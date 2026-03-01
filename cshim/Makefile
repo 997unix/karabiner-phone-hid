@@ -2,8 +2,8 @@ CXX := clang++
 CXXFLAGS := -std=c++23 -O2 -Wall -mmacosx-version-min=13.0
 
 # Include paths for Karabiner headers.
-KARABINER_INCLUDE ?= ../vendor-cpp/include
-KARABINER_VENDOR_INCLUDE ?= ../vendor-cpp/vendor/vendor/include
+KARABINER_INCLUDE ?= ../vendor-headers/karabiner
+KARABINER_VENDOR_INCLUDE ?= ../vendor-headers/deps
 
 # Build with stub (no Karabiner headers needed) by default.
 # Set STUB=0 to build with real Karabiner headers.

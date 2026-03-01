@@ -1,3 +1,0 @@
-[submodule "vendor-cpp"]
-	path = vendor-cpp
-	url = https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice.git

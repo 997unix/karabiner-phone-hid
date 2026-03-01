@@ -8,7 +8,6 @@ all: build
 
 # Build C shim → static library, then Go binary.
 shim:
-	@git submodule update --init --recursive 2>/dev/null || true
 	$(MAKE) -C cshim STUB=$(STUB)
 
 build: shim
