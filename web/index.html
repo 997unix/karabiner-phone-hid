@@ -4,34 +4,144 @@
 <title>Phone HID</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui;background:#1a1a2e;color:#e6e6e6;height:100vh;display:flex;flex-direction:column}
-#status{padding:8px 16px;text-align:center;font-size:14px}
+html,body{height:100%;overflow:hidden}
+body{font-family:system-ui;background:#1a1a2e;color:#e6e6e6;display:flex;flex-direction:column}
+
+/* Tab strip */
+.tabs{display:flex;border-bottom:1px solid #333;flex-shrink:0}
+.tabs button{flex:1;background:none;border:none;color:#888;font-size:13px;font-weight:600;
+  padding:10px 0 8px;cursor:pointer;border-bottom:2px solid transparent;
+  -webkit-tap-highlight-color:transparent}
+.tabs button.active{color:#e6e6e6;border-bottom-color:#4ecca3}
+
+/* Swipe container */
+.swipe{flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none}
+.swipe::-webkit-scrollbar{display:none}
+
+/* Each page */
+.page{min-width:100%;scroll-snap-align:start;display:flex;flex-direction:column;
+  justify-content:flex-end;padding:12px;gap:8px}
+
+/* Button grid inside each page */
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+
+button.btn{border:none;border-radius:16px;color:#e6e6e6;font-size:15px;font-weight:600;
+  min-height:70px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button.btn:active{opacity:0.7;transform:scale(0.95)}
+
+/* Status bar */
+#status{padding:8px 16px;text-align:center;font-size:13px;flex-shrink:0}
 .dot{display:inline-block;width:8px;height:8px;border-radius:4px;margin-right:6px;vertical-align:middle}
 .connected .dot{background:#4ecca3}
 .disconnected .dot{background:#e74c3c}
-.grid{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px;align-content:end}
-button{border:none;border-radius:16px;color:#e6e6e6;font-size:15px;font-weight:600;
-  min-height:70px;cursor:pointer;-webkit-tap-highlight-color:transparent;
-  active:scale(0.95)}
-button:active{opacity:0.7;transform:scale(0.95)}
 </style>
 </head><body>
+
+<div class="tabs" id="tabs">
+  <button data-idx="0" class="active">Teammate</button>
+  <button data-idx="1">Terminal</button>
+  <button data-idx="2">Media</button>
+  <button data-idx="3">Zoom</button>
+</div>
+
+<div class="swipe" id="swipe">
+  <!-- Teammate -->
+  <div class="page"><div class="grid" id="tab0"></div></div>
+  <!-- Terminal -->
+  <div class="page"><div class="grid" id="tab1"></div></div>
+  <!-- Media -->
+  <div class="page"><div class="grid" id="tab2"></div></div>
+  <!-- Zoom -->
+  <div class="page"><div class="grid" id="tab3"></div></div>
+</div>
+
 <div id="status" class="disconnected"><span class="dot"></span><span id="stxt">Disconnected</span></div>
-<div class="grid" id="grid"></div>
+
 <script>
-const buttons = [
-  {action:"superwhisper_toggle",label:"SW",color:"#e74c3c",long:"superwhisper_paste"},
-  {action:"return",label:"Return",color:"#3498db"},
-  {action:"tmux_prefix",label:"Prefix",color:"#9b59b6"},
-  {action:"tmux_copy_mode",label:"Copy",color:"#2ecc71"},
-  {action:"tmux_scroll_up",label:"Scr Up",color:"#1abc9c"},
-  {action:"tmux_scroll_down",label:"Scr Dn",color:"#1abc9c"},
-  {action:"tmux_page_up",label:"Pg Up",color:"#16a085"},
-  {action:"tmux_page_down",label:"Pg Dn",color:"#16a085"},
-  {action:"tmux_exit_copy",label:"Exit",color:"#e67e22"},
+const tabs = [
+  { name:"Teammate", buttons:[
+    {action:"superwhisper_toggle",label:"SW",color:"#e74c3c",long:"superwhisper_paste"},
+    {action:"return",label:"Return",color:"#3498db"},
+    {action:"teammate_interrupt",label:"Interrupt",color:"#e67e22"},
+    {action:"tmux_copy_mode",label:"Copy Mode",color:"#2ecc71"},
+    {action:"tmux_scroll_up",label:"Scr Up",color:"#1abc9c"},
+    {action:"tmux_scroll_down",label:"Scr Dn",color:"#1abc9c"},
+    {action:"tmux_page_up",label:"Pg Up",color:"#16a085"},
+    {action:"tmux_page_down",label:"Pg Dn",color:"#16a085"},
+    {action:"tmux_exit_copy",label:"Exit Copy",color:"#e67e22"},
+    {action:"teammate_accept",label:"Accept",color:"#27ae60"},
+    {action:"teammate_reject",label:"Reject",color:"#c0392b"},
+    {action:"tmux_prefix",label:"Prefix",color:"#9b59b6"},
+  ]},
+  { name:"Terminal", buttons:[
+    {action:"superwhisper_toggle",label:"SW",color:"#e74c3c",long:"superwhisper_paste"},
+    {action:"return",label:"Return",color:"#3498db"},
+    {action:"tmux_prefix",label:"Prefix",color:"#9b59b6"},
+    {action:"tmux_copy_mode",label:"Copy Mode",color:"#2ecc71"},
+    {action:"tmux_scroll_up",label:"Scr Up",color:"#1abc9c"},
+    {action:"tmux_scroll_down",label:"Scr Dn",color:"#1abc9c"},
+    {action:"tmux_page_up",label:"Pg Up",color:"#16a085"},
+    {action:"tmux_page_down",label:"Pg Dn",color:"#16a085"},
+    {action:"tmux_exit_copy",label:"Exit Copy",color:"#e67e22"},
+    {action:"tmux_split_h",label:"Split H",color:"#8e44ad"},
+    {action:"tmux_split_v",label:"Split V",color:"#8e44ad"},
+    {action:"tmux_next_pane",label:"Next Pane",color:"#2980b9"},
+  ]},
+  { name:"Media", buttons:[
+    {action:"media_prev",label:"Prev",color:"#8e44ad"},
+    {action:"media_play_pause",label:"Play/Pause",color:"#27ae60"},
+    {action:"media_next",label:"Next",color:"#8e44ad"},
+    {action:"media_vol_down",label:"Vol Down",color:"#2980b9"},
+    {action:"media_mute",label:"Mute",color:"#c0392b"},
+    {action:"media_vol_up",label:"Vol Up",color:"#2980b9"},
+  ]},
+  { name:"Zoom", buttons:[
+    {action:"zoom_mute",label:"Mute",color:"#c0392b"},
+    {action:"zoom_video",label:"Video",color:"#2980b9"},
+    {action:"zoom_share",label:"Share",color:"#27ae60"},
+    {action:"zoom_chat",label:"Chat",color:"#8e44ad"},
+    {action:"zoom_hand",label:"Hand",color:"#e67e22"},
+    {action:"zoom_leave",label:"Leave",color:"#e74c3c"},
+  ]},
 ];
 
-let ws, grid=document.getElementById("grid"), stxt=document.getElementById("stxt"), sbar=document.getElementById("status");
+let ws;
+const swipe=document.getElementById("swipe");
+const stxt=document.getElementById("stxt");
+const sbar=document.getElementById("status");
+const tabBtns=document.querySelectorAll(".tabs button");
+
+// Build button grids
+tabs.forEach((tab,i)=>{
+  const grid=document.getElementById("tab"+i);
+  tab.buttons.forEach(b=>{
+    const el=document.createElement("button");
+    el.className="btn";
+    el.textContent=b.label;
+    el.style.background=b.color;
+    el.onclick=()=>send(b.action);
+    if(b.long){
+      let t;
+      el.ontouchstart=(e)=>{e.preventDefault();t=setTimeout(()=>{send(b.long);if(navigator.vibrate)navigator.vibrate(50)},500)};
+      el.ontouchend=()=>{clearTimeout(t);send(b.action);if(navigator.vibrate)navigator.vibrate(30)};
+      el.ontouchcancel=()=>clearTimeout(t);
+    }
+    grid.appendChild(el);
+  });
+});
+
+// Tab sync: scroll → highlight
+swipe.addEventListener("scroll",()=>{
+  const idx=Math.round(swipe.scrollLeft/swipe.clientWidth);
+  tabBtns.forEach((b,i)=>b.classList.toggle("active",i===idx));
+});
+
+// Tab tap → scroll
+tabBtns.forEach(b=>b.addEventListener("click",()=>{
+  const idx=parseInt(b.dataset.idx);
+  swipe.scrollTo({left:idx*swipe.clientWidth,behavior:"smooth"});
+}));
 
 function connect(){
   const host=location.hostname||"127.0.0.1";
@@ -49,16 +159,6 @@ function send(action){
     if(navigator.vibrate)navigator.vibrate(30);
   }
 }
-
-buttons.forEach(b=>{
-  const el=document.createElement("button");
-  el.textContent=b.label;
-  el.style.background=b.color;
-  el.onclick=()=>send(b.action);
-  if(b.long){let t;el.ontouchstart=()=>{t=setTimeout(()=>{send(b.long);if(navigator.vibrate)navigator.vibrate(50)},500)};
-    el.ontouchend=()=>clearTimeout(t);el.ontouchcancel=()=>clearTimeout(t)}
-  grid.appendChild(el);
-});
 
 connect();
 </script>
