@@ -1,18 +1,36 @@
-.PHONY: test build clean shim
+.PHONY: all build shim test clean install uninstall
 
-BIN := bin/karabiner-phone-hid
+BIN      := bin/karabiner-phone-hid
+PREFIX   ?= /usr/local
+STUB     ?= 0
 
-# Build the C shim static library (stub mode by default).
-# Set STUB=0 and ensure vendor-cpp/ has Karabiner headers for real build.
+all: build
+
+# Build C shim → static library, then Go binary.
 shim:
-	$(MAKE) -C cshim
-
-test: shim
-	go test ./internal/... -v
+	@git submodule update --init --recursive 2>/dev/null || true
+	$(MAKE) -C cshim STUB=$(STUB)
 
 build: shim
 	go build -o $(BIN) ./cmd/server
+	@echo "Built $(BIN)"
+
+test:
+	$(MAKE) -C cshim STUB=1
+	go test ./internal/... -v
 
 clean:
 	rm -rf bin/
 	$(MAKE) -C cshim clean
+
+install: build
+	install -d $(PREFIX)/bin
+	install -m 755 $(BIN) $(PREFIX)/bin/
+	install -d $(PREFIX)/share/karabiner-phone-hid/web
+	install -m 644 web/index.html $(PREFIX)/share/karabiner-phone-hid/web/
+	@echo "Installed to $(PREFIX)/bin/karabiner-phone-hid"
+	@echo "Run with: sudo karabiner-phone-hid -web $(PREFIX)/share/karabiner-phone-hid/web"
+
+uninstall:
+	rm -f $(PREFIX)/bin/karabiner-phone-hid
+	rm -rf $(PREFIX)/share/karabiner-phone-hid
