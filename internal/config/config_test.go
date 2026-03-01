@@ -100,14 +100,143 @@ func TestAllActions(t *testing.T) {
 	r := NewRegistry(nil)
 	actions := r.AllActions()
 
-	if len(actions) != 10 {
-		t.Errorf("AllActions len = %d, want 10", len(actions))
+	if len(actions) != 29 {
+		t.Errorf("AllActions len = %d, want 29", len(actions))
 	}
 
 	// Check that each has name and label
 	for _, a := range actions {
 		if a.Name == "" || a.Label == "" {
 			t.Errorf("action with empty name or label: %+v", a)
+		}
+	}
+}
+
+func TestTeammateActions(t *testing.T) {
+	r := NewRegistry(nil)
+
+	tests := []struct {
+		name     string
+		wantKey  string
+		wantMods []string
+	}{
+		{"teammate_accept", "tab", nil},
+		{"teammate_reject", "escape", nil},
+		{"teammate_interrupt", "c", []string{"control"}},
+	}
+
+	for _, tt := range tests {
+		steps, ok := r.Resolve(tt.name)
+		if !ok {
+			t.Errorf("Resolve(%q) not found", tt.name)
+			continue
+		}
+		if steps[0].Key != tt.wantKey {
+			t.Errorf("Resolve(%q)[0].Key = %q, want %q", tt.name, steps[0].Key, tt.wantKey)
+		}
+		if tt.wantMods != nil && steps[0].Modifiers[0] != tt.wantMods[0] {
+			t.Errorf("Resolve(%q)[0].Modifiers = %v, want %v", tt.name, steps[0].Modifiers, tt.wantMods)
+		}
+	}
+}
+
+func TestMediaActions(t *testing.T) {
+	r := NewRegistry(nil)
+
+	tests := []struct {
+		name    string
+		wantKey string
+	}{
+		{"media_play_pause", "f8"},
+		{"media_next", "f9"},
+		{"media_prev", "f7"},
+		{"media_vol_up", "f12"},
+		{"media_vol_down", "f11"},
+		{"media_mute", "f10"},
+	}
+
+	for _, tt := range tests {
+		steps, ok := r.Resolve(tt.name)
+		if !ok {
+			t.Errorf("Resolve(%q) not found", tt.name)
+			continue
+		}
+		if steps[0].Key != tt.wantKey {
+			t.Errorf("Resolve(%q)[0].Key = %q, want %q", tt.name, steps[0].Key, tt.wantKey)
+		}
+	}
+}
+
+func TestZoomActions(t *testing.T) {
+	r := NewRegistry(nil)
+
+	tests := []struct {
+		name     string
+		wantKey  string
+		wantMods []string
+	}{
+		{"zoom_mute", "a", []string{"command", "shift"}},
+		{"zoom_video", "v", []string{"command", "shift"}},
+		{"zoom_share", "s", []string{"command", "shift"}},
+		{"zoom_chat", "h", []string{"command", "shift"}},
+		{"zoom_hand", "y", []string{"option"}},
+		{"zoom_leave", "w", []string{"command"}},
+	}
+
+	for _, tt := range tests {
+		steps, ok := r.Resolve(tt.name)
+		if !ok {
+			t.Errorf("Resolve(%q) not found", tt.name)
+			continue
+		}
+		if steps[0].Key != tt.wantKey {
+			t.Errorf("Resolve(%q)[0].Key = %q, want %q", tt.name, steps[0].Key, tt.wantKey)
+		}
+		for i, mod := range tt.wantMods {
+			found := false
+			for _, m := range steps[0].Modifiers {
+				if m == mod {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Errorf("Resolve(%q)[0].Modifiers missing %q (index %d), got %v", tt.name, mod, i, steps[0].Modifiers)
+			}
+		}
+	}
+}
+
+func TestTmuxExtraActions(t *testing.T) {
+	r := NewRegistry(nil)
+
+	tests := []struct {
+		name      string
+		wantSteps int
+		lastKey   string
+	}{
+		{"tmux_split_h", 2, "quote"},
+		{"tmux_split_v", 2, "5"},
+		{"tmux_next_pane", 2, "o"},
+		{"tmux_next_window", 2, "n"},
+	}
+
+	for _, tt := range tests {
+		steps, ok := r.Resolve(tt.name)
+		if !ok {
+			t.Errorf("Resolve(%q) not found", tt.name)
+			continue
+		}
+		if len(steps) != tt.wantSteps {
+			t.Errorf("Resolve(%q) steps len = %d, want %d", tt.name, len(steps), tt.wantSteps)
+			continue
+		}
+		// First step should be tmux prefix (Ctrl+\)
+		if steps[0].Key != "backslash" || steps[0].Modifiers[0] != "control" {
+			t.Errorf("Resolve(%q)[0] = %+v, want backslash+control", tt.name, steps[0])
+		}
+		if steps[1].Key != tt.lastKey {
+			t.Errorf("Resolve(%q)[1].Key = %q, want %q", tt.name, steps[1].Key, tt.lastKey)
 		}
 	}
 }

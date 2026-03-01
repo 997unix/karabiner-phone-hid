@@ -140,6 +140,117 @@ func defaultActions() map[string]ActionDefinition {
 			Label: "Prefix",
 			Steps: []protocol.KeyStep{{Key: "backslash", Modifiers: []string{"control"}}},
 		},
+		// Tmux extras
+		{
+			Name:  "tmux_split_h",
+			Label: "Split H",
+			Steps: []protocol.KeyStep{
+				{Key: "backslash", Modifiers: []string{"control"}, DelayMs: 100},
+				{Key: "quote", Modifiers: []string{"shift"}},
+			},
+		},
+		{
+			Name:  "tmux_split_v",
+			Label: "Split V",
+			Steps: []protocol.KeyStep{
+				{Key: "backslash", Modifiers: []string{"control"}, DelayMs: 100},
+				{Key: "5", Modifiers: []string{"shift"}},
+			},
+		},
+		{
+			Name:  "tmux_next_pane",
+			Label: "Next Pane",
+			Steps: []protocol.KeyStep{
+				{Key: "backslash", Modifiers: []string{"control"}, DelayMs: 100},
+				{Key: "o", Modifiers: []string{}},
+			},
+		},
+		{
+			Name:  "tmux_next_window",
+			Label: "Next Win",
+			Steps: []protocol.KeyStep{
+				{Key: "backslash", Modifiers: []string{"control"}, DelayMs: 100},
+				{Key: "n", Modifiers: []string{}},
+			},
+		},
+		// Teammate (Claude Code / Copilot inline suggestions)
+		{
+			Name:  "teammate_accept",
+			Label: "Accept",
+			Steps: []protocol.KeyStep{{Key: "tab", Modifiers: []string{}}},
+		},
+		{
+			Name:  "teammate_reject",
+			Label: "Reject",
+			Steps: []protocol.KeyStep{{Key: "escape", Modifiers: []string{}}},
+		},
+		{
+			Name:  "teammate_interrupt",
+			Label: "Interrupt",
+			Steps: []protocol.KeyStep{{Key: "c", Modifiers: []string{"control"}}},
+		},
+		// Media (F-keys = media controls on macOS by default)
+		{
+			Name:  "media_prev",
+			Label: "Prev",
+			Steps: []protocol.KeyStep{{Key: "f7", Modifiers: []string{}}},
+		},
+		{
+			Name:  "media_play_pause",
+			Label: "Play/Pause",
+			Steps: []protocol.KeyStep{{Key: "f8", Modifiers: []string{}}},
+		},
+		{
+			Name:  "media_next",
+			Label: "Next",
+			Steps: []protocol.KeyStep{{Key: "f9", Modifiers: []string{}}},
+		},
+		{
+			Name:  "media_mute",
+			Label: "Mute",
+			Steps: []protocol.KeyStep{{Key: "f10", Modifiers: []string{}}},
+		},
+		{
+			Name:  "media_vol_down",
+			Label: "Vol Down",
+			Steps: []protocol.KeyStep{{Key: "f11", Modifiers: []string{}}},
+		},
+		{
+			Name:  "media_vol_up",
+			Label: "Vol Up",
+			Steps: []protocol.KeyStep{{Key: "f12", Modifiers: []string{}}},
+		},
+		// Zoom shortcuts
+		{
+			Name:  "zoom_mute",
+			Label: "Mute",
+			Steps: []protocol.KeyStep{{Key: "a", Modifiers: []string{"command", "shift"}}},
+		},
+		{
+			Name:  "zoom_video",
+			Label: "Video",
+			Steps: []protocol.KeyStep{{Key: "v", Modifiers: []string{"command", "shift"}}},
+		},
+		{
+			Name:  "zoom_share",
+			Label: "Share",
+			Steps: []protocol.KeyStep{{Key: "s", Modifiers: []string{"command", "shift"}}},
+		},
+		{
+			Name:  "zoom_chat",
+			Label: "Chat",
+			Steps: []protocol.KeyStep{{Key: "h", Modifiers: []string{"command", "shift"}}},
+		},
+		{
+			Name:  "zoom_hand",
+			Label: "Hand",
+			Steps: []protocol.KeyStep{{Key: "y", Modifiers: []string{"option"}}},
+		},
+		{
+			Name:  "zoom_leave",
+			Label: "Leave",
+			Steps: []protocol.KeyStep{{Key: "w", Modifiers: []string{"command"}}},
+		},
 	}
 
 	m := make(map[string]ActionDefinition, len(defaults))
