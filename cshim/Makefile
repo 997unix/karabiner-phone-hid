@@ -1,9 +1,9 @@
 CXX := clang++
-CXXFLAGS := -std=c++20 -O2 -Wall
+CXXFLAGS := -std=c++23 -O2 -Wall -mmacosx-version-min=13.0
 
-# Set KARABINER_INCLUDE to the path containing pqrs/ headers.
-# Default: ../vendor-cpp/include
+# Include paths for Karabiner headers.
 KARABINER_INCLUDE ?= ../vendor-cpp/include
+KARABINER_VENDOR_INCLUDE ?= ../vendor-cpp/vendor/vendor/include
 
 # Build with stub (no Karabiner headers needed) by default.
 # Set STUB=0 to build with real Karabiner headers.
@@ -12,7 +12,7 @@ STUB ?= 1
 ifeq ($(STUB),1)
 CXXFLAGS += -DKARABINER_STUB
 else
-CXXFLAGS += -I$(KARABINER_INCLUDE)
+CXXFLAGS += -I$(KARABINER_INCLUDE) -I$(KARABINER_VENDOR_INCLUDE)
 endif
 
 .PHONY: all clean

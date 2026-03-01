@@ -13,12 +13,17 @@
 // When KARABINER_STUB is defined, we build a no-op stub for development/testing.
 #ifndef KARABINER_STUB
 
-#include <pqrs/dispatcher/extra/timer.hpp>
-#include <pqrs/karabiner/driverkit/virtual_hid_device_service.hpp>
+#include <filesystem>
 #include <memory>
+#include <pqrs/dispatcher/extra/timer.hpp>
+#include <pqrs/karabiner/driverkit/virtual_hid_device_driver.hpp>
+#include <pqrs/karabiner/driverkit/virtual_hid_device_service.hpp>
+
+namespace vhd_driver = pqrs::karabiner::driverkit::virtual_hid_device_driver;
+namespace vhd_service = pqrs::karabiner::driverkit::virtual_hid_device_service;
 
 struct karabiner_client {
-    std::shared_ptr<pqrs::karabiner::driverkit::virtual_hid_device_service::client> client;
+    std::shared_ptr<vhd_service::client> client;
     karabiner_status_callback_t callback;
     void* context;
 };
@@ -36,13 +41,13 @@ karabiner_client_t* karabiner_client_create(karabiner_status_callback_t callback
     c->callback = callback;
     c->context = context;
 
-    c->client = std::make_shared<pqrs::karabiner::driverkit::virtual_hid_device_service::client>();
+    c->client = std::make_shared<vhd_service::client>();
 
     c->client->connected.connect([c] {
         if (c->callback) c->callback(KARABINER_STATUS_CONNECTED, c->context);
     });
 
-    c->client->connect_failed.connect([c](auto&& error) {
+    c->client->connect_failed.connect([c](const asio::error_code&) {
         if (c->callback) c->callback(KARABINER_STATUS_CONNECT_FAILED, c->context);
     });
 
@@ -50,12 +55,14 @@ karabiner_client_t* karabiner_client_create(karabiner_status_callback_t callback
         if (c->callback) c->callback(KARABINER_STATUS_CLOSED, c->context);
     });
 
-    c->client->error_occurred.connect([c](auto&& error) {
+    c->client->error_occurred.connect([c](const asio::error_code&) {
         if (c->callback) c->callback(KARABINER_STATUS_ERROR, c->context);
     });
 
-    c->client->virtual_hid_keyboard_ready.connect([c] {
-        if (c->callback) c->callback(KARABINER_STATUS_KEYBOARD_READY, c->context);
+    c->client->virtual_hid_keyboard_ready.connect([c](bool ready) {
+        if (ready && c->callback) {
+            c->callback(KARABINER_STATUS_KEYBOARD_READY, c->context);
+        }
     });
 
     return c;
@@ -69,7 +76,7 @@ void karabiner_client_start(karabiner_client_t* client) {
 
 void karabiner_client_init_keyboard(karabiner_client_t* client) {
     if (client && client->client) {
-        pqrs::karabiner::driverkit::virtual_hid_device_service::virtual_hid_keyboard_parameters params;
+        vhd_service::virtual_hid_keyboard_parameters params;
         client->client->async_virtual_hid_keyboard_initialize(params);
     }
 }
@@ -80,14 +87,19 @@ void karabiner_send_keyboard_report(karabiner_client_t* client,
                                      int key_count) {
     if (!client || !client->client) return;
 
-    pqrs::karabiner::driverkit::virtual_hid_device_driver::hid_report::keyboard_input report;
+    vhd_driver::hid_report::keyboard_input report;
 
-    // Set modifiers
-    report.modifiers.insert(pqrs::karabiner::driverkit::virtual_hid_device_driver::hid_report::modifier(modifiers));
+    // Set modifier bits individually
+    for (int bit = 0; bit < 8; bit++) {
+        if (modifiers & (1 << bit)) {
+            report.modifiers.insert(
+                static_cast<vhd_driver::hid_report::modifier>(1 << bit));
+        }
+    }
 
-    // Set keys
+    // Set keys (keys.insert takes plain uint16_t)
     for (int i = 0; i < key_count && i < 32; i++) {
-        report.keys.insert(pqrs::hid::usage::keyboard_or_keypad::value_t(keys[i]));
+        report.keys.insert(keys[i]);
     }
 
     client->client->async_post_report(report);
@@ -96,7 +108,7 @@ void karabiner_send_keyboard_report(karabiner_client_t* client,
 void karabiner_send_keyboard_release(karabiner_client_t* client) {
     if (!client || !client->client) return;
 
-    pqrs::karabiner::driverkit::virtual_hid_device_driver::hid_report::keyboard_input report;
+    vhd_driver::hid_report::keyboard_input report;
     client->client->async_post_report(report);
 }
 
