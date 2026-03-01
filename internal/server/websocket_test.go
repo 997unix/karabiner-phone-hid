@@ -30,7 +30,7 @@ func startTestServer(t *testing.T) (*Server, *hid.MockPoster, string) {
 	}
 	t.Cleanup(func() { srv.Stop() })
 
-	url := fmt.Sprintf("ws://127.0.0.1:%d/", port)
+	url := fmt.Sprintf("ws://127.0.0.1:%d/ws", port)
 	return srv, mock, url
 }
 

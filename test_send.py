@@ -16,7 +16,7 @@ except ImportError:
 
 
 async def main():
-    uri = "ws://127.0.0.1:8765"
+    uri = "ws://127.0.0.1:8765/ws"
     text = f"robot test loop {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
 
     async with websockets.connect(uri) as ws:

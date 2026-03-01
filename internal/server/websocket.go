@@ -20,6 +20,7 @@ type Server struct {
 	router     *Router
 	serverName string
 	actions    []protocol.ActionInfo
+	webDir     string
 	listener   net.Listener
 	mu         sync.Mutex
 }
@@ -33,10 +34,16 @@ func NewServer(router *Router, serverName string, actions []protocol.ActionInfo)
 	}
 }
 
+// SetWebDir sets the directory to serve static files from at /ui/.
+func (s *Server) SetWebDir(dir string) {
+	s.webDir = dir
+}
+
 // Start begins listening. Returns the bound port. Use Stop to shut down.
 func (s *Server) Start(addr string) (int, error) {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", s.handleWS)
+	mux.HandleFunc("/ws", s.handleWS)
+	mux.HandleFunc("/", s.handleRoot)
 
 	ln, err := net.Listen("tcp", addr)
 	if err != nil {
@@ -67,6 +74,16 @@ func (s *Server) Stop() error {
 		return s.listener.Close()
 	}
 	return nil
+}
+
+func (s *Server) handleRoot(w http.ResponseWriter, r *http.Request) {
+	// Serve static files if webDir is set
+	if s.webDir != "" {
+		http.FileServer(http.Dir(s.webDir)).ServeHTTP(w, r)
+		return
+	}
+	// Otherwise try WebSocket upgrade (backward compat)
+	s.handleWS(w, r)
 }
 
 func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {

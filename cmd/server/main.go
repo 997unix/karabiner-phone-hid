@@ -17,6 +17,7 @@ import (
 func main() {
 	port := flag.Int("port", 8765, "WebSocket listen port")
 	name := flag.String("name", "", "Server name for Bonjour (default: hostname)")
+	webDir := flag.String("web", "", "Directory to serve web UI from (default: web/ next to binary)")
 	flag.Parse()
 
 	// Check root
@@ -55,6 +56,20 @@ func main() {
 	}
 
 	ws := server.NewServer(router, serverName, actions)
+
+	// Serve web UI
+	wd := *webDir
+	if wd == "" {
+		// Default: web/ relative to working directory
+		if _, err := os.Stat("web/index.html"); err == nil {
+			wd = "web"
+		}
+	}
+	if wd != "" {
+		ws.SetWebDir(wd)
+		log.Printf("[Server] Serving web UI from %s", wd)
+	}
+
 	boundPort, err := ws.Start(fmt.Sprintf("0.0.0.0:%d", *port))
 	if err != nil {
 		log.Fatalf("[Server] Failed to start: %v", err)
