@@ -22,7 +22,7 @@ Karabiner-Elements includes the DriverKit virtual HID daemon. If Karabiner is ru
 ## Install
 
 ```bash
-git clone --recurse-submodules https://github.com/tonyjiang/karabiner-phone-hid.git
+git clone --recurse-submodules https://github.com/997unix/karabiner-phone-hid.git
 cd karabiner-phone-hid
 make
 ```
