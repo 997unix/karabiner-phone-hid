@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	"github.com/tonyjiang/karabiner-phone-hid/internal/config"
@@ -60,9 +61,15 @@ func main() {
 	// Serve web UI
 	wd := *webDir
 	if wd == "" {
-		// Default: web/ relative to working directory
+		// Try relative to working directory first
 		if _, err := os.Stat("web/index.html"); err == nil {
 			wd = "web"
+		} else if exe, err := os.Executable(); err == nil {
+			// Then try relative to the binary
+			candidate := filepath.Join(filepath.Dir(exe), "..", "web")
+			if _, err := os.Stat(filepath.Join(candidate, "index.html")); err == nil {
+				wd = candidate
+			}
 		}
 	}
 	if wd != "" {
