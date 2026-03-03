@@ -8,7 +8,9 @@ import (
 	"os/signal"
 	"path/filepath"
 	"syscall"
+	"time"
 
+	"github.com/tonyjiang/karabiner-phone-hid/internal/buildinfo"
 	"github.com/tonyjiang/karabiner-phone-hid/internal/config"
 	"github.com/tonyjiang/karabiner-phone-hid/internal/discovery"
 	"github.com/tonyjiang/karabiner-phone-hid/internal/hid"
@@ -91,6 +93,10 @@ func main() {
 	} else {
 		defer adv.Stop()
 	}
+
+	// Watch for binary changes — exec() new version on rebuild
+	stopWatch := buildinfo.WatchSelfExec(30 * time.Second)
+	defer stopWatch()
 
 	// Wait for shutdown signal
 	sig := make(chan os.Signal, 1)
