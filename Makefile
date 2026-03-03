@@ -11,7 +11,9 @@ shim:
 	$(MAKE) -C cshim STUB=$(STUB)
 
 build: shim
-	go build -o $(BIN) ./cmd/server
+	@mkdir -p $(dir $(BIN))
+	go build -o $(BIN).tmp ./cmd/server
+	mv $(BIN).tmp $(BIN)
 	@echo "Built $(BIN)"
 
 test:
