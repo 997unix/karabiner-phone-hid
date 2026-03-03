@@ -100,8 +100,8 @@ func TestAllActions(t *testing.T) {
 	r := NewRegistry(nil)
 	actions := r.AllActions()
 
-	if len(actions) != 29 {
-		t.Errorf("AllActions len = %d, want 29", len(actions))
+	if len(actions) != 34 {
+		t.Errorf("AllActions len = %d, want 34", len(actions))
 	}
 
 	// Check that each has name and label
@@ -122,7 +122,8 @@ func TestTeammateActions(t *testing.T) {
 	}{
 		{"teammate_accept", "tab", nil},
 		{"teammate_reject", "escape", nil},
-		{"teammate_interrupt", "c", []string{"control"}},
+		{"teammate_attention", "c", []string{"control"}},
+		{"paste", "v", []string{"command"}},
 	}
 
 	for _, tt := range tests {
@@ -237,6 +238,31 @@ func TestTmuxExtraActions(t *testing.T) {
 		}
 		if steps[1].Key != tt.lastKey {
 			t.Errorf("Resolve(%q)[1].Key = %q, want %q", tt.name, steps[1].Key, tt.lastKey)
+		}
+	}
+}
+
+func TestArrowActions(t *testing.T) {
+	r := NewRegistry(nil)
+
+	tests := []struct {
+		name    string
+		wantKey string
+	}{
+		{"arrow_up", "up_arrow"},
+		{"arrow_down", "down_arrow"},
+		{"arrow_left", "left_arrow"},
+		{"arrow_right", "right_arrow"},
+	}
+
+	for _, tt := range tests {
+		steps, ok := r.Resolve(tt.name)
+		if !ok {
+			t.Errorf("Resolve(%q) not found", tt.name)
+			continue
+		}
+		if steps[0].Key != tt.wantKey {
+			t.Errorf("Resolve(%q)[0].Key = %q, want %q", tt.name, steps[0].Key, tt.wantKey)
 		}
 	}
 }

@@ -185,9 +185,14 @@ func defaultActions() map[string]ActionDefinition {
 			Steps: []protocol.KeyStep{{Key: "escape", Modifiers: []string{}}},
 		},
 		{
-			Name:  "teammate_interrupt",
-			Label: "Interrupt",
+			Name:  "teammate_attention",
+			Label: "tmate-attn",
 			Steps: []protocol.KeyStep{{Key: "c", Modifiers: []string{"control"}}},
+		},
+		{
+			Name:  "paste",
+			Label: "Paste",
+			Steps: []protocol.KeyStep{{Key: "v", Modifiers: []string{"command"}}},
 		},
 		// Media (F-keys = media controls on macOS by default)
 		{
@@ -250,6 +255,27 @@ func defaultActions() map[string]ActionDefinition {
 			Name:  "zoom_leave",
 			Label: "Leave",
 			Steps: []protocol.KeyStep{{Key: "w", Modifiers: []string{"command"}}},
+		},
+		// Arrow keys
+		{
+			Name:  "arrow_up",
+			Label: "Up",
+			Steps: []protocol.KeyStep{{Key: "up_arrow", Modifiers: []string{}}},
+		},
+		{
+			Name:  "arrow_down",
+			Label: "Down",
+			Steps: []protocol.KeyStep{{Key: "down_arrow", Modifiers: []string{}}},
+		},
+		{
+			Name:  "arrow_left",
+			Label: "Left",
+			Steps: []protocol.KeyStep{{Key: "left_arrow", Modifiers: []string{}}},
+		},
+		{
+			Name:  "arrow_right",
+			Label: "Right",
+			Steps: []protocol.KeyStep{{Key: "right_arrow", Modifiers: []string{}}},
 		},
 	}
 
