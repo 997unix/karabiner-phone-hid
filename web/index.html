@@ -61,18 +61,21 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
 <script>
 const tabs = [
   { name:"Teammate", buttons:[
-    {action:"superwhisper_toggle",label:"SW",color:"#e74c3c",long:"superwhisper_paste"},
+    {action:"superwhisper_toggle",label:"SuperWhisper",color:"#e74c3c",long:"superwhisper_paste",span:3},
     {action:"return",label:"Return",color:"#3498db"},
-    {action:"teammate_interrupt",label:"Interrupt",color:"#e67e22"},
-    {action:"tmux_copy_mode",label:"Copy Mode",color:"#2ecc71"},
-    {action:"tmux_scroll_up",label:"Scr Up",color:"#1abc9c"},
-    {action:"tmux_scroll_down",label:"Scr Dn",color:"#1abc9c"},
-    {action:"tmux_page_up",label:"Pg Up",color:"#16a085"},
-    {action:"tmux_page_down",label:"Pg Dn",color:"#16a085"},
-    {action:"tmux_exit_copy",label:"Exit Copy",color:"#e67e22"},
     {action:"teammate_accept",label:"Accept",color:"#27ae60"},
+    {action:"tmux_copy_mode",label:"Copy Mode",color:"#2ecc71"},
+    {action:"paste",label:"Paste",color:"#9b59b6"},
     {action:"teammate_reject",label:"Reject",color:"#c0392b"},
-    {action:"tmux_prefix",label:"Prefix",color:"#9b59b6"},
+    {action:"tmux_page_up",label:"Pg Up",color:"#16a085"},
+    {action:"teammate_attention",label:"tmate-attn",color:"#e67e22"},
+    {action:"arrow_up",label:"Up",color:"#1abc9c"},
+    {action:"tmux_page_down",label:"Pg Dn",color:"#16a085"},
+    {action:"arrow_left",label:"Left",color:"#1abc9c"},
+    {action:"arrow_down",label:"Down",color:"#1abc9c"},
+    {action:"tmux_exit_copy",label:"Exit Copy",color:"#e67e22"},
+    {action:null,label:"",color:"transparent"},
+    {action:"arrow_right",label:"Right",color:"#1abc9c"},
   ]},
   { name:"Terminal", buttons:[
     {action:"superwhisper_toggle",label:"SW",color:"#e74c3c",long:"superwhisper_paste"},
@@ -120,6 +123,8 @@ tabs.forEach((tab,i)=>{
     el.className="btn";
     el.textContent=b.label;
     el.style.background=b.color;
+    if(b.span)el.style.gridColumn="span "+b.span;
+    if(!b.action){el.disabled=true;el.style.visibility="hidden";grid.appendChild(el);return}
     el.onclick=()=>send(b.action);
     if(b.long){
       let t;
