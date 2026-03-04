@@ -1,4 +1,4 @@
-.PHONY: all build shim test clean install uninstall
+.PHONY: all build shim test clean install uninstall sudoers unsudoers
 
 BIN      := bin/karabiner-phone-hid
 PREFIX   ?= /usr/local
@@ -35,3 +35,15 @@ install: build
 uninstall:
 	rm -f $(PREFIX)/bin/karabiner-phone-hid
 	rm -rf $(PREFIX)/share/karabiner-phone-hid
+
+SUDOERS_FILE := scripts/sudoers/karabiner-phone-hid
+SUDOERS_DEST := /etc/sudoers.d/karabiner-phone-hid
+
+sudoers:
+	visudo -cf $(SUDOERS_FILE)
+	sudo install -m 440 -o root -g wheel $(SUDOERS_FILE) $(SUDOERS_DEST)
+	@echo "Installed $(SUDOERS_DEST) — run without password: sudo karabiner-phone-hid"
+
+unsudoers:
+	sudo rm -f $(SUDOERS_DEST)
+	@echo "Removed $(SUDOERS_DEST)"
