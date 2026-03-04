@@ -31,15 +31,26 @@ button.btn{border:none;border-radius:16px;color:#e6e6e6;font-size:15px;font-weig
 button.btn:active{opacity:0.7;transform:scale(0.95)}
 
 /* Compact keyboard layout */
-.kb{display:flex;flex-direction:column;gap:4px;align-items:center}
-.kb .kb-row{display:flex;gap:3px;justify-content:center;width:100%}
-.kb button.key{border:none;border-radius:8px;color:#e6e6e6;font-size:12px;font-weight:600;
-  height:42px;min-width:0;flex:1;max-width:42px;cursor:pointer;-webkit-tap-highlight-color:transparent;
+.kb-page{min-width:100%;scroll-snap-align:start;display:flex;flex-direction:column;
+  padding:6px;gap:0;justify-content:flex-end}
+.kb-sw{border:none;border-radius:12px;color:#e6e6e6;font-size:16px;font-weight:700;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;background:#e74c3c;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;flex:1;max-height:12.5vh;min-height:44px;
+  margin-bottom:6px}
+.kb-sw:active{opacity:0.7;transform:scale(0.97)}
+.kb{display:flex;flex-direction:column;gap:3px;align-items:center;flex-shrink:0}
+.kb .kb-row{display:flex;gap:2px;justify-content:center;width:100%}
+.kb button.key{border:none;border-radius:6px;color:#e6e6e6;font-size:11px;font-weight:600;
+  height:36px;min-width:0;flex:1;cursor:pointer;-webkit-tap-highlight-color:transparent;
   display:flex;align-items:center;justify-content:center;padding:0}
 .kb button.key:active{opacity:0.7;transform:scale(0.93)}
-.kb button.key.wide{max-width:none;flex:1.5}
-.kb button.key.wider{max-width:none;flex:2}
-.kb button.key.space{max-width:none;flex:5}
+.kb button.key.wide{flex:1.4}
+.kb button.key.wider{flex:1.8}
+.kb button.key.space{flex:4}
+.kb button.key.fk{height:28px;font-size:9px}
+/* Arrow cluster: 3-col grid for inverted-T */
+.kb .arrow-cluster{display:grid;grid-template-columns:1fr 1fr 1fr;gap:2px;width:auto}
+.kb .arrow-cluster button.key{height:30px;width:32px;flex:none}
 
 /* Status bar */
 #status{padding:8px 16px;text-align:center;font-size:13px;flex-shrink:0}
@@ -65,7 +76,7 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
   <!-- YouTube Remote -->
   <div class="page"><div class="grid" id="tab2"></div></div>
   <!-- Keyboard -->
-  <div class="page"><div class="kb" id="tab3"></div></div>
+  <div class="kb-page" id="tab3"></div>
   <!-- Numpad -->
   <div class="page"><div class="grid" id="tab4"></div></div>
 </div>
@@ -119,7 +130,20 @@ const tabs = [
     {action:"yt_captions",label:"CC",color:"#e67e22"},
     {action:"yt_speed_up",label:"Speed +",color:"#1abc9c"},
   ]},
-  { name:"Keyboard", layout:"kb", rows:[
+  { name:"Keyboard", layout:"kb",
+    sw:{action:"superwhisper_toggle",label:"SuperWhisper",long:"superwhisper_paste"},
+    rows:[
+    // F-keys
+    [
+      {action:"key_escape",label:"Esc",color:"#c0392b",css:"fk"},
+      {action:"key_f1",label:"F1",color:"#444",css:"fk"},{action:"key_f2",label:"F2",color:"#444",css:"fk"},
+      {action:"key_f3",label:"F3",color:"#444",css:"fk"},{action:"key_f4",label:"F4",color:"#444",css:"fk"},
+      {action:"key_f5",label:"F5",color:"#444",css:"fk"},{action:"key_f6",label:"F6",color:"#444",css:"fk"},
+      {action:"key_f7",label:"F7",color:"#444",css:"fk"},{action:"key_f8",label:"F8",color:"#444",css:"fk"},
+      {action:"key_f9",label:"F9",color:"#444",css:"fk"},{action:"key_f10",label:"F10",color:"#444",css:"fk"},
+      {action:"key_f11",label:"F11",color:"#444",css:"fk"},{action:"key_f12",label:"F12",color:"#444",css:"fk"},
+    ],
+    // Number row
     [
       {action:"key_grave",label:"`",color:"#444"},
       {action:"key_1",label:"1",color:"#333"},{action:"key_2",label:"2",color:"#333"},
@@ -127,41 +151,54 @@ const tabs = [
       {action:"key_5",label:"5",color:"#333"},{action:"key_6",label:"6",color:"#333"},
       {action:"key_7",label:"7",color:"#333"},{action:"key_8",label:"8",color:"#333"},
       {action:"key_9",label:"9",color:"#333"},{action:"key_0",label:"0",color:"#333"},
+      {action:"key_hyphen",label:"-",color:"#444"},{action:"key_equal",label:"=",color:"#444"},
       {action:"key_backspace",label:"\u232B",color:"#555",css:"wide"},
-    ],[
+    ],
+    // QWERTY row
+    [
       {action:"key_tab",label:"Tab",color:"#555",css:"wide"},
       {action:"key_q",label:"Q",color:"#333"},{action:"key_w",label:"W",color:"#333"},
       {action:"key_e",label:"E",color:"#333"},{action:"key_r",label:"R",color:"#333"},
       {action:"key_t",label:"T",color:"#333"},{action:"key_y",label:"Y",color:"#333"},
       {action:"key_u",label:"U",color:"#333"},{action:"key_i",label:"I",color:"#333"},
       {action:"key_o",label:"O",color:"#333"},{action:"key_p",label:"P",color:"#333"},
+      {action:"key_open_bracket",label:"[",color:"#444"},{action:"key_close_bracket",label:"]",color:"#444"},
       {action:"key_backslash",label:"\\",color:"#444"},
-    ],[
-      {action:"key_escape",label:"Esc",color:"#c0392b",css:"wide"},
+    ],
+    // Home row
+    [
+      {action:"key_enter",label:"\u21B5",color:"#27ae60",css:"wider"},
       {action:"key_a",label:"A",color:"#333"},{action:"key_s",label:"S",color:"#333"},
       {action:"key_d",label:"D",color:"#333"},{action:"key_f",label:"F",color:"#333"},
       {action:"key_g",label:"G",color:"#333"},{action:"key_h",label:"H",color:"#333"},
       {action:"key_j",label:"J",color:"#333"},{action:"key_k",label:"K",color:"#333"},
       {action:"key_l",label:"L",color:"#333"},{action:"key_semicolon",label:";",color:"#444"},
-      {action:"key_enter",label:"\u21B5",color:"#27ae60",css:"wide"},
-    ],[
-      {action:"key_hyphen",label:"-",color:"#444"},
+      {action:"key_quote",label:"'",color:"#444"},
+      {action:"key_enter",label:"\u21B5",color:"#27ae60",css:"wider"},
+    ],
+    // Bottom letter row
+    [
+      {action:"key_delete",label:"Del",color:"#555"},
       {action:"key_z",label:"Z",color:"#333"},{action:"key_x",label:"X",color:"#333"},
       {action:"key_c",label:"C",color:"#333"},{action:"key_v",label:"V",color:"#333"},
       {action:"key_b",label:"B",color:"#333"},{action:"key_n",label:"N",color:"#333"},
       {action:"key_m",label:"M",color:"#333"},{action:"key_comma",label:",",color:"#444"},
       {action:"key_period",label:".",color:"#444"},{action:"key_slash",label:"/",color:"#444"},
-      {action:"key_equal",label:"=",color:"#444"},
-    ],[
-      {action:"key_open_bracket",label:"[",color:"#444"},
-      {action:"key_close_bracket",label:"]",color:"#444"},
-      {action:"key_quote",label:"'",color:"#444"},
-      {action:"key_space",label:"",color:"#555",css:"space"},
-      {action:"arrow_left",label:"\u25C0",color:"#1abc9c"},
-      {action:"arrow_down",label:"\u25BC",color:"#1abc9c"},
-      {action:"arrow_up",label:"\u25B2",color:"#1abc9c"},
-      {action:"arrow_right",label:"\u25B6",color:"#1abc9c"},
+      {action:"key_page_up",label:"PgU",color:"#16a085"},
+      {action:"key_page_down",label:"PgD",color:"#16a085"},
     ],
+    // Modifier + space row
+    [
+      {action:"mod_ctrl",label:"Ctrl",color:"#555"},
+      {action:"mod_option",label:"Opt",color:"#555"},
+      {action:"mod_command",label:"Cmd",color:"#555"},
+      {action:"key_space",label:"",color:"#444",css:"space"},
+      {action:"mod_command",label:"Cmd",color:"#555"},
+      {action:"mod_option",label:"Opt",color:"#555"},
+      {action:"mod_ctrl",label:"Ctrl",color:"#555"},
+    ],
+    // Arrow row — will be rendered specially
+    "arrows",
   ]},
   { name:"Numpad", buttons:[
     {action:"key_escape",label:"Esc",color:"#555"},
@@ -204,20 +241,53 @@ function wireBtn(el,b){
 tabs.forEach((tab,i)=>{
   const container=document.getElementById("tab"+i);
   if(tab.layout==="kb"){
-    // Keyboard: row-based compact layout
+    // SuperWhisper banner
+    if(tab.sw){
+      const sw=document.createElement("button");
+      sw.className="kb-sw";
+      sw.textContent=tab.sw.label;
+      wireBtn(sw,tab.sw);
+      container.appendChild(sw);
+    }
+    // Keyboard area
+    const kbDiv=document.createElement("div");
+    kbDiv.className="kb";
     tab.rows.forEach(row=>{
-      const rowEl=document.createElement("div");
-      rowEl.className="kb-row";
-      row.forEach(b=>{
-        const el=document.createElement("button");
-        el.className="key"+(b.css?" "+b.css:"");
-        el.textContent=b.label;
-        el.style.background=b.color;
-        wireBtn(el,b);
-        rowEl.appendChild(el);
-      });
-      container.appendChild(rowEl);
+      if(row==="arrows"){
+        // Inverted-T arrow cluster
+        const cl=document.createElement("div");
+        cl.className="arrow-cluster";
+        [{action:null},{action:"arrow_up",label:"\u25B2",color:"#1abc9c"},{action:null},
+         {action:"arrow_left",label:"\u25C0",color:"#1abc9c"},{action:"arrow_down",label:"\u25BC",color:"#1abc9c"},{action:"arrow_right",label:"\u25B6",color:"#1abc9c"},
+        ].forEach(b=>{
+          const el=document.createElement("button");
+          el.className="key";
+          el.textContent=b.label||"";
+          el.style.background=b.color||"transparent";
+          if(!b.action){el.style.visibility="hidden";el.disabled=true}
+          else wireBtn(el,b);
+          cl.appendChild(el);
+        });
+        const wrap=document.createElement("div");
+        wrap.className="kb-row";
+        wrap.style.justifyContent="center";
+        wrap.appendChild(cl);
+        kbDiv.appendChild(wrap);
+      } else {
+        const rowEl=document.createElement("div");
+        rowEl.className="kb-row";
+        row.forEach(b=>{
+          const el=document.createElement("button");
+          el.className="key"+(b.css?" "+b.css:"");
+          el.textContent=b.label;
+          el.style.background=b.color;
+          wireBtn(el,b);
+          rowEl.appendChild(el);
+        });
+        kbDiv.appendChild(rowEl);
+      }
     });
+    container.appendChild(kbDiv);
   } else {
     // Standard 3-column grid
     tab.buttons.forEach(b=>{
