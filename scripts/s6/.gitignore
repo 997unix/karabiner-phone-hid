@@ -1,0 +1,3 @@
+# s6 runtime state (created by s6-svscan and s6-supervise)
+.s6-svscan/
+**/supervise/

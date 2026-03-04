@@ -1,4 +1,5 @@
-.PHONY: all build shim test clean install uninstall sudoers unsudoers s6-up s6-down s6-status s6-log
+.PHONY: all build shim test clean install uninstall sudoers unsudoers \
+       s6-install s6-uninstall s6-scan s6-up s6-down s6-restart s6-status s6-log
 
 BIN      := bin/karabiner-phone-hid
 PREFIX   ?= /usr/local
@@ -48,28 +49,52 @@ unsudoers:
 	sudo rm -f $(SUDOERS_DEST)
 	@echo "Removed $(SUDOERS_DEST)"
 
-# s6 supervision — uses s6-svscan to wire service + log pipeline
-S6_SCANDIR := scripts/s6
-S6_SVCDIR  := $(S6_SCANDIR)/karabiner-phone-hid
-S6_LOGDIR  := $(HOME)/.local/log/karabiner-phone-hid
+# s6 supervision
+#   Scan dir: ~/.local/share/s6/scan/   (s6-svscan watches this)
+#   Service:  symlinked from project's scripts/s6/karabiner-phone-hid/
+#   Logs:     ~/.local/log/karabiner-phone-hid/current
+S6_SCANDIR := $(HOME)/.local/share/s6/scan
+S6_SVCNAME := karabiner-phone-hid
+S6_SVCLINK := $(S6_SCANDIR)/$(S6_SVCNAME)
+S6_LOGDIR  := $(HOME)/.local/log/$(S6_SVCNAME)
+S6_SRCDIR  := $(CURDIR)/scripts/s6/$(S6_SVCNAME)
 
-s6-up: build
-	@mkdir -p $(S6_LOGDIR)
-	@if s6-svstat $(S6_SVCDIR) 2>/dev/null; then \
-		echo "Already running — sending restart"; \
-		s6-svc -r $(S6_SVCDIR); \
-	else \
-		s6-svscan $(S6_SCANDIR) & \
-		echo "s6-svscan started — use 'make s6-status' or 'make s6-log'"; \
-	fi
+s6-install: build
+	@mkdir -p $(S6_SCANDIR) $(S6_LOGDIR)
+	@ln -sfn $(S6_SRCDIR) $(S6_SVCLINK)
+	@echo "Installed: $(S6_SVCLINK) → $(S6_SRCDIR)"
+	@echo "Logs:      $(S6_LOGDIR)/current"
+	@echo ""
+	@echo "Start the scanner (once, or add to login items):"
+	@echo "  s6-svscan $(S6_SCANDIR) &"
+	@echo ""
+	@echo "Then use:"
+	@echo "  make s6-status    # check service"
+	@echo "  make s6-log       # tail logs"
+	@echo "  make s6-down      # stop service"
+
+s6-uninstall:
+	@s6-svc -d $(S6_SVCLINK) 2>/dev/null; true
+	@rm -f $(S6_SVCLINK)
+	@echo "Removed $(S6_SVCLINK)"
+
+s6-scan:
+	@mkdir -p $(S6_SCANDIR)
+	s6-svscan $(S6_SCANDIR) &
+	@echo "s6-svscan running on $(S6_SCANDIR)"
+
+s6-up:
+	s6-svc -u $(S6_SVCLINK)
 
 s6-down:
-	@s6-svc -d $(S6_SVCDIR) 2>/dev/null; true
-	@s6-svscanctl -q $(S6_SCANDIR) 2>/dev/null; true
-	@echo "Service stopped"
+	s6-svc -d $(S6_SVCLINK)
+
+s6-restart: build
+	s6-svc -r $(S6_SVCLINK)
 
 s6-status:
-	s6-svstat $(S6_SVCDIR)
+	s6-svstat $(S6_SVCLINK)
+	@s6-svstat $(S6_SVCLINK)/log 2>/dev/null; true
 
 s6-log:
 	tail -f $(S6_LOGDIR)/current | s6-tai64nlocal
