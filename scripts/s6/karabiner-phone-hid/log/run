@@ -1,0 +1,2 @@
+#!/bin/sh
+exec s6-log T s10000000 n5 /Users/tony/.local/log/karabiner-phone-hid

@@ -27,14 +27,16 @@ func WatchSelfExec(interval time.Duration) func() {
 		return func() {}
 	}
 
-	return watchBinary(self, interval, func(path string, args []string, env []string) error {
+	return watchBinary(self, interval, os.Stdout, func(path string, args []string, env []string) error {
+		fmt.Println() // newline after dots
 		log.Printf("[SelfWatch] Binary changed on disk, exec-ing new version...")
 		return syscall.Exec(path, args, env)
 	})
 }
 
 // watchBinary is the testable core. It returns a stop function.
-func watchBinary(path string, interval time.Duration, exec execFunc) func() {
+// On each tick where the binary hasn't changed, it writes a "." to heartbeat.
+func watchBinary(path string, interval time.Duration, heartbeat io.Writer, exec execFunc) func() {
 	startHash := hashFile(path)
 	if startHash == "" {
 		log.Printf("[SelfWatch] Warning: could not hash %s", path)
@@ -52,6 +54,7 @@ func watchBinary(path string, interval time.Duration, exec execFunc) func() {
 					exec(path, os.Args, os.Environ())
 					return
 				}
+				fmt.Fprint(heartbeat, ".")
 			case <-done:
 				return
 			}

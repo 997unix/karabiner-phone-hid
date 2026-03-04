@@ -1,4 +1,4 @@
-.PHONY: all build shim test clean install uninstall sudoers unsudoers
+.PHONY: all build shim test clean install uninstall sudoers unsudoers s6-up s6-down s6-status s6-log
 
 BIN      := bin/karabiner-phone-hid
 PREFIX   ?= /usr/local
@@ -47,3 +47,23 @@ sudoers:
 unsudoers:
 	sudo rm -f $(SUDOERS_DEST)
 	@echo "Removed $(SUDOERS_DEST)"
+
+# s6 supervision
+S6_SVCDIR  := scripts/s6/karabiner-phone-hid
+S6_LOGDIR  := $(HOME)/.local/log/karabiner-phone-hid
+
+s6-up: build
+	@mkdir -p $(S6_LOGDIR)
+	s6-supervise $(S6_SVCDIR) &
+	@echo "s6-supervise started — use 'make s6-status' or 'make s6-log'"
+
+s6-down:
+	s6-svc -d $(S6_SVCDIR)
+	s6-svc -x $(S6_SVCDIR)
+	@echo "Service stopped"
+
+s6-status:
+	s6-svstat $(S6_SVCDIR)
+
+s6-log:
+	tail -f $(S6_LOGDIR)/current | s6-tai64nlocal

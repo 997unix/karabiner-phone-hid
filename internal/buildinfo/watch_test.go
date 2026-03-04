@@ -1,8 +1,10 @@
 package buildinfo
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -47,21 +49,19 @@ func TestWatchSelfExecCallsCallback(t *testing.T) {
 	dir := t.TempDir()
 	fakeBin := filepath.Join(dir, "fakebin")
 
-	// Write initial content
 	if err := os.WriteFile(fakeBin, []byte("v1"), 0755); err != nil {
 		t.Fatal(err)
 	}
 
 	execCalled := make(chan struct{}, 1)
+	var buf bytes.Buffer
 
-	// Use the testable version with a custom exec callback
-	stop := watchBinary(fakeBin, 50*time.Millisecond, func(path string, args []string, env []string) error {
+	stop := watchBinary(fakeBin, 50*time.Millisecond, &buf, func(path string, args []string, env []string) error {
 		execCalled <- struct{}{}
 		return nil
 	})
 	defer stop()
 
-	// Overwrite the binary
 	if err := os.WriteFile(fakeBin, []byte("v2"), 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -83,18 +83,43 @@ func TestWatchSelfExecNoChangeNoCallback(t *testing.T) {
 	}
 
 	execCalled := make(chan struct{}, 1)
+	var buf bytes.Buffer
 
-	stop := watchBinary(fakeBin, 50*time.Millisecond, func(path string, args []string, env []string) error {
+	stop := watchBinary(fakeBin, 50*time.Millisecond, &buf, func(path string, args []string, env []string) error {
 		execCalled <- struct{}{}
 		return nil
 	})
 	defer stop()
 
-	// Wait several intervals — should NOT trigger
 	select {
 	case <-execCalled:
 		t.Fatal("exec callback called when binary didn't change")
 	case <-time.After(300 * time.Millisecond):
 		// success — no change detected
+	}
+}
+
+func TestWatchWritesHeartbeatDots(t *testing.T) {
+	dir := t.TempDir()
+	fakeBin := filepath.Join(dir, "fakebin")
+
+	if err := os.WriteFile(fakeBin, []byte("stable"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	var buf bytes.Buffer
+
+	stop := watchBinary(fakeBin, 50*time.Millisecond, &buf, func(path string, args []string, env []string) error {
+		return nil
+	})
+
+	// Wait for several ticks
+	time.Sleep(300 * time.Millisecond)
+	stop()
+
+	output := buf.String()
+	dotCount := strings.Count(output, ".")
+	if dotCount < 3 {
+		t.Errorf("expected at least 3 heartbeat dots, got %d (output: %q)", dotCount, output)
 	}
 }
