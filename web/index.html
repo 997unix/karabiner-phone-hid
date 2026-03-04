@@ -30,6 +30,17 @@ button.btn{border:none;border-radius:16px;color:#e6e6e6;font-size:15px;font-weig
   min-height:70px;cursor:pointer;-webkit-tap-highlight-color:transparent}
 button.btn:active{opacity:0.7;transform:scale(0.95)}
 
+/* Compact keyboard layout */
+.kb{display:flex;flex-direction:column;gap:4px;align-items:center}
+.kb .kb-row{display:flex;gap:3px;justify-content:center;width:100%}
+.kb button.key{border:none;border-radius:8px;color:#e6e6e6;font-size:12px;font-weight:600;
+  height:42px;min-width:0;flex:1;max-width:42px;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  display:flex;align-items:center;justify-content:center;padding:0}
+.kb button.key:active{opacity:0.7;transform:scale(0.93)}
+.kb button.key.wide{max-width:none;flex:1.5}
+.kb button.key.wider{max-width:none;flex:2}
+.kb button.key.space{max-width:none;flex:5}
+
 /* Status bar */
 #status{padding:8px 16px;text-align:center;font-size:13px;flex-shrink:0}
 .dot{display:inline-block;width:8px;height:8px;border-radius:4px;margin-right:6px;vertical-align:middle}
@@ -54,7 +65,7 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
   <!-- YouTube Remote -->
   <div class="page"><div class="grid" id="tab2"></div></div>
   <!-- Keyboard -->
-  <div class="page"><div class="grid" id="tab3"></div></div>
+  <div class="page"><div class="kb" id="tab3"></div></div>
   <!-- Numpad -->
   <div class="page"><div class="grid" id="tab4"></div></div>
 </div>
@@ -108,31 +119,49 @@ const tabs = [
     {action:"yt_captions",label:"CC",color:"#e67e22"},
     {action:"yt_speed_up",label:"Speed +",color:"#1abc9c"},
   ]},
-  { name:"Keyboard", buttons:[
-    {action:"key_escape",label:"Esc",color:"#555"},
-    {action:"key_grave",label:"`",color:"#444"},
-    {action:"key_backspace",label:"Bksp",color:"#555"},
-    {action:"key_tab",label:"Tab",color:"#555"},
-    {action:"key_open_bracket",label:"[",color:"#444"},
-    {action:"key_close_bracket",label:"]",color:"#444"},
-    {action:"key_q",label:"Q",color:"#333"},{action:"key_w",label:"W",color:"#333"},{action:"key_e",label:"E",color:"#333"},
-    {action:"key_r",label:"R",color:"#333"},{action:"key_t",label:"T",color:"#333"},{action:"key_y",label:"Y",color:"#333"},
-    {action:"key_u",label:"U",color:"#333"},{action:"key_i",label:"I",color:"#333"},{action:"key_o",label:"O",color:"#333"},
-    {action:"key_p",label:"P",color:"#333"},{action:"key_hyphen",label:"-",color:"#444"},{action:"key_equal",label:"=",color:"#444"},
-    {action:"key_a",label:"A",color:"#333"},{action:"key_s",label:"S",color:"#333"},{action:"key_d",label:"D",color:"#333"},
-    {action:"key_f",label:"F",color:"#333"},{action:"key_g",label:"G",color:"#333"},{action:"key_h",label:"H",color:"#333"},
-    {action:"key_j",label:"J",color:"#333"},{action:"key_k",label:"K",color:"#333"},{action:"key_l",label:"L",color:"#333"},
-    {action:"key_semicolon",label:";",color:"#444"},{action:"key_quote",label:"'",color:"#444"},{action:"key_backslash",label:"\\",color:"#444"},
-    {action:"key_z",label:"Z",color:"#333"},{action:"key_x",label:"X",color:"#333"},{action:"key_c",label:"C",color:"#333"},
-    {action:"key_v",label:"V",color:"#333"},{action:"key_b",label:"B",color:"#333"},{action:"key_n",label:"N",color:"#333"},
-    {action:"key_m",label:"M",color:"#333"},{action:"key_comma",label:",",color:"#444"},{action:"key_period",label:".",color:"#444"},
-    {action:"key_slash",label:"/",color:"#444"},{action:"key_space",label:"Space",color:"#555",span:2},
-    {action:"key_enter",label:"Enter",color:"#27ae60"},
-    {action:"arrow_left",label:"\u25C0",color:"#1abc9c"},
-    {action:"arrow_down",label:"\u25BC",color:"#1abc9c"},
-    {action:"arrow_up",label:"\u25B2",color:"#1abc9c"},
-    {action:"arrow_right",label:"\u25B6",color:"#1abc9c"},
-    {action:"key_delete",label:"Del",color:"#555"},
+  { name:"Keyboard", layout:"kb", rows:[
+    [
+      {action:"key_grave",label:"`",color:"#444"},
+      {action:"key_1",label:"1",color:"#333"},{action:"key_2",label:"2",color:"#333"},
+      {action:"key_3",label:"3",color:"#333"},{action:"key_4",label:"4",color:"#333"},
+      {action:"key_5",label:"5",color:"#333"},{action:"key_6",label:"6",color:"#333"},
+      {action:"key_7",label:"7",color:"#333"},{action:"key_8",label:"8",color:"#333"},
+      {action:"key_9",label:"9",color:"#333"},{action:"key_0",label:"0",color:"#333"},
+      {action:"key_backspace",label:"\u232B",color:"#555",css:"wide"},
+    ],[
+      {action:"key_tab",label:"Tab",color:"#555",css:"wide"},
+      {action:"key_q",label:"Q",color:"#333"},{action:"key_w",label:"W",color:"#333"},
+      {action:"key_e",label:"E",color:"#333"},{action:"key_r",label:"R",color:"#333"},
+      {action:"key_t",label:"T",color:"#333"},{action:"key_y",label:"Y",color:"#333"},
+      {action:"key_u",label:"U",color:"#333"},{action:"key_i",label:"I",color:"#333"},
+      {action:"key_o",label:"O",color:"#333"},{action:"key_p",label:"P",color:"#333"},
+      {action:"key_backslash",label:"\\",color:"#444"},
+    ],[
+      {action:"key_escape",label:"Esc",color:"#c0392b",css:"wide"},
+      {action:"key_a",label:"A",color:"#333"},{action:"key_s",label:"S",color:"#333"},
+      {action:"key_d",label:"D",color:"#333"},{action:"key_f",label:"F",color:"#333"},
+      {action:"key_g",label:"G",color:"#333"},{action:"key_h",label:"H",color:"#333"},
+      {action:"key_j",label:"J",color:"#333"},{action:"key_k",label:"K",color:"#333"},
+      {action:"key_l",label:"L",color:"#333"},{action:"key_semicolon",label:";",color:"#444"},
+      {action:"key_enter",label:"\u21B5",color:"#27ae60",css:"wide"},
+    ],[
+      {action:"key_hyphen",label:"-",color:"#444"},
+      {action:"key_z",label:"Z",color:"#333"},{action:"key_x",label:"X",color:"#333"},
+      {action:"key_c",label:"C",color:"#333"},{action:"key_v",label:"V",color:"#333"},
+      {action:"key_b",label:"B",color:"#333"},{action:"key_n",label:"N",color:"#333"},
+      {action:"key_m",label:"M",color:"#333"},{action:"key_comma",label:",",color:"#444"},
+      {action:"key_period",label:".",color:"#444"},{action:"key_slash",label:"/",color:"#444"},
+      {action:"key_equal",label:"=",color:"#444"},
+    ],[
+      {action:"key_open_bracket",label:"[",color:"#444"},
+      {action:"key_close_bracket",label:"]",color:"#444"},
+      {action:"key_quote",label:"'",color:"#444"},
+      {action:"key_space",label:"",color:"#555",css:"space"},
+      {action:"arrow_left",label:"\u25C0",color:"#1abc9c"},
+      {action:"arrow_down",label:"\u25BC",color:"#1abc9c"},
+      {action:"arrow_up",label:"\u25B2",color:"#1abc9c"},
+      {action:"arrow_right",label:"\u25B6",color:"#1abc9c"},
+    ],
   ]},
   { name:"Numpad", buttons:[
     {action:"key_escape",label:"Esc",color:"#555"},
@@ -159,25 +188,48 @@ const stxt=document.getElementById("stxt");
 const sbar=document.getElementById("status");
 const tabBtns=document.querySelectorAll(".tabs button");
 
+// Wire up a button element with action/long-press
+function wireBtn(el,b){
+  if(!b.action){el.disabled=true;el.style.visibility="hidden";return}
+  el.onclick=()=>send(b.action);
+  if(b.long){
+    let t;
+    el.ontouchstart=(e)=>{e.preventDefault();t=setTimeout(()=>{send(b.long);if(navigator.vibrate)navigator.vibrate(50)},500)};
+    el.ontouchend=()=>{clearTimeout(t);send(b.action);if(navigator.vibrate)navigator.vibrate(30)};
+    el.ontouchcancel=()=>clearTimeout(t);
+  }
+}
+
 // Build button grids
 tabs.forEach((tab,i)=>{
-  const grid=document.getElementById("tab"+i);
-  tab.buttons.forEach(b=>{
-    const el=document.createElement("button");
-    el.className="btn";
-    el.textContent=b.label;
-    el.style.background=b.color;
-    if(b.span)el.style.gridColumn="span "+b.span;
-    if(!b.action){el.disabled=true;el.style.visibility="hidden";grid.appendChild(el);return}
-    el.onclick=()=>send(b.action);
-    if(b.long){
-      let t;
-      el.ontouchstart=(e)=>{e.preventDefault();t=setTimeout(()=>{send(b.long);if(navigator.vibrate)navigator.vibrate(50)},500)};
-      el.ontouchend=()=>{clearTimeout(t);send(b.action);if(navigator.vibrate)navigator.vibrate(30)};
-      el.ontouchcancel=()=>clearTimeout(t);
-    }
-    grid.appendChild(el);
-  });
+  const container=document.getElementById("tab"+i);
+  if(tab.layout==="kb"){
+    // Keyboard: row-based compact layout
+    tab.rows.forEach(row=>{
+      const rowEl=document.createElement("div");
+      rowEl.className="kb-row";
+      row.forEach(b=>{
+        const el=document.createElement("button");
+        el.className="key"+(b.css?" "+b.css:"");
+        el.textContent=b.label;
+        el.style.background=b.color;
+        wireBtn(el,b);
+        rowEl.appendChild(el);
+      });
+      container.appendChild(rowEl);
+    });
+  } else {
+    // Standard 3-column grid
+    tab.buttons.forEach(b=>{
+      const el=document.createElement("button");
+      el.className="btn";
+      el.textContent=b.label;
+      el.style.background=b.color;
+      if(b.span)el.style.gridColumn="span "+b.span;
+      wireBtn(el,b);
+      container.appendChild(el);
+    });
+  }
 });
 
 // Tab sync: scroll → highlight
