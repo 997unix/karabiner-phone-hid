@@ -41,8 +41,9 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
 <div class="tabs" id="tabs">
   <button data-idx="0" class="active">Teammate</button>
   <button data-idx="1">Terminal</button>
-  <button data-idx="2">Media</button>
-  <button data-idx="3">Zoom</button>
+  <button data-idx="2">YouTube</button>
+  <button data-idx="3">Keyboard</button>
+  <button data-idx="4">Numpad</button>
 </div>
 
 <div class="swipe" id="swipe">
@@ -50,10 +51,12 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
   <div class="page"><div class="grid" id="tab0"></div></div>
   <!-- Terminal -->
   <div class="page"><div class="grid" id="tab1"></div></div>
-  <!-- Media -->
+  <!-- YouTube Remote -->
   <div class="page"><div class="grid" id="tab2"></div></div>
-  <!-- Zoom -->
+  <!-- Keyboard -->
   <div class="page"><div class="grid" id="tab3"></div></div>
+  <!-- Numpad -->
+  <div class="page"><div class="grid" id="tab4"></div></div>
 </div>
 
 <div id="status" class="disconnected"><span class="dot"></span><span id="stxt">Disconnected</span></div>
@@ -91,21 +94,62 @@ const tabs = [
     {action:"tmux_split_v",label:"Split V",color:"#8e44ad"},
     {action:"tmux_next_pane",label:"Next Pane",color:"#2980b9"},
   ]},
-  { name:"Media", buttons:[
-    {action:"media_prev",label:"Prev",color:"#8e44ad"},
-    {action:"media_play_pause",label:"Play/Pause",color:"#27ae60"},
-    {action:"media_next",label:"Next",color:"#8e44ad"},
-    {action:"media_vol_down",label:"Vol Down",color:"#2980b9"},
-    {action:"media_mute",label:"Mute",color:"#c0392b"},
-    {action:"media_vol_up",label:"Vol Up",color:"#2980b9"},
+  { name:"YouTube", buttons:[
+    {action:"yt_prev_video",label:"Prev Vid",color:"#8e44ad"},
+    {action:"yt_play_pause",label:"Play/Pause",color:"#c0392b",span:1},
+    {action:"yt_next_video",label:"Next Vid",color:"#8e44ad"},
+    {action:"yt_back_10",label:"\u25C0 10s",color:"#2980b9"},
+    {action:"yt_mute",label:"Mute",color:"#e67e22"},
+    {action:"yt_fwd_10",label:"10s \u25B6",color:"#2980b9"},
+    {action:"yt_vol_down",label:"Vol -",color:"#16a085"},
+    {action:"yt_fullscreen",label:"Fullscreen",color:"#27ae60"},
+    {action:"yt_vol_up",label:"Vol +",color:"#16a085"},
+    {action:"yt_speed_down",label:"Speed -",color:"#1abc9c"},
+    {action:"yt_captions",label:"CC",color:"#e67e22"},
+    {action:"yt_speed_up",label:"Speed +",color:"#1abc9c"},
   ]},
-  { name:"Zoom", buttons:[
-    {action:"zoom_mute",label:"Mute",color:"#c0392b"},
-    {action:"zoom_video",label:"Video",color:"#2980b9"},
-    {action:"zoom_share",label:"Share",color:"#27ae60"},
-    {action:"zoom_chat",label:"Chat",color:"#8e44ad"},
-    {action:"zoom_hand",label:"Hand",color:"#e67e22"},
-    {action:"zoom_leave",label:"Leave",color:"#e74c3c"},
+  { name:"Keyboard", buttons:[
+    {action:"key_escape",label:"Esc",color:"#555"},
+    {action:"key_grave",label:"`",color:"#444"},
+    {action:"key_backspace",label:"Bksp",color:"#555"},
+    {action:"key_tab",label:"Tab",color:"#555"},
+    {action:"key_open_bracket",label:"[",color:"#444"},
+    {action:"key_close_bracket",label:"]",color:"#444"},
+    {action:"key_q",label:"Q",color:"#333"},{action:"key_w",label:"W",color:"#333"},{action:"key_e",label:"E",color:"#333"},
+    {action:"key_r",label:"R",color:"#333"},{action:"key_t",label:"T",color:"#333"},{action:"key_y",label:"Y",color:"#333"},
+    {action:"key_u",label:"U",color:"#333"},{action:"key_i",label:"I",color:"#333"},{action:"key_o",label:"O",color:"#333"},
+    {action:"key_p",label:"P",color:"#333"},{action:"key_hyphen",label:"-",color:"#444"},{action:"key_equal",label:"=",color:"#444"},
+    {action:"key_a",label:"A",color:"#333"},{action:"key_s",label:"S",color:"#333"},{action:"key_d",label:"D",color:"#333"},
+    {action:"key_f",label:"F",color:"#333"},{action:"key_g",label:"G",color:"#333"},{action:"key_h",label:"H",color:"#333"},
+    {action:"key_j",label:"J",color:"#333"},{action:"key_k",label:"K",color:"#333"},{action:"key_l",label:"L",color:"#333"},
+    {action:"key_semicolon",label:";",color:"#444"},{action:"key_quote",label:"'",color:"#444"},{action:"key_backslash",label:"\\",color:"#444"},
+    {action:"key_z",label:"Z",color:"#333"},{action:"key_x",label:"X",color:"#333"},{action:"key_c",label:"C",color:"#333"},
+    {action:"key_v",label:"V",color:"#333"},{action:"key_b",label:"B",color:"#333"},{action:"key_n",label:"N",color:"#333"},
+    {action:"key_m",label:"M",color:"#333"},{action:"key_comma",label:",",color:"#444"},{action:"key_period",label:".",color:"#444"},
+    {action:"key_slash",label:"/",color:"#444"},{action:"key_space",label:"Space",color:"#555",span:2},
+    {action:"key_enter",label:"Enter",color:"#27ae60"},
+    {action:"arrow_left",label:"\u25C0",color:"#1abc9c"},
+    {action:"arrow_down",label:"\u25BC",color:"#1abc9c"},
+    {action:"arrow_up",label:"\u25B2",color:"#1abc9c"},
+    {action:"arrow_right",label:"\u25B6",color:"#1abc9c"},
+    {action:"key_delete",label:"Del",color:"#555"},
+  ]},
+  { name:"Numpad", buttons:[
+    {action:"key_escape",label:"Esc",color:"#555"},
+    {action:"key_backspace",label:"Bksp",color:"#555"},
+    {action:"key_delete",label:"Del",color:"#555"},
+    {action:"key_7",label:"7",color:"#333"},
+    {action:"key_8",label:"8",color:"#333"},
+    {action:"key_9",label:"9",color:"#333"},
+    {action:"key_4",label:"4",color:"#333"},
+    {action:"key_5",label:"5",color:"#333"},
+    {action:"key_6",label:"6",color:"#333"},
+    {action:"key_1",label:"1",color:"#333"},
+    {action:"key_2",label:"2",color:"#333"},
+    {action:"key_3",label:"3",color:"#333"},
+    {action:"key_0",label:"0",color:"#333",span:2},
+    {action:"key_period",label:".",color:"#444"},
+    {action:"key_enter",label:"Enter",color:"#27ae60",span:3},
   ]},
 ];
 

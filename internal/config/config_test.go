@@ -100,8 +100,8 @@ func TestAllActions(t *testing.T) {
 	r := NewRegistry(nil)
 	actions := r.AllActions()
 
-	if len(actions) != 34 {
-		t.Errorf("AllActions len = %d, want 34", len(actions))
+	if len(actions) != 113 {
+		t.Errorf("AllActions len = %d, want 113", len(actions))
 	}
 
 	// Check that each has name and label
@@ -168,20 +168,19 @@ func TestMediaActions(t *testing.T) {
 	}
 }
 
-func TestZoomActions(t *testing.T) {
+func TestYouTubeActions(t *testing.T) {
 	r := NewRegistry(nil)
 
 	tests := []struct {
-		name     string
-		wantKey  string
-		wantMods []string
+		name    string
+		wantKey string
 	}{
-		{"zoom_mute", "a", []string{"command", "shift"}},
-		{"zoom_video", "v", []string{"command", "shift"}},
-		{"zoom_share", "s", []string{"command", "shift"}},
-		{"zoom_chat", "h", []string{"command", "shift"}},
-		{"zoom_hand", "y", []string{"option"}},
-		{"zoom_leave", "w", []string{"command"}},
+		{"yt_play_pause", "k"},
+		{"yt_back_10", "j"},
+		{"yt_fwd_10", "l"},
+		{"yt_mute", "m"},
+		{"yt_fullscreen", "f"},
+		{"yt_captions", "c"},
 	}
 
 	for _, tt := range tests {
@@ -193,17 +192,55 @@ func TestZoomActions(t *testing.T) {
 		if steps[0].Key != tt.wantKey {
 			t.Errorf("Resolve(%q)[0].Key = %q, want %q", tt.name, steps[0].Key, tt.wantKey)
 		}
-		for i, mod := range tt.wantMods {
-			found := false
-			for _, m := range steps[0].Modifiers {
-				if m == mod {
-					found = true
-					break
-				}
-			}
-			if !found {
-				t.Errorf("Resolve(%q)[0].Modifiers missing %q (index %d), got %v", tt.name, mod, i, steps[0].Modifiers)
-			}
+	}
+}
+
+func TestYouTubeSpeedActions(t *testing.T) {
+	r := NewRegistry(nil)
+
+	steps, ok := r.Resolve("yt_speed_up")
+	if !ok {
+		t.Fatal("yt_speed_up not found")
+	}
+	if steps[0].Key != "period" || steps[0].Modifiers[0] != "shift" {
+		t.Errorf("yt_speed_up = %+v, want period+shift", steps[0])
+	}
+
+	steps, ok = r.Resolve("yt_speed_down")
+	if !ok {
+		t.Fatal("yt_speed_down not found")
+	}
+	if steps[0].Key != "comma" || steps[0].Modifiers[0] != "shift" {
+		t.Errorf("yt_speed_down = %+v, want comma+shift", steps[0])
+	}
+}
+
+func TestKeyboardActions(t *testing.T) {
+	r := NewRegistry(nil)
+
+	tests := []struct {
+		name    string
+		wantKey string
+	}{
+		{"key_a", "a"},
+		{"key_z", "z"},
+		{"key_1", "1"},
+		{"key_0", "0"},
+		{"key_escape", "escape"},
+		{"key_tab", "tab"},
+		{"key_backspace", "delete_or_backspace"},
+		{"key_space", "spacebar"},
+		{"key_enter", "return_or_enter"},
+	}
+
+	for _, tt := range tests {
+		steps, ok := r.Resolve(tt.name)
+		if !ok {
+			t.Errorf("Resolve(%q) not found", tt.name)
+			continue
+		}
+		if steps[0].Key != tt.wantKey {
+			t.Errorf("Resolve(%q)[0].Key = %q, want %q", tt.name, steps[0].Key, tt.wantKey)
 		}
 	}
 }
