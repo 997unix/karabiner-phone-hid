@@ -27,9 +27,10 @@ import (
 
 // KarabinerPoster sends HID reports via the Karabiner DriverKit virtual HID device.
 type KarabinerPoster struct {
-	client *C.karabiner_client_t
-	mu     sync.Mutex
-	ready  chan struct{}
+	client    *C.karabiner_client_t
+	mu        sync.Mutex
+	ready     chan struct{}
+	readyDots int // counts "keyboard ready" heartbeat dots
 }
 
 // posters tracks active KarabinerPoster instances for the C callback.
@@ -54,7 +55,17 @@ func goKarabinerCallback(status C.karabiner_status_t, context unsafe.Pointer) {
 		fmt.Println("[Karabiner] Connected to daemon")
 		C.karabiner_client_init_keyboard(poster.client)
 	case C.KARABINER_STATUS_KEYBOARD_READY:
-		fmt.Println("[Karabiner] Keyboard ready")
+		if poster.readyDots == 0 {
+			fmt.Print("[Karabiner] Keyboard ready")
+		}
+		poster.readyDots++
+		if poster.readyDots >= 80 {
+			fmt.Println()
+			fmt.Print("[Karabiner] Keyboard ready")
+			poster.readyDots = 1
+		} else {
+			fmt.Print(".")
+		}
 		select {
 		case poster.ready <- struct{}{}:
 		default:

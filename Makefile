@@ -48,18 +48,24 @@ unsudoers:
 	sudo rm -f $(SUDOERS_DEST)
 	@echo "Removed $(SUDOERS_DEST)"
 
-# s6 supervision
-S6_SVCDIR  := scripts/s6/karabiner-phone-hid
+# s6 supervision — uses s6-svscan to wire service + log pipeline
+S6_SCANDIR := scripts/s6
+S6_SVCDIR  := $(S6_SCANDIR)/karabiner-phone-hid
 S6_LOGDIR  := $(HOME)/.local/log/karabiner-phone-hid
 
 s6-up: build
 	@mkdir -p $(S6_LOGDIR)
-	s6-supervise $(S6_SVCDIR) &
-	@echo "s6-supervise started — use 'make s6-status' or 'make s6-log'"
+	@if s6-svstat $(S6_SVCDIR) 2>/dev/null; then \
+		echo "Already running — sending restart"; \
+		s6-svc -r $(S6_SVCDIR); \
+	else \
+		s6-svscan $(S6_SCANDIR) & \
+		echo "s6-svscan started — use 'make s6-status' or 'make s6-log'"; \
+	fi
 
 s6-down:
-	s6-svc -d $(S6_SVCDIR)
-	s6-svc -x $(S6_SVCDIR)
+	@s6-svc -d $(S6_SVCDIR) 2>/dev/null; true
+	@s6-svscanctl -q $(S6_SCANDIR) 2>/dev/null; true
 	@echo "Service stopped"
 
 s6-status:
