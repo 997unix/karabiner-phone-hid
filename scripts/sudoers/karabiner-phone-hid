@@ -1,2 +1,4 @@
+tony ALL=(root) NOPASSWD: /usr/local/bin/karabiner-phone-hid *
 tony ALL=(root) NOPASSWD: /usr/local/bin/karabiner-phone-hid
+tony ALL=(root) NOPASSWD: /Users/tony/workspace/karabiner-phone-hid/bin/karabiner-phone-hid *
 tony ALL=(root) NOPASSWD: /Users/tony/workspace/karabiner-phone-hid/bin/karabiner-phone-hid

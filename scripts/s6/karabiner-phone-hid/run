@@ -1,4 +1,4 @@
 #!/bin/sh
 exec 2>&1
-cd /Users/tony/workspace/karabiner-phone-hid
-exec sudo -n ./bin/karabiner-phone-hid -web web
+exec sudo -n /Users/tony/workspace/karabiner-phone-hid/bin/karabiner-phone-hid \
+  -web /Users/tony/workspace/karabiner-phone-hid/web
