@@ -79,6 +79,7 @@ func (s *Server) Stop() error {
 func (s *Server) handleRoot(w http.ResponseWriter, r *http.Request) {
 	// Serve static files if webDir is set
 	if s.webDir != "" {
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 		http.FileServer(http.Dir(s.webDir)).ServeHTTP(w, r)
 		return
 	}
