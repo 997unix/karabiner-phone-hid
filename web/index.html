@@ -66,6 +66,24 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
   display:flex;align-items:center;justify-content:center}
 .cp button.nk:active{opacity:0.7;transform:scale(0.95)}
 
+/* Phone keyboard: modifiers on left, keys on right */
+.pk-page{min-width:100%;scroll-snap-align:start;display:flex;flex-direction:column;
+  padding:6px;gap:4px;justify-content:flex-end}
+.pk-body{display:flex;gap:4px;flex:1;min-height:0}
+.pk-mods{display:flex;flex-direction:column;gap:3px;width:54px;flex-shrink:0}
+.pk-mods button{border:none;border-radius:8px;color:#e6e6e6;font-size:11px;font-weight:700;
+  flex:1;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  display:flex;align-items:center;justify-content:center;min-height:0}
+.pk-mods button:active{opacity:0.7;transform:scale(0.95)}
+.pk-keys{display:flex;flex-direction:column;gap:3px;flex:1}
+.pk-keys .kb-row{display:flex;gap:2px;width:100%}
+.pk-keys button.key{border:none;border-radius:6px;color:#e6e6e6;font-size:13px;font-weight:600;
+  flex:1;min-width:0;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  display:flex;align-items:center;justify-content:center;padding:0;min-height:0}
+.pk-keys button.key:active{opacity:0.7;transform:scale(0.93)}
+.pk-keys button.key.wide{flex:1.5}
+.pk-keys button.key.space{flex:3}
+
 /* Status bar */
 #status{padding:8px 16px;text-align:center;font-size:13px;flex-shrink:0}
 .dot{display:inline-block;width:8px;height:8px;border-radius:4px;margin-right:6px;vertical-align:middle}
@@ -80,6 +98,7 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
   <button data-idx="2">YouTube</button>
   <button data-idx="3">Keyboard</button>
   <button data-idx="4">Numpad</button>
+  <button data-idx="5">Type</button>
 </div>
 
 <div class="swipe" id="swipe">
@@ -93,6 +112,8 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
   <div class="kb-page" id="tab3"></div>
   <!-- Numpad -->
   <div class="kb-page" id="tab4"></div>
+  <!-- Type -->
+  <div class="pk-page" id="tab5"></div>
 </div>
 
 <div id="status" class="disconnected"><span class="dot"></span><span id="stxt">Disconnected</span></div>
@@ -262,6 +283,57 @@ const tabs = [
       {action:"numpad_decimal",label:".",color:"#444"},
     ],
   },
+  { name:"Type", layout:"phone",
+    sw:{action:"superwhisper_toggle",label:"SuperWhisper",long:"superwhisper_paste"},
+    mods:[
+      {action:"shift_lock",label:"\u21EA",color:"#e74c3c"},
+      {action:"mod_shift",label:"\u21E7",color:"#7f8c8d"},
+      {action:"mod_ctrl",label:"Ctrl",color:"#2c3e50"},
+      {action:"mod_option",label:"Opt",color:"#8e44ad"},
+      {action:"mod_command",label:"Cmd",color:"#2980b9"},
+    ],
+    rows:[
+    [
+      {action:"key_q",label:"Q",color:"#333",hid:"q"},{action:"key_w",label:"W",color:"#333",hid:"w"},
+      {action:"key_e",label:"E",color:"#333",hid:"e"},{action:"key_r",label:"R",color:"#333",hid:"r"},
+      {action:"key_t",label:"T",color:"#333",hid:"t"},{action:"key_y",label:"Y",color:"#333",hid:"y"},
+      {action:"key_u",label:"U",color:"#333",hid:"u"},{action:"key_i",label:"I",color:"#333",hid:"i"},
+      {action:"key_o",label:"O",color:"#333",hid:"o"},{action:"key_p",label:"P",color:"#333",hid:"p"},
+    ],[
+      {action:"key_a",label:"A",color:"#333",hid:"a"},{action:"key_s",label:"S",color:"#333",hid:"s"},
+      {action:"key_d",label:"D",color:"#333",hid:"d"},{action:"key_f",label:"F",color:"#333",hid:"f"},
+      {action:"key_g",label:"G",color:"#333",hid:"g"},{action:"key_h",label:"H",color:"#333",hid:"h"},
+      {action:"key_j",label:"J",color:"#333",hid:"j"},{action:"key_k",label:"K",color:"#333",hid:"k"},
+      {action:"key_l",label:"L",color:"#333",hid:"l"},{action:"key_semicolon",label:";",color:"#444",hid:"semicolon"},
+    ],[
+      {action:"key_z",label:"Z",color:"#333",hid:"z"},{action:"key_x",label:"X",color:"#333",hid:"x"},
+      {action:"key_c",label:"C",color:"#333",hid:"c"},{action:"key_v",label:"V",color:"#333",hid:"v"},
+      {action:"key_b",label:"B",color:"#333",hid:"b"},{action:"key_n",label:"N",color:"#333",hid:"n"},
+      {action:"key_m",label:"M",color:"#333",hid:"m"},{action:"key_comma",label:",",color:"#444",hid:"comma"},
+      {action:"key_period",label:".",color:"#444",hid:"period"},{action:"key_slash",label:"/",color:"#444",hid:"slash"},
+    ],[
+      {action:"key_1",label:"1",color:"#444",hid:"1"},{action:"key_2",label:"2",color:"#444",hid:"2"},
+      {action:"key_3",label:"3",color:"#444",hid:"3"},{action:"key_4",label:"4",color:"#444",hid:"4"},
+      {action:"key_5",label:"5",color:"#444",hid:"5"},{action:"key_6",label:"6",color:"#444",hid:"6"},
+      {action:"key_7",label:"7",color:"#444",hid:"7"},{action:"key_8",label:"8",color:"#444",hid:"8"},
+      {action:"key_9",label:"9",color:"#444",hid:"9"},{action:"key_0",label:"0",color:"#444",hid:"0"},
+    ],[
+      {action:"key_hyphen",label:"-",color:"#444",hid:"hyphen"},{action:"key_equal",label:"=",color:"#444",hid:"equal_sign"},
+      {action:"key_open_bracket",label:"[",color:"#444",hid:"open_bracket"},{action:"key_close_bracket",label:"]",color:"#444",hid:"close_bracket"},
+      {action:"key_quote",label:"'",color:"#444",hid:"quote"},{action:"key_grave",label:"`",color:"#444",hid:"grave_accent_and_tilde"},
+      {action:"key_backslash",label:"\\",color:"#444",hid:"backslash"},
+      {action:"key_tab",label:"Tab",color:"#555",hid:"tab"},
+      {action:"key_escape",label:"Esc",color:"#c0392b",hid:"escape"},
+      {action:"key_backspace",label:"\u232B",color:"#555",hid:"delete_or_backspace",repeat:true},
+    ],[
+      {action:"key_space",label:"Space",color:"#444",css:"space",hid:"spacebar",repeat:true},
+      {action:"key_enter",label:"\u21B5",color:"#27ae60",hid:"return_or_enter"},
+      {action:"arrow_left",label:"\u25C0",color:"#1abc9c",hid:"left_arrow",repeat:true},
+      {action:"arrow_down",label:"\u25BC",color:"#1abc9c",hid:"down_arrow",repeat:true},
+      {action:"arrow_up",label:"\u25B2",color:"#1abc9c",hid:"up_arrow",repeat:true},
+      {action:"arrow_right",label:"\u25B6",color:"#1abc9c",hid:"right_arrow",repeat:true},
+    ],
+  ]},
 ];
 
 let ws;
@@ -272,18 +344,31 @@ const tabBtns=document.querySelectorAll(".tabs button");
 
 // Sticky modifier state
 const mods={shift:false,control:false,option:false,command:false};
+let shiftLock=false;
 const modBtns=[];// elements to update visually
 
 function toggleMod(name){
   mods[name]=!mods[name];
-  modBtns.forEach(({el,mod})=>{
-    if(mod===name)el.style.opacity=mods[name]?"1":"0.6";
+  updateModVisuals();
+}
+
+function toggleShiftLock(){
+  shiftLock=!shiftLock;
+  mods.shift=shiftLock;
+  updateModVisuals();
+}
+
+function updateModVisuals(){
+  modBtns.forEach(({el,mod,lock})=>{
+    if(lock)el.style.opacity=shiftLock?"1":"0.5";
+    else if(mod)el.style.opacity=mods[mod]?"1":"0.5";
   });
 }
 
 function clearMods(){
   for(const k in mods)mods[k]=false;
-  modBtns.forEach(({el})=>el.style.opacity="0.6");
+  if(shiftLock)mods.shift=true;// shift lock persists
+  updateModVisuals();
 }
 
 function activeModList(){
@@ -328,11 +413,18 @@ function addRepeat(el,fn){
 // Wire up a button element with action/long-press
 function wireBtn(el,b){
   if(!b.action){el.disabled=true;el.style.visibility="hidden";return}
+  // Shift lock button
+  if(b.action==="shift_lock"){
+    el.style.opacity="0.5";
+    el.onclick=()=>{toggleShiftLock();if(navigator.vibrate)navigator.vibrate(30)};
+    modBtns.push({el,lock:true});
+    return;
+  }
   // Modifier toggle buttons
   if(b.action.startsWith("mod_")){
     const raw=b.action.slice(4);// "mod_ctrl" → "ctrl"
     const mod=raw==="ctrl"?"control":raw;// match HID modifier names
-    el.style.opacity="0.6";
+    el.style.opacity="0.5";
     el.onclick=()=>{toggleMod(mod);if(navigator.vibrate)navigator.vibrate(30)};
     modBtns.push({el,mod});
     return;
@@ -471,6 +563,47 @@ tabs.forEach((tab,i)=>{
       npDiv.appendChild(el);
     });
     container.appendChild(npDiv);
+  } else if(tab.layout==="phone"){
+    // SuperWhisper banner
+    if(tab.sw){
+      const sw=document.createElement("button");
+      sw.className="kb-sw";
+      sw.textContent=tab.sw.label;
+      wireBtn(sw,tab.sw);
+      container.appendChild(sw);
+    }
+    // Body: modifiers on left, keys on right
+    const body=document.createElement("div");
+    body.className="pk-body";
+    // Left modifier column
+    const modCol=document.createElement("div");
+    modCol.className="pk-mods";
+    tab.mods.forEach(b=>{
+      const el=document.createElement("button");
+      el.textContent=b.label;
+      el.style.background=b.color;
+      wireBtn(el,b);
+      modCol.appendChild(el);
+    });
+    body.appendChild(modCol);
+    // Right key area
+    const keyArea=document.createElement("div");
+    keyArea.className="pk-keys";
+    tab.rows.forEach(row=>{
+      const rowEl=document.createElement("div");
+      rowEl.className="kb-row";
+      row.forEach(b=>{
+        const el=document.createElement("button");
+        el.className="key"+(b.css?" "+b.css:"");
+        el.textContent=b.label;
+        el.style.background=b.color;
+        wireBtn(el,b);
+        rowEl.appendChild(el);
+      });
+      keyArea.appendChild(rowEl);
+    });
+    body.appendChild(keyArea);
+    container.appendChild(body);
   } else {
     // Standard 3-column grid
     tab.buttons.forEach(b=>{
