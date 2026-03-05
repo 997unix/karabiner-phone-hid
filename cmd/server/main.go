@@ -23,6 +23,18 @@ func main() {
 	webDir := flag.String("web", "", "Directory to serve web UI from (default: web/ next to binary)")
 	flag.Parse()
 
+	// Log build identity and re-exec provenance
+	id := buildinfo.Self()
+	if prev := buildinfo.PrevChecksum(); prev != "" {
+		prevShort := prev
+		if len(prevShort) > 12 {
+			prevShort = prevShort[:12]
+		}
+		log.Printf("[Server] re-exec from checksum=%s to %s", prevShort, id)
+	} else {
+		log.Printf("[Server] start %s", id)
+	}
+
 	// Check root
 	if os.Geteuid() != 0 {
 		fmt.Fprintln(os.Stderr, "Warning: not running as root. Karabiner VHD requires root privileges.")

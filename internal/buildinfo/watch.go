@@ -27,10 +27,13 @@ func WatchSelfExec(interval time.Duration) func() {
 		return func() {}
 	}
 
+	startChecksum := hashFile(self)
+
 	return watchBinary(self, interval, os.Stdout, func(path string, args []string, env []string) error {
 		fmt.Println() // newline after dots
-		log.Printf("[SelfWatch] Binary changed on disk, exec-ing new version...")
-		return syscall.Exec(path, args, env)
+		SetPrevChecksum(startChecksum)
+		log.Printf("[SelfWatch] Binary changed on disk, re-exec-ing...")
+		return syscall.Exec(path, args, os.Environ())
 	})
 }
 
