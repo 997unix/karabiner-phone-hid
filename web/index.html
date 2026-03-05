@@ -58,8 +58,9 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
   min-height:56px;cursor:pointer;-webkit-tap-highlight-color:transparent;
   display:flex;align-items:center;justify-content:center}
 .np button.nk:active{opacity:0.7;transform:scale(0.95)}
-/* Control pad: 3-col block above numpad */
-.cp{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:0 8px;flex-shrink:0}
+/* Control pad: 3-col block above numpad, double gutter between rows */
+.cp{display:grid;grid-template-columns:repeat(3,1fr);column-gap:4px;row-gap:12px;padding:0 8px;flex-shrink:0;
+  margin-bottom:12px}
 .cp button.nk{border:none;border-radius:10px;color:#e6e6e6;font-size:14px;font-weight:600;
   min-height:50px;cursor:pointer;-webkit-tap-highlight-color:transparent;
   display:flex;align-items:center;justify-content:center}
@@ -214,6 +215,7 @@ const tabs = [
     "arrows",
   ]},
   { name:"Numpad", layout:"numpad",
+    sw:{action:"superwhisper_toggle",label:"SuperWhisper",long:"superwhisper_paste"},
     controlPad:[
       {action:"key_insert",label:"Ins",color:"#555"},
       {action:"key_home",label:"Home",color:"#555"},
@@ -320,6 +322,14 @@ tabs.forEach((tab,i)=>{
     });
     container.appendChild(kbDiv);
   } else if(tab.layout==="numpad"){
+    // SuperWhisper banner
+    if(tab.sw){
+      const sw=document.createElement("button");
+      sw.className="kb-sw";
+      sw.textContent=tab.sw.label;
+      wireBtn(sw,tab.sw);
+      container.appendChild(sw);
+    }
     // Control pad (Insert/Home/PgUp block)
     const cpDiv=document.createElement("div");
     cpDiv.className="cp";
