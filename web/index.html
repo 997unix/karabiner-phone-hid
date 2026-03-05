@@ -52,6 +52,19 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
 .kb .arrow-cluster{display:grid;grid-template-columns:1fr 1fr 1fr;gap:2px;width:auto}
 .kb .arrow-cluster button.key{height:30px;width:32px;flex:none}
 
+/* Numpad grid layout */
+.np{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:0 8px;flex-shrink:0}
+.np button.nk{border:none;border-radius:10px;color:#e6e6e6;font-size:18px;font-weight:600;
+  min-height:56px;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  display:flex;align-items:center;justify-content:center}
+.np button.nk:active{opacity:0.7;transform:scale(0.95)}
+/* Control pad: 3-col block above numpad */
+.cp{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:0 8px;flex-shrink:0}
+.cp button.nk{border:none;border-radius:10px;color:#e6e6e6;font-size:14px;font-weight:600;
+  min-height:50px;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  display:flex;align-items:center;justify-content:center}
+.cp button.nk:active{opacity:0.7;transform:scale(0.95)}
+
 /* Status bar */
 #status{padding:8px 16px;text-align:center;font-size:13px;flex-shrink:0}
 .dot{display:inline-block;width:8px;height:8px;border-radius:4px;margin-right:6px;vertical-align:middle}
@@ -78,7 +91,7 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
   <!-- Keyboard -->
   <div class="kb-page" id="tab3"></div>
   <!-- Numpad -->
-  <div class="page"><div class="grid" id="tab4"></div></div>
+  <div class="kb-page" id="tab4"></div>
 </div>
 
 <div id="status" class="disconnected"><span class="dot"></span><span id="stxt">Disconnected</span></div>
@@ -200,23 +213,41 @@ const tabs = [
     // Arrow row — will be rendered specially
     "arrows",
   ]},
-  { name:"Numpad", buttons:[
-    {action:"key_escape",label:"Esc",color:"#555"},
-    {action:"key_backspace",label:"Bksp",color:"#555"},
-    {action:"key_delete",label:"Del",color:"#555"},
-    {action:"key_7",label:"7",color:"#333"},
-    {action:"key_8",label:"8",color:"#333"},
-    {action:"key_9",label:"9",color:"#333"},
-    {action:"key_4",label:"4",color:"#333"},
-    {action:"key_5",label:"5",color:"#333"},
-    {action:"key_6",label:"6",color:"#333"},
-    {action:"key_1",label:"1",color:"#333"},
-    {action:"key_2",label:"2",color:"#333"},
-    {action:"key_3",label:"3",color:"#333"},
-    {action:"key_0",label:"0",color:"#333",span:2},
-    {action:"key_period",label:".",color:"#444"},
-    {action:"key_enter",label:"Enter",color:"#27ae60",span:3},
-  ]},
+  { name:"Numpad", layout:"numpad",
+    controlPad:[
+      {action:"key_insert",label:"Ins",color:"#555"},
+      {action:"key_home",label:"Home",color:"#555"},
+      {action:"key_page_up",label:"PgUp",color:"#555"},
+      {action:"key_delete",label:"Del",color:"#555"},
+      {action:"key_end",label:"End",color:"#555"},
+      {action:"key_page_down",label:"PgDn",color:"#555"},
+    ],
+    // Standard numpad: 4 columns, + and Enter span 2 rows
+    numpad:[
+      // Row 1: NumLock / * -
+      {action:"key_escape",label:"Esc",color:"#555"},
+      {action:"numpad_divide",label:"/",color:"#444"},
+      {action:"numpad_multiply",label:"*",color:"#444"},
+      {action:"numpad_subtract",label:"\u2212",color:"#444"},
+      // Row 2: 7 8 9 +
+      {action:"numpad_7",label:"7",color:"#333"},
+      {action:"numpad_8",label:"8",color:"#333"},
+      {action:"numpad_9",label:"9",color:"#333"},
+      {action:"numpad_add",label:"+",color:"#444",rowSpan:2},
+      // Row 3: 4 5 6 (+ continues)
+      {action:"numpad_4",label:"4",color:"#333"},
+      {action:"numpad_5",label:"5",color:"#333"},
+      {action:"numpad_6",label:"6",color:"#333"},
+      // Row 4: 1 2 3 Enter
+      {action:"numpad_1",label:"1",color:"#333"},
+      {action:"numpad_2",label:"2",color:"#333"},
+      {action:"numpad_3",label:"3",color:"#333"},
+      {action:"numpad_enter",label:"\u21B5",color:"#27ae60",rowSpan:2},
+      // Row 5: 0(wide) . (Enter continues)
+      {action:"numpad_0",label:"0",color:"#333",colSpan:2},
+      {action:"numpad_decimal",label:".",color:"#444"},
+    ],
+  },
 ];
 
 let ws;
@@ -288,6 +319,33 @@ tabs.forEach((tab,i)=>{
       }
     });
     container.appendChild(kbDiv);
+  } else if(tab.layout==="numpad"){
+    // Control pad (Insert/Home/PgUp block)
+    const cpDiv=document.createElement("div");
+    cpDiv.className="cp";
+    tab.controlPad.forEach(b=>{
+      const el=document.createElement("button");
+      el.className="nk";
+      el.textContent=b.label;
+      el.style.background=b.color;
+      wireBtn(el,b);
+      cpDiv.appendChild(el);
+    });
+    container.appendChild(cpDiv);
+    // Numpad grid with row/col spanning
+    const npDiv=document.createElement("div");
+    npDiv.className="np";
+    tab.numpad.forEach(b=>{
+      const el=document.createElement("button");
+      el.className="nk";
+      el.textContent=b.label;
+      el.style.background=b.color;
+      if(b.colSpan)el.style.gridColumn="span "+b.colSpan;
+      if(b.rowSpan)el.style.gridRow="span "+b.rowSpan;
+      wireBtn(el,b);
+      npDiv.appendChild(el);
+    });
+    container.appendChild(npDiv);
   } else {
     // Standard 3-column grid
     tab.buttons.forEach(b=>{

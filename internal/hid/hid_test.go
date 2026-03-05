@@ -62,6 +62,29 @@ func TestLookupSpecialKeys(t *testing.T) {
 	}
 }
 
+func TestLookupNumpadKeys(t *testing.T) {
+	tests := []struct {
+		name string
+		want uint16
+	}{
+		{"numpad_0", 0x62}, {"numpad_1", 0x59}, {"numpad_9", 0x61},
+		{"numpad_add", 0x57}, {"numpad_subtract", 0x56},
+		{"numpad_multiply", 0x55}, {"numpad_divide", 0x54},
+		{"numpad_enter", 0x58}, {"numpad_decimal", 0x63},
+		{"insert", 0x49}, {"num_lock", 0x53},
+	}
+	for _, tt := range tests {
+		code, ok := LookupKeyCode(tt.name)
+		if !ok {
+			t.Errorf("LookupKeyCode(%q) not found", tt.name)
+			continue
+		}
+		if code != tt.want {
+			t.Errorf("LookupKeyCode(%q) = 0x%02X, want 0x%02X", tt.name, code, tt.want)
+		}
+	}
+}
+
 func TestLookupUnknownKey(t *testing.T) {
 	_, ok := LookupKeyCode("nonexistent")
 	if ok {

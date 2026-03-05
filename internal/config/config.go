@@ -534,6 +534,29 @@ func defaultActions() map[string]ActionDefinition {
 			Label: "Right",
 			Steps: []protocol.KeyStep{{Key: "right_arrow", Modifiers: []string{}}},
 		},
+		// Insert key
+		{
+			Name:  "key_insert",
+			Label: "Ins",
+			Steps: []protocol.KeyStep{{Key: "insert", Modifiers: []string{}}},
+		},
+		// Numpad keys
+		{Name: "numpad_0", Label: "0", Steps: []protocol.KeyStep{{Key: "numpad_0", Modifiers: []string{}}}},
+		{Name: "numpad_1", Label: "1", Steps: []protocol.KeyStep{{Key: "numpad_1", Modifiers: []string{}}}},
+		{Name: "numpad_2", Label: "2", Steps: []protocol.KeyStep{{Key: "numpad_2", Modifiers: []string{}}}},
+		{Name: "numpad_3", Label: "3", Steps: []protocol.KeyStep{{Key: "numpad_3", Modifiers: []string{}}}},
+		{Name: "numpad_4", Label: "4", Steps: []protocol.KeyStep{{Key: "numpad_4", Modifiers: []string{}}}},
+		{Name: "numpad_5", Label: "5", Steps: []protocol.KeyStep{{Key: "numpad_5", Modifiers: []string{}}}},
+		{Name: "numpad_6", Label: "6", Steps: []protocol.KeyStep{{Key: "numpad_6", Modifiers: []string{}}}},
+		{Name: "numpad_7", Label: "7", Steps: []protocol.KeyStep{{Key: "numpad_7", Modifiers: []string{}}}},
+		{Name: "numpad_8", Label: "8", Steps: []protocol.KeyStep{{Key: "numpad_8", Modifiers: []string{}}}},
+		{Name: "numpad_9", Label: "9", Steps: []protocol.KeyStep{{Key: "numpad_9", Modifiers: []string{}}}},
+		{Name: "numpad_divide", Label: "/", Steps: []protocol.KeyStep{{Key: "numpad_divide", Modifiers: []string{}}}},
+		{Name: "numpad_multiply", Label: "*", Steps: []protocol.KeyStep{{Key: "numpad_multiply", Modifiers: []string{}}}},
+		{Name: "numpad_subtract", Label: "-", Steps: []protocol.KeyStep{{Key: "numpad_subtract", Modifiers: []string{}}}},
+		{Name: "numpad_add", Label: "+", Steps: []protocol.KeyStep{{Key: "numpad_add", Modifiers: []string{}}}},
+		{Name: "numpad_enter", Label: "Enter", Steps: []protocol.KeyStep{{Key: "numpad_enter", Modifiers: []string{}}}},
+		{Name: "numpad_decimal", Label: ".", Steps: []protocol.KeyStep{{Key: "numpad_decimal", Modifiers: []string{}}}},
 	}
 
 	m := make(map[string]ActionDefinition, len(defaults))

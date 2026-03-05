@@ -40,15 +40,35 @@ var keyCodes = map[string]uint16{
 	"f9": 0x42, "f10": 0x43, "f11": 0x44, "f12": 0x45,
 
 	// Navigation
-	"right_arrow": 0x4F,
-	"left_arrow":  0x50,
-	"down_arrow":  0x51,
-	"up_arrow":    0x52,
-	"page_up":     0x4B,
-	"page_down":   0x4E,
-	"home":        0x4A,
-	"end":         0x4D,
+	"insert":         0x49,
+	"right_arrow":    0x4F,
+	"left_arrow":     0x50,
+	"down_arrow":     0x51,
+	"up_arrow":       0x52,
+	"page_up":        0x4B,
+	"page_down":      0x4E,
+	"home":           0x4A,
+	"end":            0x4D,
 	"delete_forward": 0x4C,
+
+	// Numpad
+	"num_lock":          0x53,
+	"numpad_divide":     0x54,
+	"numpad_multiply":   0x55,
+	"numpad_subtract":   0x56,
+	"numpad_add":        0x57,
+	"numpad_enter":      0x58,
+	"numpad_1":          0x59,
+	"numpad_2":          0x5A,
+	"numpad_3":          0x5B,
+	"numpad_4":          0x5C,
+	"numpad_5":          0x5D,
+	"numpad_6":          0x5E,
+	"numpad_7":          0x5F,
+	"numpad_8":          0x60,
+	"numpad_9":          0x61,
+	"numpad_0":          0x62,
+	"numpad_decimal":    0x63,
 }
 
 // HID modifier bit flags (byte 0 of keyboard report).

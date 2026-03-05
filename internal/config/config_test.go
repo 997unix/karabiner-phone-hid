@@ -100,8 +100,8 @@ func TestAllActions(t *testing.T) {
 	r := NewRegistry(nil)
 	actions := r.AllActions()
 
-	if len(actions) != 113 {
-		t.Errorf("AllActions len = %d, want 113", len(actions))
+	if len(actions) != 130 {
+		t.Errorf("AllActions len = %d, want 130", len(actions))
 	}
 
 	// Check that each has name and label
@@ -290,6 +290,37 @@ func TestArrowActions(t *testing.T) {
 		{"arrow_down", "down_arrow"},
 		{"arrow_left", "left_arrow"},
 		{"arrow_right", "right_arrow"},
+	}
+
+	for _, tt := range tests {
+		steps, ok := r.Resolve(tt.name)
+		if !ok {
+			t.Errorf("Resolve(%q) not found", tt.name)
+			continue
+		}
+		if steps[0].Key != tt.wantKey {
+			t.Errorf("Resolve(%q)[0].Key = %q, want %q", tt.name, steps[0].Key, tt.wantKey)
+		}
+	}
+}
+
+func TestNumpadActions(t *testing.T) {
+	r := NewRegistry(nil)
+
+	tests := []struct {
+		name    string
+		wantKey string
+	}{
+		{"numpad_0", "numpad_0"},
+		{"numpad_1", "numpad_1"},
+		{"numpad_9", "numpad_9"},
+		{"numpad_add", "numpad_add"},
+		{"numpad_subtract", "numpad_subtract"},
+		{"numpad_multiply", "numpad_multiply"},
+		{"numpad_divide", "numpad_divide"},
+		{"numpad_enter", "numpad_enter"},
+		{"numpad_decimal", "numpad_decimal"},
+		{"key_insert", "insert"},
 	}
 
 	for _, tt := range tests {
