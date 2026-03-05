@@ -4,20 +4,24 @@ Turn your phone into a wireless keyboard for your Mac — keystrokes appear as r
 
 No app to install. Open a browser on your phone, tap buttons, keystrokes appear on your Mac.
 
+## Prerequisites
+
+- **macOS 13+**
+- **[Karabiner-Elements](https://karabiner-elements.pqrs.org/)** installed and running (provides the DriverKit virtual HID daemon)
+- **Go 1.23+** (`brew install go`)
+- **Xcode Command Line Tools** (`xcode-select --install`)
+- **A phone/tablet on the same network** with any modern browser
+
+Optional, for process supervision:
+
+- **[s6](https://skarnet.org/software/s6/)** (`brew install s6`) — recommended for running as a long-lived service
+
 ## Why
 
 - Keystrokes go through Karabiner's virtual keyboard, so they get full remapping support
 - Events look like physical keyboard input to every app (not Accessibility API injection)
 - Five swipeable tabs — coding assistant, terminal, YouTube remote, full keyboard, numpad
 - Works from any device with a browser — phone, tablet, another computer
-
-## Prerequisites
-
-- **macOS 13+**
-- **[Karabiner-Elements](https://karabiner-elements.pqrs.org/)** installed and running
-- **Go 1.23+** and **Xcode Command Line Tools** (`xcode-select --install`)
-
-Karabiner-Elements includes the DriverKit virtual HID daemon. If Karabiner is running, you're good.
 
 ## Install
 
@@ -31,16 +35,53 @@ This builds the C++ shim against Karabiner's headers and compiles the Go server 
 
 ## Usage
 
+### Run directly
+
 ```bash
 sudo ./bin/karabiner-phone-hid
 ```
 
 Root is required to talk to Karabiner's daemon via its Unix socket.
 
-You'll see:
+To run without password prompts, install the sudoers rule:
+
+```bash
+make sudoers
+```
+
+Then you can start without typing your password:
+
+```bash
+sudo ./bin/karabiner-phone-hid
+```
+
+Stop with `Ctrl+C`.
+
+### Run with s6 (recommended)
+
+[s6](https://skarnet.org/software/s6/) keeps the server running in the background, restarts it on crashes, and captures logs with timestamps. If you want the server always available, this is the way to go.
+
+```bash
+make sudoers         # one-time: passwordless sudo for the binary
+make s6-install      # build, install, and start the supervised service
+```
+
+Useful commands:
+
+```bash
+make s6-status       # check if the service is running
+make s6-log          # tail logs (timestamped)
+make s6-restart      # rebuild + reinstall (picks up code changes)
+make s6-down         # stop the service
+make s6-uninstall    # remove the service entirely
+```
+
+Logs go to `~/.local/log/karabiner-phone-hid/current`.
+
+### Startup output
 
 ```
-[Server] start checksum=a1b2c3d4e5f6 git=1155fdd go=go1.23.0
+[Server] start checksum=a1b2c3d4e5f6 git=7a21ceb go=go1.23.5
 [Karabiner] Connected to daemon
 [Karabiner] Keyboard ready
 [Server] Serving web UI from web
@@ -60,7 +101,7 @@ Tap a button. The keystroke appears on your Mac. Swipe to switch tabs.
 
 ## Tabs
 
-### Teammate
+### tmate/tmux
 
 Coding assistant controls — SuperWhisper voice input, accept/reject inline suggestions, tmux copy mode, arrow keys.
 
@@ -84,7 +125,12 @@ Full programmer's keyboard in portrait mode:
 
 ### Numpad
 
-Standalone number pad — 0–9, period, Enter, Backspace, Delete, Esc.
+Standard numpad layout per the [W3C UIEvents spec](https://www.w3.org/TR/uievents-code/):
+
+- Control pad: Insert, Home, PgUp / Delete, End, PgDn
+- Numpad: Esc / * − across top, 7-8-9 / 4-5-6 / 1-2-3 / 0 . with + and Enter spanning two rows
+
+All numpad keys send distinct USB HID numpad scancodes (not the number row keys).
 
 ## Custom Actions
 
@@ -139,21 +185,8 @@ The Go server receives JSON messages over WebSocket, translates them to USB HID 
 The server hashes its own binary on startup. Every 30 seconds it re-checks the hash — if the binary changed (i.e. you ran `make`), it `exec()`s the new version in place. The new process logs its provenance:
 
 ```
-[Server] re-exec from checksum=a1b2c3d4e5f6 to checksum=f6e5d4c3b2a1 git=deadbee go=go1.23.0
+[Server] re-exec from checksum=a1b2c3d4e5f6 to checksum=f6e5d4c3b2a1 git=deadbee go=go1.23.5
 ```
-
-### s6 supervision (optional)
-
-```bash
-make s6-install       # install + start supervised service
-make s6-status        # check service status
-make s6-log           # tail logs
-make s6-restart       # rebuild + reinstall service
-make s6-down          # stop service
-make s6-uninstall     # remove service
-```
-
-Logs go to `~/.local/log/karabiner-phone-hid/current`.
 
 ## Wire Protocol
 
@@ -187,7 +220,7 @@ Run tests (no root or Karabiner needed):
 make test
 ```
 
-66 tests across 6 packages — protocol serialization, key code lookups, HID dispatch, message routing, WebSocket integration, build identity.
+68 tests across 6 packages — protocol serialization, key code lookups, HID dispatch, message routing, WebSocket integration, build identity.
 
 Build with stub mode (no Karabiner headers needed):
 
