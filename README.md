@@ -8,7 +8,7 @@ No app to install. Open a browser on your phone, tap buttons, keystrokes appear 
 
 - Keystrokes go through Karabiner's virtual keyboard, so they get full remapping support
 - Events look like physical keyboard input to every app (not Accessibility API injection)
-- Custom button layouts for tmux, SuperWhisper, or any key sequence you want
+- Five swipeable tabs — coding assistant, terminal, YouTube remote, full keyboard, numpad
 - Works from any device with a browser — phone, tablet, another computer
 
 ## Prerequisites
@@ -40,6 +40,7 @@ Root is required to talk to Karabiner's daemon via its Unix socket.
 You'll see:
 
 ```
+[Server] start checksum=a1b2c3d4e5f6 git=1155fdd go=go1.23.0
 [Karabiner] Connected to daemon
 [Karabiner] Keyboard ready
 [Server] Serving web UI from web
@@ -55,22 +56,35 @@ http://<your-mac-ip>:8765
 
 Find your Mac's IP with `ipconfig getifaddr en0`.
 
-Tap a button. The keystroke appears on your Mac.
+Tap a button. The keystroke appears on your Mac. Swipe to switch tabs.
 
-## Default Buttons
+## Tabs
 
-| Button | Action | Keys |
-|--------|--------|------|
-| SW | SuperWhisper toggle | `Option+Space` |
-| SW (long press) | SuperWhisper + paste | `Option+Space`, wait 500ms, `Cmd+V` |
-| Return | Enter key | `Return` |
-| Prefix | tmux prefix | `Ctrl+\` |
-| Copy | tmux copy mode | `Ctrl+\` `[` |
-| Scr Up | Scroll up (copy mode) | `Ctrl+U` |
-| Scr Dn | Scroll down (copy mode) | `Ctrl+D` |
-| Pg Up | Page up (copy mode) | `Ctrl+B` |
-| Pg Dn | Page down (copy mode) | `Ctrl+F` |
-| Exit | Exit copy mode | `q` |
+### Teammate
+
+Coding assistant controls — SuperWhisper voice input, accept/reject inline suggestions, tmux copy mode, arrow keys.
+
+### Terminal
+
+tmux session management — prefix, copy mode, scroll, split panes, navigate panes and windows.
+
+### YouTube Remote
+
+YouTube keyboard shortcuts — play/pause, seek ±10s, volume, speed ±, fullscreen, captions, next/prev video.
+
+### Keyboard
+
+Full programmer's keyboard in portrait mode:
+
+- SuperWhisper button at the top (long-press to paste)
+- F1–F12 function key row
+- Number row, QWERTY layout, symbols
+- Ctrl / Opt / Cmd modifier keys on both sides
+- Inverted-T arrow cluster, PgUp/PgDn
+
+### Numpad
+
+Standalone number pad — 0–9, period, Enter, Backspace, Delete, Esc.
 
 ## Custom Actions
 
@@ -120,6 +134,27 @@ Phone Browser  ──WebSocket──▶  Go Server  ──CGo──▶  Karabine
 
 The Go server receives JSON messages over WebSocket, translates them to USB HID keyboard reports, and sends them to Karabiner's DriverKit daemon via a C++ client library (wrapped in a C shim for CGo). The daemon feeds them to a virtual keyboard device that macOS treats as real hardware.
 
+### Auto-reload
+
+The server hashes its own binary on startup. Every 30 seconds it re-checks the hash — if the binary changed (i.e. you ran `make`), it `exec()`s the new version in place. The new process logs its provenance:
+
+```
+[Server] re-exec from checksum=a1b2c3d4e5f6 to checksum=f6e5d4c3b2a1 git=deadbee go=go1.23.0
+```
+
+### s6 supervision (optional)
+
+```bash
+make s6-install       # install + start supervised service
+make s6-status        # check service status
+make s6-log           # tail logs
+make s6-restart       # rebuild + reinstall service
+make s6-down          # stop service
+make s6-uninstall     # remove service
+```
+
+Logs go to `~/.local/log/karabiner-phone-hid/current`.
+
 ## Wire Protocol
 
 The WebSocket protocol is simple JSON. See [`shared/protocol.md`](shared/protocol.md).
@@ -152,7 +187,7 @@ Run tests (no root or Karabiner needed):
 make test
 ```
 
-35 tests across 5 packages — protocol serialization, key code lookups, HID dispatch, message routing, WebSocket integration.
+66 tests across 6 packages — protocol serialization, key code lookups, HID dispatch, message routing, WebSocket integration, build identity.
 
 Build with stub mode (no Karabiner headers needed):
 
@@ -166,14 +201,16 @@ make STUB=1
 cmd/server/main.go       Entry point
 internal/
   protocol/              JSON message types
+  config/                Action registry + config file
   hid/                   USB keycodes, HIDPoster interface, dispatcher
   server/                WebSocket server + message router
-  config/                Action registry + config file
   discovery/             Bonjour advertisement
+  buildinfo/             Binary identity, self-watch + auto-reload
 cshim/                   C wrapper around Karabiner C++ client
 vendor-cpp/              Karabiner headers (git submodule)
 web/                     Browser UI served at /
 shared/protocol.md       Wire protocol spec
+scripts/s6/              s6 supervision run scripts
 ```
 
 ## License
