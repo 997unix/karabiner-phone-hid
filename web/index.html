@@ -146,6 +146,7 @@ const tabs = [
   ]},
   { name:"Keyboard", layout:"kb",
     sw:{action:"superwhisper_toggle",label:"SuperWhisper",long:"superwhisper_paste"},
+    esc:{action:"key_escape",label:"Esc",color:"#c0392b"},
     controlPad:[
       {action:"key_insert",label:"Ins",color:"#555"},
       {action:"key_home",label:"Home",color:"#555"},
@@ -155,9 +156,8 @@ const tabs = [
       {action:"key_page_down",label:"PgDn",color:"#555"},
     ],
     rows:[
-    // F-keys
+    // F-keys (Esc moved to standalone bar)
     [
-      {action:"key_escape",label:"Esc",color:"#c0392b",css:"fk"},
       {action:"key_f1",label:"F1",color:"#444",css:"fk"},{action:"key_f2",label:"F2",color:"#444",css:"fk"},
       {action:"key_f3",label:"F3",color:"#444",css:"fk"},{action:"key_f4",label:"F4",color:"#444",css:"fk"},
       {action:"key_f5",label:"F5",color:"#444",css:"fk"},{action:"key_f6",label:"F6",color:"#444",css:"fk"},
@@ -210,13 +210,18 @@ const tabs = [
     ],
     // Modifier + space row
     [
-      {action:"mod_ctrl",label:"Ctrl",color:"#555"},
-      {action:"mod_option",label:"Opt",color:"#555"},
-      {action:"mod_command",label:"Cmd",color:"#555"},
+      {action:"mod_ctrl",label:"Ctrl",color:"#2c3e50"},
+      {action:"mod_option",label:"Opt",color:"#8e44ad"},
+      {action:"mod_command",label:"Cmd",color:"#2980b9"},
       {action:"key_space",label:"",color:"#444",css:"space"},
-      {action:"mod_command",label:"Cmd",color:"#555"},
-      {action:"mod_option",label:"Opt",color:"#555"},
-      {action:"mod_ctrl",label:"Ctrl",color:"#555"},
+      {action:"mod_command",label:"Cmd",color:"#2980b9"},
+      {action:"mod_option",label:"Opt",color:"#8e44ad"},
+      {action:"mod_ctrl",label:"Ctrl",color:"#2c3e50"},
+    ],
+    // Shift keys
+    [
+      {action:"mod_shift",label:"Shift",color:"#7f8c8d",css:"wider"},
+      {action:"mod_shift",label:"Shift",color:"#7f8c8d",css:"wider"},
     ],
     // Arrow row — will be rendered specially
     "arrows",
@@ -289,23 +294,34 @@ tabs.forEach((tab,i)=>{
       wireBtn(sw,tab.sw);
       container.appendChild(sw);
     }
-    // Keyboard area
-    const kbDiv=document.createElement("div");
-    kbDiv.className="kb";
-    // Control pad block (Ins/Home/PgUp + Del/End/PgDn) with double gutters
+    // Esc bar (double-wide, red)
+    if(tab.esc){
+      const esc=document.createElement("button");
+      esc.className="kb-sw";
+      esc.style.background=tab.esc.color;
+      esc.style.maxHeight="6vh";esc.style.minHeight="36px";
+      esc.style.fontSize="14px";esc.style.fontWeight="700";
+      esc.textContent=tab.esc.label;
+      wireBtn(esc,tab.esc);
+      container.appendChild(esc);
+    }
+    // Control pad block (Ins/Home/PgUp + Del/End/PgDn)
     if(tab.controlPad){
       const cpDiv=document.createElement("div");
       cpDiv.className="cp";
       cpDiv.style.margin="0 0 8px";
       tab.controlPad.forEach(b=>{
         const el=document.createElement("button");
-        el.className="key";el.style.height="32px";el.style.fontSize="10px";
+        el.className="nk";el.style.minHeight="40px";el.style.fontSize="12px";
         el.textContent=b.label;el.style.background=b.color;
         wireBtn(el,b);
         cpDiv.appendChild(el);
       });
-      kbDiv.appendChild(cpDiv);
+      container.appendChild(cpDiv);
     }
+    // Keyboard area
+    const kbDiv=document.createElement("div");
+    kbDiv.className="kb";
     tab.rows.forEach(row=>{
       if(row==="gap"){
         const gap=document.createElement("div");
