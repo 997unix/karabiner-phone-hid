@@ -52,6 +52,9 @@ func (r *Router) handleAction(msg *protocol.IncomingMessage) []byte {
 		if err != nil {
 			return r.encodeAck(msg.ID, fmt.Sprintf("invalid keypress payload: %v", err))
 		}
+		if len(kp.Modifiers) > 0 {
+			log.Printf("[Router] keypress key=%s modifiers=%v", kp.Key, kp.Modifiers)
+		}
 		steps = []protocol.KeyStep{
 			{Key: kp.Key, Modifiers: kp.Modifiers},
 		}
