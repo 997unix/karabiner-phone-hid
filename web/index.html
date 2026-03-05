@@ -146,6 +146,14 @@ const tabs = [
   ]},
   { name:"Keyboard", layout:"kb",
     sw:{action:"superwhisper_toggle",label:"SuperWhisper",long:"superwhisper_paste"},
+    controlPad:[
+      {action:"key_insert",label:"Ins",color:"#555"},
+      {action:"key_home",label:"Home",color:"#555"},
+      {action:"key_page_up",label:"PgUp",color:"#555"},
+      {action:"key_delete",label:"Del",color:"#555"},
+      {action:"key_end",label:"End",color:"#555"},
+      {action:"key_page_down",label:"PgDn",color:"#555"},
+    ],
     rows:[
     // F-keys
     [
@@ -157,6 +165,7 @@ const tabs = [
       {action:"key_f9",label:"F9",color:"#444",css:"fk"},{action:"key_f10",label:"F10",color:"#444",css:"fk"},
       {action:"key_f11",label:"F11",color:"#444",css:"fk"},{action:"key_f12",label:"F12",color:"#444",css:"fk"},
     ],
+    "gap",
     // Number row
     [
       {action:"key_grave",label:"`",color:"#444"},
@@ -168,6 +177,7 @@ const tabs = [
       {action:"key_hyphen",label:"-",color:"#444"},{action:"key_equal",label:"=",color:"#444"},
       {action:"key_backspace",label:"\u232B",color:"#555",css:"wide"},
     ],
+    "gap",
     // QWERTY row
     [
       {action:"key_tab",label:"Tab",color:"#555",css:"wide"},
@@ -192,14 +202,11 @@ const tabs = [
     ],
     // Bottom letter row
     [
-      {action:"key_delete",label:"Del",color:"#555"},
       {action:"key_z",label:"Z",color:"#333"},{action:"key_x",label:"X",color:"#333"},
       {action:"key_c",label:"C",color:"#333"},{action:"key_v",label:"V",color:"#333"},
       {action:"key_b",label:"B",color:"#333"},{action:"key_n",label:"N",color:"#333"},
       {action:"key_m",label:"M",color:"#333"},{action:"key_comma",label:",",color:"#444"},
       {action:"key_period",label:".",color:"#444"},{action:"key_slash",label:"/",color:"#444"},
-      {action:"key_page_up",label:"PgU",color:"#16a085"},
-      {action:"key_page_down",label:"PgD",color:"#16a085"},
     ],
     // Modifier + space row
     [
@@ -285,8 +292,26 @@ tabs.forEach((tab,i)=>{
     // Keyboard area
     const kbDiv=document.createElement("div");
     kbDiv.className="kb";
+    // Control pad block (Ins/Home/PgUp + Del/End/PgDn) with double gutters
+    if(tab.controlPad){
+      const cpDiv=document.createElement("div");
+      cpDiv.className="cp";
+      cpDiv.style.margin="0 0 8px";
+      tab.controlPad.forEach(b=>{
+        const el=document.createElement("button");
+        el.className="key";el.style.height="32px";el.style.fontSize="10px";
+        el.textContent=b.label;el.style.background=b.color;
+        wireBtn(el,b);
+        cpDiv.appendChild(el);
+      });
+      kbDiv.appendChild(cpDiv);
+    }
     tab.rows.forEach(row=>{
-      if(row==="arrows"){
+      if(row==="gap"){
+        const gap=document.createElement("div");
+        gap.style.height="6px";
+        kbDiv.appendChild(gap);
+      } else if(row==="arrows"){
         // Inverted-T arrow cluster
         const cl=document.createElement("div");
         cl.className="arrow-cluster";
