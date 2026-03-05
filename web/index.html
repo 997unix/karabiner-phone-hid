@@ -158,62 +158,62 @@ const tabs = [
     rows:[
     // F-keys (Esc moved to standalone bar)
     [
-      {action:"key_f1",label:"F1",color:"#444",css:"fk"},{action:"key_f2",label:"F2",color:"#444",css:"fk"},
-      {action:"key_f3",label:"F3",color:"#444",css:"fk"},{action:"key_f4",label:"F4",color:"#444",css:"fk"},
-      {action:"key_f5",label:"F5",color:"#444",css:"fk"},{action:"key_f6",label:"F6",color:"#444",css:"fk"},
-      {action:"key_f7",label:"F7",color:"#444",css:"fk"},{action:"key_f8",label:"F8",color:"#444",css:"fk"},
-      {action:"key_f9",label:"F9",color:"#444",css:"fk"},{action:"key_f10",label:"F10",color:"#444",css:"fk"},
-      {action:"key_f11",label:"F11",color:"#444",css:"fk"},{action:"key_f12",label:"F12",color:"#444",css:"fk"},
+      {action:"key_f1",label:"F1",color:"#444",css:"fk",hid:"f1"},{action:"key_f2",label:"F2",color:"#444",css:"fk",hid:"f2"},
+      {action:"key_f3",label:"F3",color:"#444",css:"fk",hid:"f3"},{action:"key_f4",label:"F4",color:"#444",css:"fk",hid:"f4"},
+      {action:"key_f5",label:"F5",color:"#444",css:"fk",hid:"f5"},{action:"key_f6",label:"F6",color:"#444",css:"fk",hid:"f6"},
+      {action:"key_f7",label:"F7",color:"#444",css:"fk",hid:"f7"},{action:"key_f8",label:"F8",color:"#444",css:"fk",hid:"f8"},
+      {action:"key_f9",label:"F9",color:"#444",css:"fk",hid:"f9"},{action:"key_f10",label:"F10",color:"#444",css:"fk",hid:"f10"},
+      {action:"key_f11",label:"F11",color:"#444",css:"fk",hid:"f11"},{action:"key_f12",label:"F12",color:"#444",css:"fk",hid:"f12"},
     ],
     "gap",
     // Number row
     [
-      {action:"key_grave",label:"`",color:"#444"},
-      {action:"key_1",label:"1",color:"#333"},{action:"key_2",label:"2",color:"#333"},
-      {action:"key_3",label:"3",color:"#333"},{action:"key_4",label:"4",color:"#333"},
-      {action:"key_5",label:"5",color:"#333"},{action:"key_6",label:"6",color:"#333"},
-      {action:"key_7",label:"7",color:"#333"},{action:"key_8",label:"8",color:"#333"},
-      {action:"key_9",label:"9",color:"#333"},{action:"key_0",label:"0",color:"#333"},
-      {action:"key_hyphen",label:"-",color:"#444"},{action:"key_equal",label:"=",color:"#444"},
-      {action:"key_backspace",label:"\u232B",color:"#555",css:"wide"},
+      {action:"key_grave",label:"`",color:"#444",hid:"grave_accent_and_tilde"},
+      {action:"key_1",label:"1",color:"#333",hid:"1"},{action:"key_2",label:"2",color:"#333",hid:"2"},
+      {action:"key_3",label:"3",color:"#333",hid:"3"},{action:"key_4",label:"4",color:"#333",hid:"4"},
+      {action:"key_5",label:"5",color:"#333",hid:"5"},{action:"key_6",label:"6",color:"#333",hid:"6"},
+      {action:"key_7",label:"7",color:"#333",hid:"7"},{action:"key_8",label:"8",color:"#333",hid:"8"},
+      {action:"key_9",label:"9",color:"#333",hid:"9"},{action:"key_0",label:"0",color:"#333",hid:"0"},
+      {action:"key_hyphen",label:"-",color:"#444",hid:"hyphen"},{action:"key_equal",label:"=",color:"#444",hid:"equal_sign"},
+      {action:"key_backspace",label:"\u232B",color:"#555",css:"wide",hid:"delete_or_backspace",repeat:true},
     ],
     "gap",
     // QWERTY row
     [
-      {action:"key_tab",label:"Tab",color:"#555",css:"wide"},
-      {action:"key_q",label:"Q",color:"#333"},{action:"key_w",label:"W",color:"#333"},
-      {action:"key_e",label:"E",color:"#333"},{action:"key_r",label:"R",color:"#333"},
-      {action:"key_t",label:"T",color:"#333"},{action:"key_y",label:"Y",color:"#333"},
-      {action:"key_u",label:"U",color:"#333"},{action:"key_i",label:"I",color:"#333"},
-      {action:"key_o",label:"O",color:"#333"},{action:"key_p",label:"P",color:"#333"},
-      {action:"key_open_bracket",label:"[",color:"#444"},{action:"key_close_bracket",label:"]",color:"#444"},
-      {action:"key_backslash",label:"\\",color:"#444"},
+      {action:"key_tab",label:"Tab",color:"#555",css:"wide",hid:"tab"},
+      {action:"key_q",label:"Q",color:"#333",hid:"q"},{action:"key_w",label:"W",color:"#333",hid:"w"},
+      {action:"key_e",label:"E",color:"#333",hid:"e"},{action:"key_r",label:"R",color:"#333",hid:"r"},
+      {action:"key_t",label:"T",color:"#333",hid:"t"},{action:"key_y",label:"Y",color:"#333",hid:"y"},
+      {action:"key_u",label:"U",color:"#333",hid:"u"},{action:"key_i",label:"I",color:"#333",hid:"i"},
+      {action:"key_o",label:"O",color:"#333",hid:"o"},{action:"key_p",label:"P",color:"#333",hid:"p"},
+      {action:"key_open_bracket",label:"[",color:"#444",hid:"open_bracket"},{action:"key_close_bracket",label:"]",color:"#444",hid:"close_bracket"},
+      {action:"key_backslash",label:"\\",color:"#444",hid:"backslash"},
     ],
     // Home row
     [
-      {action:"key_enter",label:"\u21B5",color:"#27ae60",css:"wider"},
-      {action:"key_a",label:"A",color:"#333"},{action:"key_s",label:"S",color:"#333"},
-      {action:"key_d",label:"D",color:"#333"},{action:"key_f",label:"F",color:"#333"},
-      {action:"key_g",label:"G",color:"#333"},{action:"key_h",label:"H",color:"#333"},
-      {action:"key_j",label:"J",color:"#333"},{action:"key_k",label:"K",color:"#333"},
-      {action:"key_l",label:"L",color:"#333"},{action:"key_semicolon",label:";",color:"#444"},
-      {action:"key_quote",label:"'",color:"#444"},
-      {action:"key_enter",label:"\u21B5",color:"#27ae60",css:"wider"},
+      {action:"key_enter",label:"\u21B5",color:"#27ae60",css:"wider",hid:"return_or_enter"},
+      {action:"key_a",label:"A",color:"#333",hid:"a"},{action:"key_s",label:"S",color:"#333",hid:"s"},
+      {action:"key_d",label:"D",color:"#333",hid:"d"},{action:"key_f",label:"F",color:"#333",hid:"f"},
+      {action:"key_g",label:"G",color:"#333",hid:"g"},{action:"key_h",label:"H",color:"#333",hid:"h"},
+      {action:"key_j",label:"J",color:"#333",hid:"j"},{action:"key_k",label:"K",color:"#333",hid:"k"},
+      {action:"key_l",label:"L",color:"#333",hid:"l"},{action:"key_semicolon",label:";",color:"#444",hid:"semicolon"},
+      {action:"key_quote",label:"'",color:"#444",hid:"quote"},
+      {action:"key_enter",label:"\u21B5",color:"#27ae60",css:"wider",hid:"return_or_enter"},
     ],
     // Bottom letter row
     [
-      {action:"key_z",label:"Z",color:"#333"},{action:"key_x",label:"X",color:"#333"},
-      {action:"key_c",label:"C",color:"#333"},{action:"key_v",label:"V",color:"#333"},
-      {action:"key_b",label:"B",color:"#333"},{action:"key_n",label:"N",color:"#333"},
-      {action:"key_m",label:"M",color:"#333"},{action:"key_comma",label:",",color:"#444"},
-      {action:"key_period",label:".",color:"#444"},{action:"key_slash",label:"/",color:"#444"},
+      {action:"key_z",label:"Z",color:"#333",hid:"z"},{action:"key_x",label:"X",color:"#333",hid:"x"},
+      {action:"key_c",label:"C",color:"#333",hid:"c"},{action:"key_v",label:"V",color:"#333",hid:"v"},
+      {action:"key_b",label:"B",color:"#333",hid:"b"},{action:"key_n",label:"N",color:"#333",hid:"n"},
+      {action:"key_m",label:"M",color:"#333",hid:"m"},{action:"key_comma",label:",",color:"#444",hid:"comma"},
+      {action:"key_period",label:".",color:"#444",hid:"period"},{action:"key_slash",label:"/",color:"#444",hid:"slash"},
     ],
     // Modifier + space row
     [
       {action:"mod_ctrl",label:"Ctrl",color:"#2c3e50"},
       {action:"mod_option",label:"Opt",color:"#8e44ad"},
       {action:"mod_command",label:"Cmd",color:"#2980b9"},
-      {action:"key_space",label:"",color:"#444",css:"space"},
+      {action:"key_space",label:"",color:"#444",css:"space",hid:"spacebar",repeat:true},
       {action:"mod_command",label:"Cmd",color:"#2980b9"},
       {action:"mod_option",label:"Opt",color:"#8e44ad"},
       {action:"mod_ctrl",label:"Ctrl",color:"#2c3e50"},
@@ -270,16 +270,89 @@ const stxt=document.getElementById("stxt");
 const sbar=document.getElementById("status");
 const tabBtns=document.querySelectorAll(".tabs button");
 
+// Sticky modifier state
+const mods={shift:false,control:false,option:false,command:false};
+const modBtns=[];// elements to update visually
+
+function toggleMod(name){
+  mods[name]=!mods[name];
+  modBtns.forEach(({el,mod})=>{
+    if(mod===name)el.style.opacity=mods[name]?"1":"0.6";
+  });
+}
+
+function clearMods(){
+  for(const k in mods)mods[k]=false;
+  modBtns.forEach(({el})=>el.style.opacity="0.6");
+}
+
+function activeModList(){
+  const a=[];
+  for(const k in mods)if(mods[k])a.push(k);
+  return a;
+}
+
+function hasActiveMods(){return activeModList().length>0}
+
+// Send a key with current sticky modifiers, then clear them
+function sendKey(action,b){
+  if(hasActiveMods()&&b&&b.hid){
+    // Send as keypress with modifiers
+    sendKeypress(b.hid,activeModList());
+    clearMods();
+  } else {
+    send(action);
+  }
+}
+
+function sendKeypress(key,modifiers){
+  if(ws&&ws.readyState===1){
+    ws.send(JSON.stringify({type:"action",id:Date.now().toString(),action:"keypress",payload:{key,modifiers}}));
+    if(navigator.vibrate)navigator.vibrate(30);
+  }
+}
+
+// Key repeat support
+function addRepeat(el,fn){
+  let iv,to;
+  const start=(e)=>{e.preventDefault();fn();to=setTimeout(()=>{iv=setInterval(fn,80)},400)};
+  const stop=()=>{clearTimeout(to);clearInterval(iv)};
+  el.addEventListener("touchstart",start,{passive:false});
+  el.addEventListener("touchend",stop);
+  el.addEventListener("touchcancel",stop);
+  el.addEventListener("mousedown",start);
+  el.addEventListener("mouseup",stop);
+  el.addEventListener("mouseleave",stop);
+}
+
 // Wire up a button element with action/long-press
 function wireBtn(el,b){
   if(!b.action){el.disabled=true;el.style.visibility="hidden";return}
-  el.onclick=()=>send(b.action);
+  // Modifier toggle buttons
+  if(b.action.startsWith("mod_")){
+    const mod=b.action.slice(4);// "mod_shift" → "shift"
+    el.style.opacity="0.6";
+    el.onclick=()=>{toggleMod(mod);if(navigator.vibrate)navigator.vibrate(30)};
+    modBtns.push({el,mod});
+    return;
+  }
+  // Repeating keys (arrows, backspace, delete, space)
+  if(b.repeat){
+    const fn=()=>sendKey(b.action,b);
+    addRepeat(el,fn);
+    el.onclick=null;// repeat handles it
+    return;
+  }
+  // Long-press actions (SuperWhisper paste)
   if(b.long){
     let t;
     el.ontouchstart=(e)=>{e.preventDefault();t=setTimeout(()=>{send(b.long);if(navigator.vibrate)navigator.vibrate(50)},500)};
-    el.ontouchend=()=>{clearTimeout(t);send(b.action);if(navigator.vibrate)navigator.vibrate(30)};
+    el.ontouchend=()=>{clearTimeout(t);sendKey(b.action,b);if(navigator.vibrate)navigator.vibrate(30)};
     el.ontouchcancel=()=>clearTimeout(t);
+    return;
   }
+  // Normal key — send with modifiers if active
+  el.onclick=()=>sendKey(b.action,b);
 }
 
 // Build button grids
@@ -331,8 +404,8 @@ tabs.forEach((tab,i)=>{
         // Inverted-T arrow cluster
         const cl=document.createElement("div");
         cl.className="arrow-cluster";
-        [{action:null},{action:"arrow_up",label:"\u25B2",color:"#1abc9c"},{action:null},
-         {action:"arrow_left",label:"\u25C0",color:"#1abc9c"},{action:"arrow_down",label:"\u25BC",color:"#1abc9c"},{action:"arrow_right",label:"\u25B6",color:"#1abc9c"},
+        [{action:null},{action:"arrow_up",label:"\u25B2",color:"#1abc9c",hid:"up_arrow",repeat:true},{action:null},
+         {action:"arrow_left",label:"\u25C0",color:"#1abc9c",hid:"left_arrow",repeat:true},{action:"arrow_down",label:"\u25BC",color:"#1abc9c",hid:"down_arrow",repeat:true},{action:"arrow_right",label:"\u25B6",color:"#1abc9c",hid:"right_arrow",repeat:true},
         ].forEach(b=>{
           const el=document.createElement("button");
           el.className="key";
