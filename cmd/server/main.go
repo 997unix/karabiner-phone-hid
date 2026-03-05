@@ -7,6 +7,8 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"regexp"
+	"strings"
 	"syscall"
 	"time"
 
@@ -89,6 +91,16 @@ func main() {
 	if wd != "" {
 		ws.SetWebDir(wd)
 		log.Printf("[Server] Serving web UI from %s", wd)
+		if html, err := os.ReadFile(filepath.Join(wd, "index.html")); err == nil {
+			re := regexp.MustCompile(`<button data-idx="\d+"[^>]*>([^<]+)</button>`)
+			var names []string
+			for _, m := range re.FindAllSubmatch(html, -1) {
+				names = append(names, string(m[1]))
+			}
+			if len(names) > 0 {
+				log.Printf("[Server] Tabs: %s", strings.Join(names, " | "))
+			}
+		}
 	}
 
 	boundPort, err := ws.Start(fmt.Sprintf("0.0.0.0:%d", *port))
