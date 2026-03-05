@@ -80,23 +80,40 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
 .pk-rows button.pk:active{opacity:0.7;transform:scale(0.95)}
 .pk-rows button.pk.sm{font-size:11px;color:#bbb}
 .pk-rows button.pk.space{flex:3}
+.pk-rows button.pk.esc{flex:2;font-weight:700}
+.pk-gutter{height:8px;flex-shrink:0}
 /* Bottom section: mods + space + numpad */
 .pk-bottom{display:flex;gap:4px;flex-shrink:0;margin-top:4px}
 .pk-bottom .pk-mod-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px;width:90px;flex-shrink:0}
-.pk-bottom .pk-mod-grid button{border:none;border-radius:8px;color:#e6e6e6;font-size:10px;font-weight:700;
+.pk-bottom .pk-mod-grid button{border:none;border-radius:8px;color:#fff;font-size:10px;font-weight:800;
   height:40px;cursor:pointer;-webkit-tap-highlight-color:transparent;
   display:flex;align-items:center;justify-content:center}
 .pk-bottom .pk-mod-grid button:active{opacity:0.7;transform:scale(0.95)}
-.pk-bottom .pk-mid{display:flex;flex-direction:column;gap:3px;flex:1}
-.pk-bottom .pk-mid button{border:none;border-radius:8px;color:#e6e6e6;font-size:14px;font-weight:600;
+.pk-bottom .pk-mid{display:flex;flex-direction:column;gap:3px;flex:0 0 auto;width:70px}
+.pk-bottom .pk-mid button{border:none;border-radius:8px;color:#e6e6e6;font-size:13px;font-weight:600;
   flex:1;cursor:pointer;-webkit-tap-highlight-color:transparent;
   display:flex;align-items:center;justify-content:center}
 .pk-bottom .pk-mid button:active{opacity:0.7;transform:scale(0.95)}
-.pk-bottom .pk-numgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;width:90px;flex-shrink:0}
+/* Numpad 3-col + return column */
+.pk-bottom .pk-numret{display:flex;gap:3px;flex:1}
+.pk-bottom .pk-numgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;flex:1}
 .pk-bottom .pk-numgrid button{border:none;border-radius:8px;color:#e6e6e6;font-size:14px;font-weight:600;
   height:40px;cursor:pointer;-webkit-tap-highlight-color:transparent;
   display:flex;align-items:center;justify-content:center}
 .pk-bottom .pk-numgrid button:active{opacity:0.7;transform:scale(0.95)}
+.pk-bottom .pk-ret{display:flex;flex-direction:column;width:40px;flex-shrink:0}
+.pk-bottom .pk-ret button{border:none;border-radius:8px;color:#e6e6e6;font-size:16px;font-weight:700;
+  flex:1;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  display:flex;align-items:center;justify-content:center}
+.pk-bottom .pk-ret button:active{opacity:0.7;transform:scale(0.95)}
+/* Delete bar under numpad */
+.pk-del{flex-shrink:0;margin-top:4px;display:flex;gap:4px}
+.pk-del .pk-del-spacer{width:90px;flex-shrink:0}
+.pk-del .pk-del-mid{width:70px;flex-shrink:0}
+.pk-del button{border:none;border-radius:8px;color:#e6e6e6;font-size:13px;font-weight:600;
+  height:40px;flex:1;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  display:flex;align-items:center;justify-content:center}
+.pk-del button:active{opacity:0.7;transform:scale(0.95)}
 
 /* Status bar */
 #status{padding:8px 16px;text-align:center;font-size:13px;flex-shrink:0}
@@ -375,10 +392,10 @@ const tabs = [
       ],
     },
   },
-  // Test tab: shifted keyboard block above regular keyboard block
-  { name:"Test", layout:"phone",
+  // Test tab: shifted block → numbers → Esc+QWERTY → bottom bar
+  { name:"Test", layout:"phone2",
     sw:{action:"superwhisper_toggle",label:"SuperWhisper",long:"superwhisper_paste"},
-    // Shifted keyboard block — complete layout with shift+key for every key
+    // Shifted symbols block (top)
     shifted:[
     [
       {label:"~",hid:"grave_accent_and_tilde",shift:true,color:"#3a3a3a"},
@@ -395,26 +412,9 @@ const tabs = [
       {label:"_",hid:"hyphen",shift:true,color:"#3a3a3a"},{label:"+",hid:"equal_sign",shift:true,color:"#3a3a3a"},
     ],
     ],
-    // Regular QWERTY keyboard block
-    rows:[
+    // Number + punctuation rows
+    numbers:[
     [
-      {action:"key_q",label:"Q",color:"#333",hid:"q"},{action:"key_w",label:"W",color:"#333",hid:"w"},
-      {action:"key_e",label:"E",color:"#333",hid:"e"},{action:"key_r",label:"R",color:"#333",hid:"r"},
-      {action:"key_t",label:"T",color:"#333",hid:"t"},{action:"key_y",label:"Y",color:"#333",hid:"y"},
-      {action:"key_u",label:"U",color:"#333",hid:"u"},{action:"key_i",label:"I",color:"#333",hid:"i"},
-      {action:"key_o",label:"O",color:"#333",hid:"o"},{action:"key_p",label:"P",color:"#333",hid:"p"},
-    ],[
-      {action:"key_a",label:"A",color:"#333",hid:"a"},{action:"key_s",label:"S",color:"#333",hid:"s"},
-      {action:"key_d",label:"D",color:"#333",hid:"d"},{action:"key_f",label:"F",color:"#333",hid:"f"},
-      {action:"key_g",label:"G",color:"#333",hid:"g"},{action:"key_h",label:"H",color:"#333",hid:"h"},
-      {action:"key_j",label:"J",color:"#333",hid:"j"},{action:"key_k",label:"K",color:"#333",hid:"k"},
-      {action:"key_l",label:"L",color:"#333",hid:"l"},
-    ],[
-      {action:"key_z",label:"Z",color:"#333",hid:"z"},{action:"key_x",label:"X",color:"#333",hid:"x"},
-      {action:"key_c",label:"C",color:"#333",hid:"c"},{action:"key_v",label:"V",color:"#333",hid:"v"},
-      {action:"key_b",label:"B",color:"#333",hid:"b"},{action:"key_n",label:"N",color:"#333",hid:"n"},
-      {action:"key_m",label:"M",color:"#333",hid:"m"},
-    ],[
       {action:"key_grave",label:"`",color:"#444",hid:"grave_accent_and_tilde"},
       {action:"key_1",label:"1",color:"#444",hid:"1"},{action:"key_2",label:"2",color:"#444",hid:"2"},
       {action:"key_3",label:"3",color:"#444",hid:"3"},{action:"key_4",label:"4",color:"#444",hid:"4"},
@@ -429,19 +429,40 @@ const tabs = [
       {action:"key_slash",label:"/",color:"#444",hid:"slash"},{action:"key_backslash",label:"\\",color:"#444",hid:"backslash"},
     ],
     ],
-    // Bottom bar: modifiers, space/enter/esc/bksp, numpad
+    // Esc + QWERTY block
+    qwerty:{
+      esc:{action:"key_escape",label:"Esc",color:"#c0392b",hid:"escape",css:"esc"},
+      rows:[
+      [
+        {action:"key_q",label:"Q",color:"#333",hid:"q"},{action:"key_w",label:"W",color:"#333",hid:"w"},
+        {action:"key_e",label:"E",color:"#333",hid:"e"},{action:"key_r",label:"R",color:"#333",hid:"r"},
+        {action:"key_t",label:"T",color:"#333",hid:"t"},{action:"key_y",label:"Y",color:"#333",hid:"y"},
+        {action:"key_u",label:"U",color:"#333",hid:"u"},{action:"key_i",label:"I",color:"#333",hid:"i"},
+        {action:"key_o",label:"O",color:"#333",hid:"o"},{action:"key_p",label:"P",color:"#333",hid:"p"},
+      ],[
+        {action:"key_a",label:"A",color:"#333",hid:"a"},{action:"key_s",label:"S",color:"#333",hid:"s"},
+        {action:"key_d",label:"D",color:"#333",hid:"d"},{action:"key_f",label:"F",color:"#333",hid:"f"},
+        {action:"key_g",label:"G",color:"#333",hid:"g"},{action:"key_h",label:"H",color:"#333",hid:"h"},
+        {action:"key_j",label:"J",color:"#333",hid:"j"},{action:"key_k",label:"K",color:"#333",hid:"k"},
+        {action:"key_l",label:"L",color:"#333",hid:"l"},
+      ],[
+        {action:"key_z",label:"Z",color:"#333",hid:"z"},{action:"key_x",label:"X",color:"#333",hid:"x"},
+        {action:"key_c",label:"C",color:"#333",hid:"c"},{action:"key_v",label:"V",color:"#333",hid:"v"},
+        {action:"key_b",label:"B",color:"#333",hid:"b"},{action:"key_n",label:"N",color:"#333",hid:"n"},
+        {action:"key_m",label:"M",color:"#333",hid:"m"},
+      ],
+      ],
+    },
+    // Bottom bar: modifiers | space+tab | numpad+return | delete
     bottom:{
       mods:[
-        {action:"shift_lock",label:"\u21EA",color:"#e74c3c"},
-        {action:"mod_shift",label:"\u21E7",color:"#7f8c8d"},
-        {action:"mod_ctrl",label:"Ctrl",color:"#2c3e50"},
-        {action:"mod_command",label:"Cmd",color:"#2980b9"},
+        {action:"shift_lock",label:"\u21EA Lock",color:"#ff4757"},
+        {action:"mod_shift",label:"\u21E7 Shift",color:"#ffa502"},
+        {action:"mod_ctrl",label:"Ctrl",color:"#3742fa"},
+        {action:"mod_command",label:"Cmd",color:"#2ed573"},
       ],
       mid:[
-        {action:"key_space",label:"Space",color:"#444",hid:"spacebar",repeat:true,css:"space"},
-        {action:"key_enter",label:"\u21B5",color:"#27ae60",hid:"return_or_enter"},
-        {action:"key_escape",label:"Esc",color:"#c0392b",hid:"escape"},
-        {action:"key_backspace",label:"\u232B",color:"#555",hid:"delete_or_backspace",repeat:true},
+        {action:"key_space",label:"Space",color:"#444",hid:"spacebar",repeat:true},
         {action:"key_tab",label:"Tab",color:"#555",hid:"tab"},
       ],
       nums:[
@@ -449,6 +470,8 @@ const tabs = [
         {action:"key_4",label:"4",color:"#444",hid:"4"},{action:"key_5",label:"5",color:"#444",hid:"5"},{action:"key_6",label:"6",color:"#444",hid:"6"},
         {action:"key_1",label:"1",color:"#444",hid:"1"},{action:"key_2",label:"2",color:"#444",hid:"2"},{action:"key_3",label:"3",color:"#444",hid:"3"},
       ],
+      ret:{action:"key_enter",label:"\u21B5",color:"#27ae60",hid:"return_or_enter"},
+      del:{action:"key_backspace",label:"\u232B Delete",color:"#555",hid:"delete_or_backspace",repeat:true},
     },
   },
 ];
@@ -776,6 +799,156 @@ tabs.forEach((tab,i)=>{
       });
       bot.appendChild(numGrid);
       container.appendChild(bot);
+    }
+  } else if(tab.layout==="phone2"){
+    // SuperWhisper banner
+    if(tab.sw){
+      const sw=document.createElement("button");
+      sw.className="kb-sw";
+      sw.textContent=tab.sw.label;
+      wireBtn(sw,tab.sw);
+      container.appendChild(sw);
+    }
+    // Shifted symbols block
+    if(tab.shifted){
+      const lbl=document.createElement("div");
+      lbl.className="pk-section-label";
+      lbl.textContent="shifted";
+      container.appendChild(lbl);
+      const block=document.createElement("div");
+      block.className="pk-rows";
+      tab.shifted.forEach(row=>{
+        const rowEl=document.createElement("div");
+        rowEl.className="pk-row";
+        row.forEach(b=>{
+          const el=document.createElement("button");
+          el.className="pk sm";
+          el.textContent=b.label;
+          el.style.background=b.color;
+          el.onclick=()=>{sendKeypress(b.hid,["shift"]);if(navigator.vibrate)navigator.vibrate(30)};
+          rowEl.appendChild(el);
+        });
+        block.appendChild(rowEl);
+      });
+      container.appendChild(block);
+      const g1=document.createElement("div");g1.className="pk-gutter";container.appendChild(g1);
+    }
+    // Number + punctuation rows
+    if(tab.numbers){
+      const block=document.createElement("div");
+      block.className="pk-rows";
+      tab.numbers.forEach(row=>{
+        const rowEl=document.createElement("div");
+        rowEl.className="pk-row";
+        row.forEach(b=>{
+          const el=document.createElement("button");
+          el.className="pk";
+          el.textContent=b.label;
+          el.style.background=b.color;
+          wireBtn(el,b);
+          rowEl.appendChild(el);
+        });
+        block.appendChild(rowEl);
+      });
+      container.appendChild(block);
+      const g2=document.createElement("div");g2.className="pk-gutter";container.appendChild(g2);
+    }
+    // Esc + QWERTY block
+    if(tab.qwerty){
+      const block=document.createElement("div");
+      block.className="pk-rows";
+      // Esc row
+      if(tab.qwerty.esc){
+        const escRow=document.createElement("div");
+        escRow.className="pk-row";
+        const esc=document.createElement("button");
+        esc.className="pk esc";
+        esc.textContent=tab.qwerty.esc.label;
+        esc.style.background=tab.qwerty.esc.color;
+        wireBtn(esc,tab.qwerty.esc);
+        escRow.appendChild(esc);
+        block.appendChild(escRow);
+      }
+      tab.qwerty.rows.forEach(row=>{
+        const rowEl=document.createElement("div");
+        rowEl.className="pk-row";
+        row.forEach(b=>{
+          const el=document.createElement("button");
+          el.className="pk";
+          el.textContent=b.label;
+          el.style.background=b.color;
+          wireBtn(el,b);
+          rowEl.appendChild(el);
+        });
+        block.appendChild(rowEl);
+      });
+      container.appendChild(block);
+      const g3=document.createElement("div");g3.className="pk-gutter";container.appendChild(g3);
+    }
+    // Bottom bar: mods | space+tab | numpad+return
+    if(tab.bottom){
+      const bot=document.createElement("div");
+      bot.className="pk-bottom";
+      // 2x2 modifier grid
+      const modGrid=document.createElement("div");
+      modGrid.className="pk-mod-grid";
+      tab.bottom.mods.forEach(b=>{
+        const el=document.createElement("button");
+        el.textContent=b.label;
+        el.style.background=b.color;
+        wireBtn(el,b);
+        modGrid.appendChild(el);
+      });
+      bot.appendChild(modGrid);
+      // Middle: space + tab
+      const mid=document.createElement("div");
+      mid.className="pk-mid";
+      tab.bottom.mid.forEach(b=>{
+        const el=document.createElement("button");
+        el.textContent=b.label;
+        el.style.background=b.color;
+        wireBtn(el,b);
+        mid.appendChild(el);
+      });
+      bot.appendChild(mid);
+      // Numpad 3x3 + Return column
+      const numret=document.createElement("div");
+      numret.className="pk-numret";
+      const numGrid=document.createElement("div");
+      numGrid.className="pk-numgrid";
+      tab.bottom.nums.forEach(b=>{
+        const el=document.createElement("button");
+        el.textContent=b.label;
+        el.style.background=b.color;
+        wireBtn(el,b);
+        numGrid.appendChild(el);
+      });
+      numret.appendChild(numGrid);
+      // Return column (spans full height of numpad)
+      const retCol=document.createElement("div");
+      retCol.className="pk-ret";
+      const retBtn=document.createElement("button");
+      retBtn.textContent=tab.bottom.ret.label;
+      retBtn.style.background=tab.bottom.ret.color;
+      wireBtn(retBtn,tab.bottom.ret);
+      retCol.appendChild(retBtn);
+      numret.appendChild(retCol);
+      bot.appendChild(numret);
+      container.appendChild(bot);
+      // Delete bar under numpad (spanning numpad width)
+      if(tab.bottom.del){
+        const delBar=document.createElement("div");
+        delBar.className="pk-del";
+        // Spacers to align with mods+mid above
+        const sp1=document.createElement("div");sp1.className="pk-del-spacer";delBar.appendChild(sp1);
+        const sp2=document.createElement("div");sp2.className="pk-del-mid";delBar.appendChild(sp2);
+        const delBtn=document.createElement("button");
+        delBtn.textContent=tab.bottom.del.label;
+        delBtn.style.background=tab.bottom.del.color;
+        wireBtn(delBtn,tab.bottom.del);
+        delBar.appendChild(delBtn);
+        container.appendChild(delBar);
+      }
     }
   } else {
     // Standard 3-column grid
