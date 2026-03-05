@@ -330,7 +330,8 @@ function wireBtn(el,b){
   if(!b.action){el.disabled=true;el.style.visibility="hidden";return}
   // Modifier toggle buttons
   if(b.action.startsWith("mod_")){
-    const mod=b.action.slice(4);// "mod_shift" → "shift"
+    const raw=b.action.slice(4);// "mod_ctrl" → "ctrl"
+    const mod=raw==="ctrl"?"control":raw;// match HID modifier names
     el.style.opacity="0.6";
     el.onclick=()=>{toggleMod(mod);if(navigator.vibrate)navigator.vibrate(30)};
     modBtns.push({el,mod});
