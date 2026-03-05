@@ -66,23 +66,37 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
   display:flex;align-items:center;justify-content:center}
 .cp button.nk:active{opacity:0.7;transform:scale(0.95)}
 
-/* Phone keyboard: modifiers on left, keys on right */
+/* Phone keyboard — Type/Test tabs */
 .pk-page{min-width:100%;scroll-snap-align:start;display:flex;flex-direction:column;
-  padding:6px;gap:4px;justify-content:flex-end}
-.pk-body{display:flex;gap:4px;flex:1;min-height:0}
-.pk-mods{display:flex;flex-direction:column;gap:3px;width:54px;flex-shrink:0}
-.pk-mods button{border:none;border-radius:8px;color:#e6e6e6;font-size:11px;font-weight:700;
+  padding:6px;gap:0;overflow-y:auto;justify-content:flex-end}
+.pk-section{flex-shrink:0;margin-bottom:4px}
+.pk-section-label{font-size:10px;color:#666;text-transform:uppercase;letter-spacing:1px;
+  padding:2px 4px;flex-shrink:0}
+.pk-rows{display:flex;flex-direction:column;gap:3px;flex-shrink:0}
+.pk-rows .pk-row{display:flex;gap:2px;width:100%}
+.pk-rows button.pk{border:none;border-radius:8px;color:#e6e6e6;font-weight:600;
+  height:42px;flex:1;min-width:0;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  display:flex;align-items:center;justify-content:center;padding:0;font-size:14px}
+.pk-rows button.pk:active{opacity:0.7;transform:scale(0.95)}
+.pk-rows button.pk.sm{font-size:11px;color:#bbb}
+.pk-rows button.pk.space{flex:3}
+/* Bottom section: mods + space + numpad */
+.pk-bottom{display:flex;gap:4px;flex-shrink:0;margin-top:4px}
+.pk-bottom .pk-mod-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px;width:90px;flex-shrink:0}
+.pk-bottom .pk-mod-grid button{border:none;border-radius:8px;color:#e6e6e6;font-size:10px;font-weight:700;
+  height:40px;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  display:flex;align-items:center;justify-content:center}
+.pk-bottom .pk-mod-grid button:active{opacity:0.7;transform:scale(0.95)}
+.pk-bottom .pk-mid{display:flex;flex-direction:column;gap:3px;flex:1}
+.pk-bottom .pk-mid button{border:none;border-radius:8px;color:#e6e6e6;font-size:14px;font-weight:600;
   flex:1;cursor:pointer;-webkit-tap-highlight-color:transparent;
-  display:flex;align-items:center;justify-content:center;min-height:0}
-.pk-mods button:active{opacity:0.7;transform:scale(0.95)}
-.pk-keys{display:flex;flex-direction:column;gap:3px;flex:1}
-.pk-keys .kb-row{display:flex;gap:2px;width:100%}
-.pk-keys button.key{border:none;border-radius:6px;color:#e6e6e6;font-size:13px;font-weight:600;
-  flex:1;min-width:0;cursor:pointer;-webkit-tap-highlight-color:transparent;
-  display:flex;align-items:center;justify-content:center;padding:0;min-height:0}
-.pk-keys button.key:active{opacity:0.7;transform:scale(0.93)}
-.pk-keys button.key.wide{flex:1.5}
-.pk-keys button.key.space{flex:3}
+  display:flex;align-items:center;justify-content:center}
+.pk-bottom .pk-mid button:active{opacity:0.7;transform:scale(0.95)}
+.pk-bottom .pk-numgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;width:90px;flex-shrink:0}
+.pk-bottom .pk-numgrid button{border:none;border-radius:8px;color:#e6e6e6;font-size:14px;font-weight:600;
+  height:40px;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  display:flex;align-items:center;justify-content:center}
+.pk-bottom .pk-numgrid button:active{opacity:0.7;transform:scale(0.95)}
 
 /* Status bar */
 #status{padding:8px 16px;text-align:center;font-size:13px;flex-shrink:0}
@@ -99,6 +113,7 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
   <button data-idx="3">Keyboard</button>
   <button data-idx="4">Numpad</button>
   <button data-idx="5">Type</button>
+  <button data-idx="6">Test</button>
 </div>
 
 <div class="swipe" id="swipe">
@@ -114,6 +129,8 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
   <div class="kb-page" id="tab4"></div>
   <!-- Type -->
   <div class="pk-page" id="tab5"></div>
+  <!-- Test -->
+  <div class="pk-page" id="tab6"></div>
 </div>
 
 <div id="status" class="disconnected"><span class="dot"></span><span id="stxt">Disconnected</span></div>
@@ -285,13 +302,24 @@ const tabs = [
   },
   { name:"Type", layout:"phone",
     sw:{action:"superwhisper_toggle",label:"SuperWhisper",long:"superwhisper_paste"},
-    mods:[
-      {action:"shift_lock",label:"\u21EA",color:"#e74c3c"},
-      {action:"mod_shift",label:"\u21E7",color:"#7f8c8d"},
-      {action:"mod_ctrl",label:"Ctrl",color:"#2c3e50"},
-      {action:"mod_option",label:"Opt",color:"#8e44ad"},
-      {action:"mod_command",label:"Cmd",color:"#2980b9"},
+    // Shifted symbols block (top)
+    shifted:[
+    [
+      {label:"~",hid:"grave_accent_and_tilde",shift:true,color:"#3a3a3a"},
+      {label:"!",hid:"1",shift:true,color:"#3a3a3a"},{label:"@",hid:"2",shift:true,color:"#3a3a3a"},
+      {label:"#",hid:"3",shift:true,color:"#3a3a3a"},{label:"$",hid:"4",shift:true,color:"#3a3a3a"},
+      {label:"%",hid:"5",shift:true,color:"#3a3a3a"},{label:"^",hid:"6",shift:true,color:"#3a3a3a"},
+      {label:"&",hid:"7",shift:true,color:"#3a3a3a"},{label:"*",hid:"8",shift:true,color:"#3a3a3a"},
+      {label:"(",hid:"9",shift:true,color:"#3a3a3a"},{label:")",hid:"0",shift:true,color:"#3a3a3a"},
+      {label:"_",hid:"hyphen",shift:true,color:"#3a3a3a"},{label:"+",hid:"equal_sign",shift:true,color:"#3a3a3a"},
+    ],[
+      {label:"{",hid:"open_bracket",shift:true,color:"#3a3a3a"},{label:"}",hid:"close_bracket",shift:true,color:"#3a3a3a"},
+      {label:"|",hid:"backslash",shift:true,color:"#3a3a3a"},{label:":",hid:"semicolon",shift:true,color:"#3a3a3a"},
+      {label:"\"",hid:"quote",shift:true,color:"#3a3a3a"},{label:"<",hid:"comma",shift:true,color:"#3a3a3a"},
+      {label:">",hid:"period",shift:true,color:"#3a3a3a"},{label:"?",hid:"slash",shift:true,color:"#3a3a3a"},
     ],
+    ],
+    // Regular keyboard (middle)
     rows:[
     [
       {action:"key_q",label:"Q",color:"#333",hid:"q"},{action:"key_w",label:"W",color:"#333",hid:"w"},
@@ -304,14 +332,14 @@ const tabs = [
       {action:"key_d",label:"D",color:"#333",hid:"d"},{action:"key_f",label:"F",color:"#333",hid:"f"},
       {action:"key_g",label:"G",color:"#333",hid:"g"},{action:"key_h",label:"H",color:"#333",hid:"h"},
       {action:"key_j",label:"J",color:"#333",hid:"j"},{action:"key_k",label:"K",color:"#333",hid:"k"},
-      {action:"key_l",label:"L",color:"#333",hid:"l"},{action:"key_semicolon",label:";",color:"#444",hid:"semicolon"},
+      {action:"key_l",label:"L",color:"#333",hid:"l"},
     ],[
       {action:"key_z",label:"Z",color:"#333",hid:"z"},{action:"key_x",label:"X",color:"#333",hid:"x"},
       {action:"key_c",label:"C",color:"#333",hid:"c"},{action:"key_v",label:"V",color:"#333",hid:"v"},
       {action:"key_b",label:"B",color:"#333",hid:"b"},{action:"key_n",label:"N",color:"#333",hid:"n"},
-      {action:"key_m",label:"M",color:"#333",hid:"m"},{action:"key_comma",label:",",color:"#444",hid:"comma"},
-      {action:"key_period",label:".",color:"#444",hid:"period"},{action:"key_slash",label:"/",color:"#444",hid:"slash"},
+      {action:"key_m",label:"M",color:"#333",hid:"m"},
     ],[
+      {action:"key_grave",label:"`",color:"#444",hid:"grave_accent_and_tilde"},
       {action:"key_1",label:"1",color:"#444",hid:"1"},{action:"key_2",label:"2",color:"#444",hid:"2"},
       {action:"key_3",label:"3",color:"#444",hid:"3"},{action:"key_4",label:"4",color:"#444",hid:"4"},
       {action:"key_5",label:"5",color:"#444",hid:"5"},{action:"key_6",label:"6",color:"#444",hid:"6"},
@@ -320,20 +348,109 @@ const tabs = [
     ],[
       {action:"key_hyphen",label:"-",color:"#444",hid:"hyphen"},{action:"key_equal",label:"=",color:"#444",hid:"equal_sign"},
       {action:"key_open_bracket",label:"[",color:"#444",hid:"open_bracket"},{action:"key_close_bracket",label:"]",color:"#444",hid:"close_bracket"},
-      {action:"key_quote",label:"'",color:"#444",hid:"quote"},{action:"key_grave",label:"`",color:"#444",hid:"grave_accent_and_tilde"},
-      {action:"key_backslash",label:"\\",color:"#444",hid:"backslash"},
-      {action:"key_tab",label:"Tab",color:"#555",hid:"tab"},
-      {action:"key_escape",label:"Esc",color:"#c0392b",hid:"escape"},
-      {action:"key_backspace",label:"\u232B",color:"#555",hid:"delete_or_backspace",repeat:true},
-    ],[
-      {action:"key_space",label:"Space",color:"#444",css:"space",hid:"spacebar",repeat:true},
-      {action:"key_enter",label:"\u21B5",color:"#27ae60",hid:"return_or_enter"},
-      {action:"arrow_left",label:"\u25C0",color:"#1abc9c",hid:"left_arrow",repeat:true},
-      {action:"arrow_down",label:"\u25BC",color:"#1abc9c",hid:"down_arrow",repeat:true},
-      {action:"arrow_up",label:"\u25B2",color:"#1abc9c",hid:"up_arrow",repeat:true},
-      {action:"arrow_right",label:"\u25B6",color:"#1abc9c",hid:"right_arrow",repeat:true},
+      {action:"key_semicolon",label:";",color:"#444",hid:"semicolon"},{action:"key_quote",label:"'",color:"#444",hid:"quote"},
+      {action:"key_comma",label:",",color:"#444",hid:"comma"},{action:"key_period",label:".",color:"#444",hid:"period"},
+      {action:"key_slash",label:"/",color:"#444",hid:"slash"},{action:"key_backslash",label:"\\",color:"#444",hid:"backslash"},
     ],
-  ]},
+    ],
+    // Bottom bar: modifiers, space/enter/esc/bksp, numpad
+    bottom:{
+      mods:[
+        {action:"shift_lock",label:"\u21EA",color:"#e74c3c"},
+        {action:"mod_shift",label:"\u21E7",color:"#7f8c8d"},
+        {action:"mod_ctrl",label:"Ctrl",color:"#2c3e50"},
+        {action:"mod_command",label:"Cmd",color:"#2980b9"},
+      ],
+      mid:[
+        {action:"key_space",label:"Space",color:"#444",hid:"spacebar",repeat:true,css:"space"},
+        {action:"key_enter",label:"\u21B5",color:"#27ae60",hid:"return_or_enter"},
+        {action:"key_escape",label:"Esc",color:"#c0392b",hid:"escape"},
+        {action:"key_backspace",label:"\u232B",color:"#555",hid:"delete_or_backspace",repeat:true},
+        {action:"key_tab",label:"Tab",color:"#555",hid:"tab"},
+      ],
+      nums:[
+        {action:"key_7",label:"7",color:"#444",hid:"7"},{action:"key_8",label:"8",color:"#444",hid:"8"},{action:"key_9",label:"9",color:"#444",hid:"9"},
+        {action:"key_4",label:"4",color:"#444",hid:"4"},{action:"key_5",label:"5",color:"#444",hid:"5"},{action:"key_6",label:"6",color:"#444",hid:"6"},
+        {action:"key_1",label:"1",color:"#444",hid:"1"},{action:"key_2",label:"2",color:"#444",hid:"2"},{action:"key_3",label:"3",color:"#444",hid:"3"},
+      ],
+    },
+  },
+  // Test tab: shifted keyboard block above regular keyboard block
+  { name:"Test", layout:"phone",
+    sw:{action:"superwhisper_toggle",label:"SuperWhisper",long:"superwhisper_paste"},
+    // Shifted keyboard block — complete layout with shift+key for every key
+    shifted:[
+    [
+      {label:"~",hid:"grave_accent_and_tilde",shift:true,color:"#3a3a3a"},
+      {label:"!",hid:"1",shift:true,color:"#3a3a3a"},{label:"@",hid:"2",shift:true,color:"#3a3a3a"},
+      {label:"#",hid:"3",shift:true,color:"#3a3a3a"},{label:"$",hid:"4",shift:true,color:"#3a3a3a"},
+      {label:"%",hid:"5",shift:true,color:"#3a3a3a"},{label:"^",hid:"6",shift:true,color:"#3a3a3a"},
+      {label:"&",hid:"7",shift:true,color:"#3a3a3a"},{label:"*",hid:"8",shift:true,color:"#3a3a3a"},
+      {label:"(",hid:"9",shift:true,color:"#3a3a3a"},{label:")",hid:"0",shift:true,color:"#3a3a3a"},
+    ],[
+      {label:"{",hid:"open_bracket",shift:true,color:"#3a3a3a"},{label:"}",hid:"close_bracket",shift:true,color:"#3a3a3a"},
+      {label:"|",hid:"backslash",shift:true,color:"#3a3a3a"},{label:":",hid:"semicolon",shift:true,color:"#3a3a3a"},
+      {label:"\"",hid:"quote",shift:true,color:"#3a3a3a"},{label:"<",hid:"comma",shift:true,color:"#3a3a3a"},
+      {label:">",hid:"period",shift:true,color:"#3a3a3a"},{label:"?",hid:"slash",shift:true,color:"#3a3a3a"},
+      {label:"_",hid:"hyphen",shift:true,color:"#3a3a3a"},{label:"+",hid:"equal_sign",shift:true,color:"#3a3a3a"},
+    ],
+    ],
+    // Regular QWERTY keyboard block
+    rows:[
+    [
+      {action:"key_q",label:"Q",color:"#333",hid:"q"},{action:"key_w",label:"W",color:"#333",hid:"w"},
+      {action:"key_e",label:"E",color:"#333",hid:"e"},{action:"key_r",label:"R",color:"#333",hid:"r"},
+      {action:"key_t",label:"T",color:"#333",hid:"t"},{action:"key_y",label:"Y",color:"#333",hid:"y"},
+      {action:"key_u",label:"U",color:"#333",hid:"u"},{action:"key_i",label:"I",color:"#333",hid:"i"},
+      {action:"key_o",label:"O",color:"#333",hid:"o"},{action:"key_p",label:"P",color:"#333",hid:"p"},
+    ],[
+      {action:"key_a",label:"A",color:"#333",hid:"a"},{action:"key_s",label:"S",color:"#333",hid:"s"},
+      {action:"key_d",label:"D",color:"#333",hid:"d"},{action:"key_f",label:"F",color:"#333",hid:"f"},
+      {action:"key_g",label:"G",color:"#333",hid:"g"},{action:"key_h",label:"H",color:"#333",hid:"h"},
+      {action:"key_j",label:"J",color:"#333",hid:"j"},{action:"key_k",label:"K",color:"#333",hid:"k"},
+      {action:"key_l",label:"L",color:"#333",hid:"l"},
+    ],[
+      {action:"key_z",label:"Z",color:"#333",hid:"z"},{action:"key_x",label:"X",color:"#333",hid:"x"},
+      {action:"key_c",label:"C",color:"#333",hid:"c"},{action:"key_v",label:"V",color:"#333",hid:"v"},
+      {action:"key_b",label:"B",color:"#333",hid:"b"},{action:"key_n",label:"N",color:"#333",hid:"n"},
+      {action:"key_m",label:"M",color:"#333",hid:"m"},
+    ],[
+      {action:"key_grave",label:"`",color:"#444",hid:"grave_accent_and_tilde"},
+      {action:"key_1",label:"1",color:"#444",hid:"1"},{action:"key_2",label:"2",color:"#444",hid:"2"},
+      {action:"key_3",label:"3",color:"#444",hid:"3"},{action:"key_4",label:"4",color:"#444",hid:"4"},
+      {action:"key_5",label:"5",color:"#444",hid:"5"},{action:"key_6",label:"6",color:"#444",hid:"6"},
+      {action:"key_7",label:"7",color:"#444",hid:"7"},{action:"key_8",label:"8",color:"#444",hid:"8"},
+      {action:"key_9",label:"9",color:"#444",hid:"9"},{action:"key_0",label:"0",color:"#444",hid:"0"},
+    ],[
+      {action:"key_hyphen",label:"-",color:"#444",hid:"hyphen"},{action:"key_equal",label:"=",color:"#444",hid:"equal_sign"},
+      {action:"key_open_bracket",label:"[",color:"#444",hid:"open_bracket"},{action:"key_close_bracket",label:"]",color:"#444",hid:"close_bracket"},
+      {action:"key_semicolon",label:";",color:"#444",hid:"semicolon"},{action:"key_quote",label:"'",color:"#444",hid:"quote"},
+      {action:"key_comma",label:",",color:"#444",hid:"comma"},{action:"key_period",label:".",color:"#444",hid:"period"},
+      {action:"key_slash",label:"/",color:"#444",hid:"slash"},{action:"key_backslash",label:"\\",color:"#444",hid:"backslash"},
+    ],
+    ],
+    // Bottom bar: modifiers, space/enter/esc/bksp, numpad
+    bottom:{
+      mods:[
+        {action:"shift_lock",label:"\u21EA",color:"#e74c3c"},
+        {action:"mod_shift",label:"\u21E7",color:"#7f8c8d"},
+        {action:"mod_ctrl",label:"Ctrl",color:"#2c3e50"},
+        {action:"mod_command",label:"Cmd",color:"#2980b9"},
+      ],
+      mid:[
+        {action:"key_space",label:"Space",color:"#444",hid:"spacebar",repeat:true,css:"space"},
+        {action:"key_enter",label:"\u21B5",color:"#27ae60",hid:"return_or_enter"},
+        {action:"key_escape",label:"Esc",color:"#c0392b",hid:"escape"},
+        {action:"key_backspace",label:"\u232B",color:"#555",hid:"delete_or_backspace",repeat:true},
+        {action:"key_tab",label:"Tab",color:"#555",hid:"tab"},
+      ],
+      nums:[
+        {action:"key_7",label:"7",color:"#444",hid:"7"},{action:"key_8",label:"8",color:"#444",hid:"8"},{action:"key_9",label:"9",color:"#444",hid:"9"},
+        {action:"key_4",label:"4",color:"#444",hid:"4"},{action:"key_5",label:"5",color:"#444",hid:"5"},{action:"key_6",label:"6",color:"#444",hid:"6"},
+        {action:"key_1",label:"1",color:"#444",hid:"1"},{action:"key_2",label:"2",color:"#444",hid:"2"},{action:"key_3",label:"3",color:"#444",hid:"3"},
+      ],
+    },
+  },
 ];
 
 let ws;
@@ -572,38 +689,94 @@ tabs.forEach((tab,i)=>{
       wireBtn(sw,tab.sw);
       container.appendChild(sw);
     }
-    // Body: modifiers on left, keys on right
-    const body=document.createElement("div");
-    body.className="pk-body";
-    // Left modifier column
-    const modCol=document.createElement("div");
-    modCol.className="pk-mods";
-    tab.mods.forEach(b=>{
-      const el=document.createElement("button");
-      el.textContent=b.label;
-      el.style.background=b.color;
-      wireBtn(el,b);
-      modCol.appendChild(el);
-    });
-    body.appendChild(modCol);
-    // Right key area
-    const keyArea=document.createElement("div");
-    keyArea.className="pk-keys";
-    tab.rows.forEach(row=>{
-      const rowEl=document.createElement("div");
-      rowEl.className="kb-row";
-      row.forEach(b=>{
+    // Shifted keyboard block (sends shift+key)
+    if(tab.shifted){
+      const sec=document.createElement("div");
+      sec.className="pk-section";
+      const lbl=document.createElement("div");
+      lbl.className="pk-section-label";
+      lbl.textContent="shifted";
+      sec.appendChild(lbl);
+      const block=document.createElement("div");
+      block.className="pk-rows";
+      tab.shifted.forEach(row=>{
+        const rowEl=document.createElement("div");
+        rowEl.className="pk-row";
+        row.forEach(b=>{
+          const el=document.createElement("button");
+          el.className="pk sm";
+          el.textContent=b.label;
+          el.style.background=b.color;
+          // Shifted keys send keypress with shift modifier
+          el.onclick=()=>{sendKeypress(b.hid,["shift"]);if(navigator.vibrate)navigator.vibrate(30)};
+          rowEl.appendChild(el);
+        });
+        block.appendChild(rowEl);
+      });
+      sec.appendChild(block);
+      container.appendChild(sec);
+    }
+    // Regular keyboard block
+    if(tab.rows){
+      const sec=document.createElement("div");
+      sec.className="pk-section";
+      const block=document.createElement("div");
+      block.className="pk-rows";
+      tab.rows.forEach(row=>{
+        const rowEl=document.createElement("div");
+        rowEl.className="pk-row";
+        row.forEach(b=>{
+          const el=document.createElement("button");
+          el.className="pk"+(b.css?" "+b.css:"");
+          el.textContent=b.label;
+          el.style.background=b.color;
+          wireBtn(el,b);
+          rowEl.appendChild(el);
+        });
+        block.appendChild(rowEl);
+      });
+      sec.appendChild(block);
+      container.appendChild(sec);
+    }
+    // Bottom bar: modifier grid + space/enter/etc + numpad
+    if(tab.bottom){
+      const bot=document.createElement("div");
+      bot.className="pk-bottom";
+      // Modifier 2x2 grid
+      const modGrid=document.createElement("div");
+      modGrid.className="pk-mod-grid";
+      tab.bottom.mods.forEach(b=>{
         const el=document.createElement("button");
-        el.className="key"+(b.css?" "+b.css:"");
         el.textContent=b.label;
         el.style.background=b.color;
         wireBtn(el,b);
-        rowEl.appendChild(el);
+        modGrid.appendChild(el);
       });
-      keyArea.appendChild(rowEl);
-    });
-    body.appendChild(keyArea);
-    container.appendChild(body);
+      bot.appendChild(modGrid);
+      // Middle: space, enter, esc, backspace, tab
+      const mid=document.createElement("div");
+      mid.className="pk-mid";
+      tab.bottom.mid.forEach(b=>{
+        const el=document.createElement("button");
+        el.textContent=b.label;
+        el.style.background=b.color;
+        wireBtn(el,b);
+        mid.appendChild(el);
+      });
+      bot.appendChild(mid);
+      // Numpad 3x3
+      const numGrid=document.createElement("div");
+      numGrid.className="pk-numgrid";
+      tab.bottom.nums.forEach(b=>{
+        const el=document.createElement("button");
+        el.textContent=b.label;
+        el.style.background=b.color;
+        wireBtn(el,b);
+        numGrid.appendChild(el);
+      });
+      bot.appendChild(numGrid);
+      container.appendChild(bot);
+    }
   } else {
     // Standard 3-column grid
     tab.buttons.forEach(b=>{
