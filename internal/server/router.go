@@ -52,9 +52,7 @@ func (r *Router) handleAction(msg *protocol.IncomingMessage) []byte {
 		if err != nil {
 			return r.encodeAck(msg.ID, fmt.Sprintf("invalid keypress payload: %v", err))
 		}
-		if len(kp.Modifiers) > 0 {
-			log.Printf("[Router] keypress key=%s modifiers=%v", kp.Key, kp.Modifiers)
-		}
+		log.Printf("[Router] keypress key=%q modifiers=%v (raw payload: %s)", kp.Key, kp.Modifiers, string(msg.Payload))
 		steps = []protocol.KeyStep{
 			{Key: kp.Key, Modifiers: kp.Modifiers},
 		}
@@ -70,8 +68,10 @@ func (r *Router) handleAction(msg *protocol.IncomingMessage) []byte {
 		// Named action — resolve via registry
 		resolved, ok := r.resolver.Resolve(msg.Action)
 		if !ok {
+			log.Printf("[Router] unknown action: %s", msg.Action)
 			return r.encodeAck(msg.ID, fmt.Sprintf("unknown action: %s", msg.Action))
 		}
+		log.Printf("[Router] action=%q steps=%d", msg.Action, len(resolved))
 		steps = resolved
 	}
 
