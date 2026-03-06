@@ -540,7 +540,7 @@ function sendKeypress(key,modifiers){
 // Key repeat support
 function addRepeat(el,fn){
   let iv,to;
-  const start=(e)=>{e.preventDefault();fn();to=setTimeout(()=>{iv=setInterval(fn,80)},400)};
+  const start=(e)=>{e.preventDefault();fn();to=setTimeout(()=>{iv=setInterval(fn,80)},500)};
   const stop=()=>{clearTimeout(to);clearInterval(iv)};
   el.addEventListener("touchstart",start,{passive:false});
   el.addEventListener("touchend",stop);
@@ -569,8 +569,8 @@ function wireBtn(el,b){
     modBtns.push({el,mod});
     return;
   }
-  // Repeating keys (arrows, backspace, delete, space)
-  if(b.repeat){
+  // All typeable keys repeat (standard keyboard behavior)
+  if(b.repeat||b.hid){
     const fn=()=>sendKey(b.action,b);
     addRepeat(el,fn);
     el.onclick=null;// repeat handles it
