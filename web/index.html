@@ -119,7 +119,7 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
 /* p5.js canvas pages */
 .p5-page{min-width:100%;scroll-snap-align:start;display:flex;flex-direction:column;
   padding:0;overflow:hidden}
-.p5-page canvas{width:100%!important;height:100%!important;display:block}
+.p5-page canvas{width:100%!important;height:100%!important;display:block;touch-action:pan-x}
 
 /* Status bar */
 #status{padding:8px 16px;text-align:center;font-size:13px;flex-shrink:0}
@@ -1038,6 +1038,7 @@ new p5(function(p){
   p.setup=function(){
     const c=p.createCanvas(100,100);
     c.parent("tab7");
+    c.elt.style.touchAction="pan-x";// allow horizontal swipe
     p.textAlign(p.CENTER,p.CENTER);
     p.textFont("system-ui");
     resize();
@@ -1093,16 +1094,16 @@ new p5(function(p){
   }
 
   p.touchStarted=function(e){
-    if(!e.target||e.target.tagName!=="CANVAS")return;
+    if(!e.target||e.target.tagName!=="CANVAS")return true;
     const t=p.touches.length?p.touches[0]:{x:p.mouseX,y:p.mouseY};
     pressed=hitTest(t.x,t.y);
-    if(pressed){pressAnim=1;e.preventDefault()}
-    return false;
+    if(pressed){pressAnim=1;return false}
+    return true;// let swipe through
   };
-  p.touchEnded=function(e){
+  p.touchEnded=function(){
     if(pressed){send(pressed.action);if(navigator.vibrate)navigator.vibrate(30)}
     pressed=null;
-    return false;
+    return true;
   };
   p.mousePressed=function(){
     pressed=hitTest(p.mouseX,p.mouseY);
@@ -1168,6 +1169,7 @@ new p5(function(p){
   p.setup=function(){
     const c=p.createCanvas(100,100);
     c.parent("tab8");
+    c.elt.style.touchAction="pan-x";// allow horizontal swipe
     p.textAlign(p.CENTER,p.CENTER);
     p.textFont("system-ui");
     resize();
@@ -1306,14 +1308,14 @@ new p5(function(p){
   }
 
   p.touchStarted=function(e){
-    if(!e.target||e.target.tagName!=="CANVAS")return;
+    if(!e.target||e.target.tagName!=="CANVAS")return true;
     const t=p.touches.length?p.touches[0]:{x:p.mouseX,y:p.mouseY};
-    handlePress(t.x,t.y);
-    e.preventDefault();
-    return false;
+    const k=hitTest(t.x,t.y);
+    if(k){handlePress(t.x,t.y);return false}
+    return true;// let swipe through
   };
-  p.touchEnded=function(){handleRelease();return false};
-  p.touchMoved=function(e){e.preventDefault();return false};
+  p.touchEnded=function(){handleRelease();return true};
+  p.touchMoved=function(){return true};// allow swipe
   p.mousePressed=function(){handlePress(p.mouseX,p.mouseY)};
   p.mouseReleased=function(){handleRelease()};
 },"tab8");
