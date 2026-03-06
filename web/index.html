@@ -139,6 +139,7 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
   <button data-idx="6">Test</button>
   <button data-idx="7">p5 YT</button>
   <button data-idx="8">p5 KB</button>
+  <button data-idx="9">SCI-FI</button>
 </div>
 
 <div class="swipe" id="swipe">
@@ -160,6 +161,8 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
   <div class="p5-page" id="tab7"></div>
   <!-- p5 Keyboard -->
   <div class="p5-page" id="tab8"></div>
+  <!-- SCI-FI -->
+  <div class="p5-page" id="tab9"></div>
 </div>
 
 <div id="status" class="disconnected"><span class="dot"></span><span id="stxt">Disconnected</span></div>
@@ -1319,5 +1322,362 @@ new p5(function(p){
   p.mousePressed=function(){handlePress(p.mouseX,p.mouseY)};
   p.mouseReleased=function(){handleRelease()};
 },"tab8");
+
+// ═══════════════════════════════════════════════════════════════
+// SCI-FI Terminal Keyboard — phosphor green CRT aesthetic
+// ═══════════════════════════════════════════════════════════════
+new p5(function(p){
+  let keys=[];
+  let pressed=null;
+  let pressFlash=0;
+  let bootFrame=0;
+  const bootDuration=60;// frames
+  let scanOffset=0;
+  let repeatTimer=null,repeatInterval=null;
+  // Modifier state
+  const sMods={shift:false,control:false,option:false,command:false};
+  let sShiftLock=false;
+
+  // Colors
+  const GREEN=[0,255,65];
+  const DIM_GREEN=[0,180,45];
+  const DARK_GREEN=[0,60,15];
+  const AMBER=[255,176,0];
+  const RED=[255,50,30];
+  const BG=[2,8,2];
+  const GRID_COLOR=[0,40,10];
+
+  const kbLayout=[
+    // Row 0: number row
+    [{l:"`",hid:"grave_accent_and_tilde",sl:"~"},{l:"1",hid:"1",sl:"!"},{l:"2",hid:"2",sl:"@"},
+     {l:"3",hid:"3",sl:"#"},{l:"4",hid:"4",sl:"$"},{l:"5",hid:"5",sl:"%"},
+     {l:"6",hid:"6",sl:"^"},{l:"7",hid:"7",sl:"&"},{l:"8",hid:"8",sl:"*"},
+     {l:"9",hid:"9",sl:"("},{l:"0",hid:"0",sl:")"},
+     {l:"-",hid:"hyphen",sl:"_"},{l:"=",hid:"equal_sign",sl:"+"}],
+    // Row 1: QWERTY
+    [{l:"Q",hid:"q"},{l:"W",hid:"w"},{l:"E",hid:"e"},{l:"R",hid:"r"},{l:"T",hid:"t"},
+     {l:"Y",hid:"y"},{l:"U",hid:"u"},{l:"I",hid:"i"},{l:"O",hid:"o"},{l:"P",hid:"p"},
+     {l:"[",hid:"open_bracket",sl:"{"},{l:"]",hid:"close_bracket",sl:"}"}],
+    // Row 2: home row
+    [{l:"A",hid:"a"},{l:"S",hid:"s"},{l:"D",hid:"d"},{l:"F",hid:"f"},{l:"G",hid:"g"},
+     {l:"H",hid:"h"},{l:"J",hid:"j"},{l:"K",hid:"k"},{l:"L",hid:"l"},
+     {l:";",hid:"semicolon",sl:":"},{l:"'",hid:"quote",sl:"\""},{l:"\\",hid:"backslash",sl:"|"}],
+    // Row 3: bottom letters
+    [{l:"Z",hid:"z"},{l:"X",hid:"x"},{l:"C",hid:"c"},{l:"V",hid:"v"},{l:"B",hid:"b"},
+     {l:"N",hid:"n"},{l:"M",hid:"m"},{l:",",hid:"comma",sl:"<"},
+     {l:".",hid:"period",sl:">"},{l:"/",hid:"slash",sl:"?"}],
+    // Row 4: modifiers + space
+    [{l:"CAPS",mod:"shiftlock",w:1.3},{l:"SHIFT",mod:"shift",w:1.3},
+     {l:"CTRL",mod:"control",w:1.2},{l:"OPT",mod:"option",w:1.0},
+     {l:"",hid:"spacebar",w:3,space:true},
+     {l:"CMD",mod:"command",w:1.2},
+     {l:"BSP",hid:"delete_or_backspace",w:1.0},
+     {l:"RET",hid:"return_or_enter",w:1.5}],
+    // Row 5: function row
+    [{l:"ESC",hid:"escape",w:1.3,special:true},
+     {l:"TAB",hid:"tab",w:1.0},
+     {l:"F1",hid:"f1"},{l:"F2",hid:"f2"},{l:"F3",hid:"f3"},{l:"F4",hid:"f4"},
+     {l:"F5",hid:"f5"},{l:"F6",hid:"f6"},{l:"F7",hid:"f7"},{l:"F8",hid:"f8"},
+     {l:"F9",hid:"f9"},{l:"F10",hid:"f10"}],
+  ];
+
+  p.setup=function(){
+    const c=p.createCanvas(100,100);
+    c.parent("tab9");
+    c.elt.style.touchAction="pan-x";
+    p.textAlign(p.CENTER,p.CENTER);
+    p.textFont("monospace");
+    resize();
+    bootFrame=0;
+  };
+
+  function resize(){
+    const el=document.getElementById("tab9");
+    p.resizeCanvas(el.clientWidth,el.clientHeight);
+    buildKeys();
+  }
+
+  function buildKeys(){
+    const pad=8,gapX=3,gapY=3;
+    const rows=kbLayout.length;
+    const rowH=(p.height-pad*2-(rows-1)*gapY)/rows;
+    keys=[];
+    kbLayout.forEach((row,ri)=>{
+      const totalW=row.reduce((s,k)=>s+(k.w||1),0);
+      const unitW=(p.width-pad*2-(row.length-1)*gapX)/totalW;
+      let x=pad;
+      row.forEach(k=>{
+        const w=(k.w||1)*unitW+((k.w||1)>1?((k.w||1)-1)*gapX:0);
+        keys.push({...k,x,y:pad+ri*(rowH+gapY),bw:w,bh:rowH});
+        x+=w+gapX;
+      });
+    });
+  }
+
+  p.windowResized=function(){resize()};
+
+  function isModActive(mod){
+    if(mod==="shiftlock")return sShiftLock;
+    return sMods[mod];
+  }
+  function getActiveModList(){
+    const a=[];for(const k in sMods)if(sMods[k])a.push(k);return a;
+  }
+  function clearSMods(){
+    for(const k in sMods)sMods[k]=false;
+    if(sShiftLock)sMods.shift=true;
+  }
+  function getLabel(k){
+    if(!k.sl)return k.l;
+    return sMods.shift?k.sl:k.l;
+  }
+
+  p.draw=function(){
+    p.background(...BG);
+
+    // Boot sequence
+    if(bootFrame<bootDuration){
+      drawBoot();
+      bootFrame++;
+      return;
+    }
+
+    // CRT scanlines
+    scanOffset=(scanOffset+0.5)%4;
+    p.stroke(0,20,5,40);
+    p.strokeWeight(1);
+    for(let y=scanOffset;y<p.height;y+=4){
+      p.line(0,y,p.width,y);
+    }
+
+    // Subtle grid
+    p.stroke(...GRID_COLOR,30);
+    p.strokeWeight(0.5);
+    for(let x=0;x<p.width;x+=20)p.line(x,0,x,p.height);
+    for(let y=0;y<p.height;y+=20)p.line(0,y,p.width,y);
+
+    if(pressFlash>0)pressFlash-=0.04;
+
+    // Draw keys
+    keys.forEach(k=>{
+      const isPressed=pressed===k;
+      const isMod=!!k.mod;
+      const modActive=isMod&&isModActive(k.mod);
+
+      // Key color logic
+      let keyColor=DIM_GREEN;
+      let borderColor=DARK_GREEN;
+      let textColor=GREEN;
+      let glowAlpha=0;
+
+      if(k.special){keyColor=[40,10,5];borderColor=RED;textColor=RED}
+      else if(k.mod==="shiftlock"){
+        keyColor=modActive?[40,20,0]:[20,10,0];
+        borderColor=AMBER;textColor=AMBER;
+        glowAlpha=modActive?40:0;
+      } else if(isMod){
+        keyColor=modActive?[0,40,10]:[0,15,5];
+        borderColor=modActive?GREEN:DIM_GREEN;
+        textColor=modActive?GREEN:DIM_GREEN;
+        glowAlpha=modActive?30:0;
+      } else if(isPressed){
+        keyColor=[0,80,20];borderColor=GREEN;textColor=[200,255,200];
+        glowAlpha=60;
+      } else {
+        keyColor=[0,20,5];borderColor=DARK_GREEN;textColor=DIM_GREEN;
+      }
+
+      // Glow
+      if(glowAlpha>0||(isPressed&&pressFlash>0)){
+        const ga=Math.max(glowAlpha,pressFlash*80);
+        p.noStroke();
+        p.fill(borderColor[0],borderColor[1],borderColor[2],ga);
+        p.rect(k.x-2,k.y-2,k.bw+4,k.bh+4,4);
+      }
+
+      // Key body
+      p.fill(...keyColor);
+      p.stroke(...borderColor);
+      p.strokeWeight(1);
+      p.rect(k.x,k.y,k.bw,k.bh,3);
+
+      // Inner border highlight (top-left light)
+      p.stroke(borderColor[0],borderColor[1],borderColor[2],40);
+      p.line(k.x+2,k.y+1,k.x+k.bw-2,k.y+1);
+      p.line(k.x+1,k.y+2,k.x+1,k.y+k.bh-2);
+
+      // Corner dots — sci-fi detail
+      p.noStroke();
+      p.fill(...borderColor,50);
+      const d=2;
+      p.circle(k.x+4,k.y+4,d);
+      p.circle(k.x+k.bw-4,k.y+4,d);
+      p.circle(k.x+4,k.y+k.bh-4,d);
+      p.circle(k.x+k.bw-4,k.y+k.bh-4,d);
+
+      // Space bar line decoration
+      if(k.space){
+        p.stroke(...borderColor,60);
+        p.strokeWeight(1);
+        const cy=k.y+k.bh/2;
+        p.line(k.x+10,cy,k.x+k.bw-10,cy);
+        // Dashes
+        for(let dx=k.x+20;dx<k.x+k.bw-20;dx+=12){
+          p.stroke(...GREEN,30);
+          p.line(dx,cy-2,dx,cy+2);
+        }
+      }
+
+      // Label
+      p.noStroke();
+      p.fill(...textColor);
+      const label=getLabel(k);
+      const sz=label.length>3?9:(label.length>2?10:12);
+      p.textSize(sz);
+      // Slight text flicker
+      if(p.random()>0.995)p.fill(...textColor,150);
+      p.text(label,k.x+k.bw/2,k.y+k.bh/2);
+
+      // Active mod indicator bar
+      if(modActive){
+        p.fill(...borderColor);
+        p.rect(k.x+3,k.y+k.bh-4,k.bw-6,2,1);
+      }
+    });
+
+    // Top status bar
+    drawStatusBar();
+
+    // CRT vignette
+    drawVignette();
+
+    // Phosphor bloom on press
+    if(pressed&&!pressed.mod&&pressFlash>0.5){
+      p.noStroke();
+      p.fill(0,255,65,pressFlash*20);
+      p.circle(pressed.x+pressed.bw/2,pressed.y+pressed.bh/2,pressed.bw*1.5);
+    }
+  };
+
+  function drawBoot(){
+    p.fill(...GREEN);
+    p.textSize(11);
+    p.textAlign(p.LEFT,p.TOP);
+    const lines=[
+      "KARABINER-HID TERMINAL v2.1.7",
+      "INIT PHOSPHOR DISPLAY ........... OK",
+      "SCAN USB HID INTERFACE .......... OK",
+      "CONNECT VIRTUAL KEYBOARD ........ OK",
+      "LOAD KEYMAP ISO-8859-1 .......... OK",
+      "WEBSOCKET UPLINK ................ OK",
+      "MODIFIER SUBSYSTEM .............. OK",
+      "",
+      "SYSTEM READY _"
+    ];
+    const shown=Math.floor(p.map(bootFrame,0,bootDuration,0,lines.length+1));
+    for(let i=0;i<Math.min(shown,lines.length);i++){
+      // Flicker the last line
+      if(i===shown-1&&p.random()>0.6)continue;
+      p.fill(...GREEN);
+      p.text(lines[i],12,12+i*16);
+    }
+    // Scanlines during boot too
+    p.stroke(0,20,5,30);
+    p.strokeWeight(1);
+    for(let y=0;y<p.height;y+=3)p.line(0,y,p.width,y);
+    p.textAlign(p.CENTER,p.CENTER);
+  }
+
+  function drawStatusBar(){
+    const y=2;
+    p.noStroke();
+    p.fill(0,15,4);
+    p.rect(0,0,p.width,14);
+    p.fill(...DIM_GREEN,180);
+    p.textSize(8);
+    p.textAlign(p.LEFT,p.TOP);
+    const modStr=getActiveModList().map(m=>m.toUpperCase()).join("+");
+    p.text("HID:ACTIVE",4,y);
+    p.textAlign(p.RIGHT,p.TOP);
+    p.text(modStr||"---",p.width-4,y);
+    p.textAlign(p.CENTER,p.CENTER);
+    // Separator line
+    p.stroke(...DARK_GREEN,80);
+    p.line(0,14,p.width,14);
+  }
+
+  function drawVignette(){
+    // Corner shadows for CRT curve illusion
+    const r=p.width*0.7;
+    p.noStroke();
+    for(let i=0;i<20;i++){
+      const a=p.map(i,0,20,30,0);
+      p.fill(0,0,0,a);
+      p.rect(0,0,p.width,i);
+      p.rect(0,p.height-i,p.width,i);
+      p.rect(0,0,i,p.height);
+      p.rect(p.width-i,0,i,p.height);
+    }
+  }
+
+  function hitTest(x,y){
+    return keys.find(k=>x>=k.x&&x<=k.x+k.bw&&y>=k.y&&y<=k.y+k.bh);
+  }
+
+  function fireKey(k){
+    if(!k||k.mod)return;
+    const modList=getActiveModList();
+    if(modList.length>0){
+      sendKeypress(k.hid,modList);
+      clearSMods();
+    } else {
+      sendKeypress(k.hid,[]);
+    }
+    if(navigator.vibrate)navigator.vibrate(30);
+  }
+
+  function startRepeat(k){
+    stopRepeat();
+    repeatTimer=setTimeout(()=>{
+      repeatInterval=setInterval(()=>fireKey(k),80);
+    },500);
+  }
+  function stopRepeat(){
+    clearTimeout(repeatTimer);clearInterval(repeatInterval);
+    repeatTimer=null;repeatInterval=null;
+  }
+
+  function handlePress(x,y){
+    if(bootFrame<bootDuration){bootFrame=bootDuration;return}
+    const k=hitTest(x,y);
+    if(!k)return;
+    pressed=k;pressFlash=1;
+    if(k.mod){
+      if(k.mod==="shiftlock"){sShiftLock=!sShiftLock;sMods.shift=sShiftLock}
+      else{sMods[k.mod]=!sMods[k.mod]}
+      if(navigator.vibrate)navigator.vibrate(30);
+    } else {
+      fireKey(k);
+      startRepeat(k);
+    }
+  }
+
+  function handleRelease(){
+    stopRepeat();
+    pressed=null;
+  }
+
+  p.touchStarted=function(e){
+    if(!e.target||e.target.tagName!=="CANVAS")return true;
+    const t=p.touches.length?p.touches[0]:{x:p.mouseX,y:p.mouseY};
+    const k=hitTest(t.x,t.y);
+    if(k||bootFrame<bootDuration){handlePress(t.x,t.y);return false}
+    return true;
+  };
+  p.touchEnded=function(){handleRelease();return true};
+  p.touchMoved=function(){return true};
+  p.mousePressed=function(){handlePress(p.mouseX,p.mouseY)};
+  p.mouseReleased=function(){handleRelease()};
+},"tab9");
 </script>
 </body></html>
