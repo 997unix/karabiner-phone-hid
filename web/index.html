@@ -116,6 +116,24 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
   display:flex;align-items:center;justify-content:center}
 .pk-del button:active{opacity:0.7;transform:scale(0.95)}
 
+/* Replay tab */
+.replay-page{min-width:100%;scroll-snap-align:start;display:flex;flex-direction:column;
+  padding:10px;gap:8px;background:#0a0a0a}
+.replay-page textarea{flex:1;background:#111;color:#00ff41;border:1px solid #00ff41;
+  border-radius:8px;padding:12px;font-family:monospace;font-size:16px;line-height:1.4;
+  resize:none;outline:none;-webkit-appearance:none}
+.replay-page textarea::placeholder{color:rgba(0,255,65,0.3)}
+.replay-page textarea:focus{border-color:#00ff90;box-shadow:0 0 8px rgba(0,255,65,0.2)}
+.replay-status{color:#00ff41;font-family:monospace;font-size:12px;text-align:center;
+  padding:4px 0;min-height:24px}
+.replay-btns{display:flex;gap:8px}
+.replay-btn{flex:1;border:1px solid #00ff41;background:rgba(0,255,65,0.1);color:#00ff41;
+  font-family:monospace;font-size:14px;font-weight:700;padding:14px 0;border-radius:8px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent}
+.replay-btn:active{opacity:0.7;transform:scale(0.97)}
+.replay-btn.send{background:rgba(0,255,65,0.25);font-size:16px}
+.replay-btn.stop{border-color:#ff3c3c;background:rgba(255,60,60,0.2);color:#ff3c3c}
+
 /* p5.js canvas pages */
 .p5-page{min-width:100%;scroll-snap-align:start;display:flex;flex-direction:column;
   padding:0;overflow:hidden}
@@ -171,7 +189,15 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
   <!-- 1-Hand: MessagEase-style one-handed -->
   <div class="p5-page" id="tab11"></div>
   <!-- Replay: Text-to-HID replay -->
-  <div class="p5-page" id="tab12"></div>
+  <div class="replay-page" id="tab12">
+    <textarea id="replay-text" placeholder="Type or dictate text here..." autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false"></textarea>
+    <div class="replay-status" id="replay-status">IDLE</div>
+    <div class="replay-btns">
+      <button id="replay-speed" class="replay-btn">FAST</button>
+      <button id="replay-clear" class="replay-btn">CLEAR</button>
+      <button id="replay-send" class="replay-btn send">SEND</button>
+    </div>
+  </div>
 </div>
 
 <div id="status" class="disconnected"><span class="dot"></span><span id="stxt">Disconnected</span></div>
@@ -2451,9 +2477,8 @@ new p5(function(p){
   p.mouseReleased=function(){handleRelease(p.mouseX,p.mouseY)};
 },"tab11");
 
-// Replay — Text-to-HID replay tab (sci-fi CRT aesthetic)
-new p5(function(p){
-  // Character-to-HID mapping
+// Replay — Text-to-HID replay (plain HTML)
+(function(){
   const charMap={
     'a':['a',[]],'b':['b',[]],'c':['c',[]],'d':['d',[]],'e':['e',[]],'f':['f',[]],'g':['g',[]],'h':['h',[]],'i':['i',[]],'j':['j',[]],'k':['k',[]],'l':['l',[]],'m':['m',[]],'n':['n',[]],'o':['o',[]],'p':['p',[]],'q':['q',[]],'r':['r',[]],'s':['s',[]],'t':['t',[]],'u':['u',[]],'v':['v',[]],'w':['w',[]],'x':['x',[]],'y':['y',[]],'z':['z',[]],
     'A':['a',['shift']],'B':['b',['shift']],'C':['c',['shift']],'D':['d',['shift']],'E':['e',['shift']],'F':['f',['shift']],'G':['g',['shift']],'H':['h',['shift']],'I':['i',['shift']],'J':['j',['shift']],'K':['k',['shift']],'L':['l',['shift']],'M':['m',['shift']],'N':['n',['shift']],'O':['o',['shift']],'P':['p',['shift']],'Q':['q',['shift']],'R':['r',['shift']],'S':['s',['shift']],'T':['t',['shift']],'U':['u',['shift']],'V':['v',['shift']],'W':['w',['shift']],'X':['x',['shift']],'Y':['y',['shift']],'Z':['z',['shift']],
@@ -2471,307 +2496,63 @@ new p5(function(p){
     '/':['slash',[]], '?':['slash',['shift']]
   };
 
-  let textContent="";
+  const ta=document.getElementById("replay-text");
+  const statusEl=document.getElementById("replay-status");
+  const sendBtn=document.getElementById("replay-send");
+  const clearBtn=document.getElementById("replay-clear");
+  const speedBtn=document.getElementById("replay-speed");
+
   let sending=false;
-  let sentCount=0;
-  let totalChars=0;
-  let statusMsg="IDLE";
-  let bootDone=false;
-  let bootLine=0;
-  let bootTimer=0;
-  let cursorBlink=0;
-  let inputArea={x:0,y:0,w:0,h:0};
-  let sendBtn={x:0,y:0,w:0,h:0};
-  let clearBtn={x:0,y:0,w:0,h:0};
-  let speedBtn={x:0,y:0,w:0,h:0};
-  let charDelay=30; // ms between keystrokes
-  let speedLabel="FAST";
-  const G="#00ff41";
-  const D="#0a0a0a";
-  const bootLines=["KARABINER-HID REPLAY v1.0","INIT CHAR MAP ........... OK","LOAD HID CODES .......... OK","STT INTERFACE ........... OK","","TEXT REPLAY READY _"];
+  let charDelay=30;
+  const speeds=[{ms:30,label:"FAST"},{ms:60,label:"MED"},{ms:120,label:"SLOW"}];
+  let speedIdx=0;
 
-  p.setup=function(){
-    const el=document.getElementById("tab12");
-    if(!el)return;
-    const W=el.clientWidth||400,H=el.clientHeight||600;
-    let c=p.createCanvas(W,H);
-    c.parent("tab12");
-    c.style("touch-action","pan-x");
-    p.textFont("monospace");
-    p.noSmooth();
-    bootTimer=p.millis();
-  };
+  speedBtn.addEventListener("click",function(){
+    speedIdx=(speedIdx+1)%speeds.length;
+    charDelay=speeds[speedIdx].ms;
+    speedBtn.textContent=speeds[speedIdx].label;
+    if(navigator.vibrate)navigator.vibrate(20);
+  });
 
-  p.draw=function(){
-    p.background(D);
-    const W=p.width,H=p.height;
-    cursorBlink++;
+  clearBtn.addEventListener("click",function(){
+    if(!sending){ta.value="";statusEl.textContent="IDLE"}
+    if(navigator.vibrate)navigator.vibrate(30);
+  });
 
-    // Scanlines
-    p.stroke(0,255,65,15);
-    for(let y=0;y<H;y+=3){p.line(0,y,W,y)}
-
-    if(!bootDone){
-      // Boot sequence
-      p.fill(G);p.noStroke();p.textSize(11);p.textAlign(p.LEFT,p.TOP);
-      const elapsed=p.millis()-bootTimer;
-      bootLine=Math.min(Math.floor(elapsed/200),bootLines.length);
-      for(let i=0;i<bootLine;i++){p.text(bootLines[i],10,10+i*16)}
-      if(bootLine>=bootLines.length)bootDone=true;
-      drawVignette(W,H);
-      return;
-    }
-
-    const m=8; // margin
-    const topY=m;
-    const barH=28;
-    const btnH=44;
-    const gap=6;
-
-    // Status bar
-    p.fill(0,255,65,30);p.noStroke();
-    p.rect(0,topY,W,barH);
-    p.fill(G);p.textSize(10);p.textAlign(p.LEFT,p.CENTER);
-    p.text("REPLAY:"+statusMsg,m+4,topY+barH/2);
-    p.textAlign(p.RIGHT,p.CENTER);
-    if(sending){
-      p.text(sentCount+"/"+totalChars+" CHARS",W-m-4,topY+barH/2);
-    } else {
-      const charCount=textContent.length;
-      p.text(charCount+" CHAR"+(charCount!==1?"S":""),W-m-4,topY+barH/2);
-    }
-
-    // Text area (shows current text)
-    const taY=topY+barH+gap;
-    const taH=H-taY-btnH*2-gap*3-m;
-    inputArea={x:m,y:taY,w:W-m*2,h:taH};
-
-    p.stroke(G);p.strokeWeight(1);p.noFill();
-    p.rect(m,taY,W-m*2,taH);
-
-    // Corner dots
-    const cs=4;
-    p.fill(G);p.noStroke();
-    p.rect(m,taY,cs,cs);p.rect(W-m-cs,taY,cs,cs);
-    p.rect(m,taY+taH-cs,cs,cs);p.rect(W-m-cs,taY+taH-cs,cs,cs);
-
-    // Render text content
-    p.fill(G);p.textSize(14);p.textAlign(p.LEFT,p.TOP);
-    const padding=8;
-    const maxW=W-m*2-padding*2;
-    const lineH=18;
-    const maxLines=Math.floor((taH-padding*2)/lineH);
-
-    if(textContent.length>0){
-      // Word-wrap text
-      const lines=wrapText(textContent,maxW);
-      const startLine=Math.max(0,lines.length-maxLines);
-      for(let i=startLine;i<lines.length&&(i-startLine)<maxLines;i++){
-        const ly=taY+padding+(i-startLine)*lineH;
-        // Highlight sent chars
-        if(sending&&sentCount<totalChars){
-          const lineStart=getLineCharOffset(lines,i);
-          const lineEnd=lineStart+lines[i].length;
-          if(sentCount>lineStart){
-            const highlightLen=Math.min(sentCount-lineStart,lines[i].length);
-            p.fill(0,255,65,40);p.noStroke();
-            p.rect(m+padding,ly,p.textWidth(lines[i].substring(0,highlightLen)),lineH);
-          }
-        }
-        p.fill(G);p.noStroke();
-        p.text(lines[i],m+padding,ly);
-      }
-      // Blinking cursor at end
-      if(!sending&&cursorBlink%60<30){
-        const lastVisLine=Math.min(lines.length-1,startLine+maxLines-1);
-        const cursorX=m+padding+p.textWidth(lines[lastVisLine]);
-        const cursorY=taY+padding+(lastVisLine-startLine)*lineH;
-        p.fill(G);p.rect(cursorX,cursorY,8,lineH);
-      }
-    } else {
-      // Placeholder
-      p.fill(0,255,65,80);
-      p.text("TAP TO TYPE OR DICTATE...",m+padding,taY+padding);
-      if(cursorBlink%60<30){
-        p.fill(0,255,65,80);
-        p.rect(m+padding+p.textWidth("TAP TO TYPE OR DICTATE..."),taY+padding,8,lineH);
-      }
-    }
-
-    // Progress bar when sending
-    if(sending&&totalChars>0){
-      const progY=taY+taH-4;
-      p.fill(0,255,65,30);p.noStroke();
-      p.rect(m+1,progY,W-m*2-2,3);
-      p.fill(G);
-      p.rect(m+1,progY,(W-m*2-2)*(sentCount/totalChars),3);
-    }
-
-    // Bottom buttons
-    const btnY1=taY+taH+gap;
-    const btnW3=(W-m*2-gap*2)/3;
-
-    // Speed button
-    speedBtn={x:m,y:btnY1,w:btnW3,h:btnH};
-    p.fill(0,255,65,20);p.stroke(G);p.strokeWeight(1);
-    p.rect(m,btnY1,btnW3,btnH,4);
-    p.fill(G);p.noStroke();p.textSize(11);p.textAlign(p.CENTER,p.CENTER);
-    p.text("SPEED:"+speedLabel,m+btnW3/2,btnY1+btnH/2);
-
-    // Clear button
-    clearBtn={x:m+btnW3+gap,y:btnY1,w:btnW3,h:btnH};
-    p.fill(0,255,65,20);p.stroke(G);p.strokeWeight(1);
-    p.rect(m+btnW3+gap,btnY1,btnW3,btnH,4);
-    p.fill(G);p.noStroke();p.textSize(13);p.textAlign(p.CENTER,p.CENTER);
-    p.text("CLEAR",m+btnW3+gap+btnW3/2,btnY1+btnH/2);
-
-    // Send button
-    const sendX=m+(btnW3+gap)*2;
-    sendBtn={x:sendX,y:btnY1,w:btnW3,h:btnH};
-    if(sending){
-      p.fill(255,60,60,40);p.stroke(255,60,60);
-    } else {
-      p.fill(0,255,65,40);p.stroke(G);
-    }
-    p.strokeWeight(1);
-    p.rect(sendX,btnY1,btnW3,btnH,4);
-    p.fill(sending?"#ff3c3c":G);p.noStroke();p.textSize(14);p.textAlign(p.CENTER,p.CENTER);
-    p.text(sending?"STOP":"SEND",sendX+btnW3/2,btnY1+btnH/2);
-
-    // SW button row
-    const btnY2=btnY1+btnH+gap;
-    const swBtnW=W-m*2;
-    p.fill(0,255,65,20);p.stroke(G);p.strokeWeight(1);
-    p.rect(m,btnY2,swBtnW,btnH,4);
-    p.fill(G);p.noStroke();p.textSize(11);p.textAlign(p.CENTER,p.CENTER);
-    p.text("SUPERWHISPER (HOLD)",m+swBtnW/2,btnY2+btnH/2);
-
-    drawVignette(W,H);
-  };
-
-  function wrapText(txt,maxW){
-    const lines=[];
-    let current="";
-    for(let i=0;i<txt.length;i++){
-      if(txt[i]==='\n'){lines.push(current);current="";continue}
-      const test=current+txt[i];
-      if(p.textWidth(test)>maxW){lines.push(current);current=txt[i]}
-      else{current=test}
-    }
-    lines.push(current);
-    return lines;
-  }
-
-  function getLineCharOffset(lines,lineIdx){
-    let offset=0;
-    for(let i=0;i<lineIdx;i++){offset+=lines[i].length+1}// +1 for newline/wrap
-    return offset;
-  }
-
-  function drawVignette(W,H){
-    const grad=p.drawingContext.createRadialGradient(W/2,H/2,W*0.3,W/2,H/2,W*0.8);
-    grad.addColorStop(0,"rgba(0,0,0,0)");grad.addColorStop(1,"rgba(0,0,0,0.6)");
-    p.drawingContext.fillStyle=grad;p.drawingContext.fillRect(0,0,W,H);
-  }
-
-  function inRect(x,y,r){return x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h}
+  sendBtn.addEventListener("click",function(){
+    if(sending){sending=false;return}
+    replayText();
+  });
 
   async function replayText(){
-    if(sending||!textContent.length)return;
+    const text=ta.value;
+    if(!text.length)return;
     sending=true;
-    sentCount=0;
-    totalChars=textContent.length;
-    statusMsg="SENDING";
+    sendBtn.textContent="STOP";
+    sendBtn.classList.add("stop");
 
-    for(let i=0;i<textContent.length;i++){
-      if(!sending)break; // stopped
-      const ch=textContent[i];
+    const total=text.length;
+    let sent=0;
+
+    for(let i=0;i<text.length;i++){
+      if(!sending)break;
+      const ch=text[i];
       const mapping=charMap[ch];
       if(mapping){
         sendKeypress(mapping[0],mapping[1]);
       }
-      sentCount=i+1;
+      sent=i+1;
+      statusEl.textContent=sent+"/"+total+" CHARS";
       if(charDelay>0)await new Promise(r=>setTimeout(r,charDelay));
     }
+
+    const done=sent>=total;
     sending=false;
-    statusMsg=sentCount>=totalChars?"DONE":"STOPPED";
-    setTimeout(()=>{if(statusMsg==="DONE"||statusMsg==="STOPPED")statusMsg="IDLE"},3000);
+    sendBtn.textContent="SEND";
+    sendBtn.classList.remove("stop");
+    statusEl.textContent=done?"DONE":"STOPPED";
+    setTimeout(()=>{if(statusEl.textContent==="DONE"||statusEl.textContent==="STOPPED")statusEl.textContent="IDLE"},3000);
   }
-
-  function openInput(){
-    // Create a temporary hidden input to trigger phone keyboard/STT
-    let inp=document.getElementById("replay-input");
-    if(!inp){
-      inp=document.createElement("textarea");
-      inp.id="replay-input";
-      inp.style.cssText="position:fixed;top:-9999px;left:-9999px;opacity:0;font-size:16px;";
-      inp.setAttribute("autocomplete","off");
-      inp.setAttribute("autocorrect","off");
-      inp.setAttribute("autocapitalize","off");
-      inp.setAttribute("spellcheck","false");
-      document.body.appendChild(inp);
-      inp.addEventListener("input",function(){
-        textContent=inp.value;
-      });
-    }
-    inp.value=textContent;
-    inp.focus();
-    inp.click();
-  }
-
-  function cycleSpeed(){
-    if(charDelay===30){charDelay=60;speedLabel="MED"}
-    else if(charDelay===60){charDelay=120;speedLabel="SLOW"}
-    else{charDelay=30;speedLabel="FAST"}
-    if(navigator.vibrate)navigator.vibrate(20);
-  }
-
-  let swTimer=null;
-  function handlePress(x,y){
-    if(!bootDone)return;
-    if(navigator.vibrate)navigator.vibrate(30);
-
-    if(inRect(x,y,sendBtn)){
-      if(sending){sending=false;statusMsg="STOPPED"}
-      else{replayText()}
-      return;
-    }
-    if(inRect(x,y,clearBtn)){
-      if(!sending){textContent="";const inp=document.getElementById("replay-input");if(inp)inp.value=""}
-      return;
-    }
-    if(inRect(x,y,speedBtn)){
-      cycleSpeed();
-      return;
-    }
-
-    // SW button (bottom full-width)
-    const m=8,btnH=44,gap=6;
-    const swY=inputArea.y+inputArea.h+gap+btnH+gap;
-    const swBtn={x:m,y:swY,w:p.width-m*2,h:btnH};
-    if(inRect(x,y,swBtn)){
-      send("superwhisper_toggle");
-      swTimer=setTimeout(()=>{send("superwhisper_paste");swTimer=null},800);
-      return;
-    }
-
-    // Tap text area to open keyboard
-    if(inRect(x,y,inputArea)){
-      openInput();
-    }
-  }
-
-  function handleRelease(x,y){
-    if(swTimer){clearTimeout(swTimer);swTimer=null}
-  }
-
-  p.touchStarted=function(){
-    if(p.touches.length){handlePress(p.touches[0].x,p.touches[0].y)}
-    return true;
-  };
-  p.touchEnded=function(){handleRelease(0,0);return true};
-  p.mousePressed=function(){handlePress(p.mouseX,p.mouseY)};
-  p.mouseReleased=function(){handleRelease(p.mouseX,p.mouseY)};
-},"tab12");
+})();
 </script>
 </body></html>
