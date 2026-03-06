@@ -1347,14 +1347,19 @@ new p5(function(p){
   const BG=[2,8,2];
   const GRID_COLOR=[0,40,10];
 
+  // Return key is placed separately — spans rows 1-3 on the right
+  const retKey={l:"RET",hid:"return_or_enter",spanRows:3,startRow:1,special:false,ret:true};
+
   const kbLayout=[
-    // Row 0: number row
-    [{l:"`",hid:"grave_accent_and_tilde",sl:"~"},{l:"1",hid:"1",sl:"!"},{l:"2",hid:"2",sl:"@"},
+    // Row 0: ESC + SuperWhisper + number row
+    [{l:"ESC",hid:"escape",w:1.2,special:true},
+     {l:"SW",action:"superwhisper_toggle",w:1.2,sw:true,long:"superwhisper_paste"},
+     {l:"`",hid:"grave_accent_and_tilde",sl:"~"},{l:"1",hid:"1",sl:"!"},{l:"2",hid:"2",sl:"@"},
      {l:"3",hid:"3",sl:"#"},{l:"4",hid:"4",sl:"$"},{l:"5",hid:"5",sl:"%"},
      {l:"6",hid:"6",sl:"^"},{l:"7",hid:"7",sl:"&"},{l:"8",hid:"8",sl:"*"},
      {l:"9",hid:"9",sl:"("},{l:"0",hid:"0",sl:")"},
      {l:"-",hid:"hyphen",sl:"_"},{l:"=",hid:"equal_sign",sl:"+"}],
-    // Row 1: QWERTY
+    // Row 1: QWERTY + brackets  (RET on right, spans 3 rows)
     [{l:"Q",hid:"q"},{l:"W",hid:"w"},{l:"E",hid:"e"},{l:"R",hid:"r"},{l:"T",hid:"t"},
      {l:"Y",hid:"y"},{l:"U",hid:"u"},{l:"I",hid:"i"},{l:"O",hid:"o"},{l:"P",hid:"p"},
      {l:"[",hid:"open_bracket",sl:"{"},{l:"]",hid:"close_bracket",sl:"}"}],
@@ -1367,18 +1372,12 @@ new p5(function(p){
      {l:"N",hid:"n"},{l:"M",hid:"m"},{l:",",hid:"comma",sl:"<"},
      {l:".",hid:"period",sl:">"},{l:"/",hid:"slash",sl:"?"}],
     // Row 4: modifiers + space
-    [{l:"CAPS",mod:"shiftlock",w:1.3},{l:"SHIFT",mod:"shift",w:1.3},
+    [{l:"SHIFT",mod:"shift",w:1.5},
      {l:"CTRL",mod:"control",w:1.2},{l:"OPT",mod:"option",w:1.0},
-     {l:"",hid:"spacebar",w:3,space:true},
+     {l:"",hid:"spacebar",w:3.5,space:true},
      {l:"CMD",mod:"command",w:1.2},
-     {l:"BSP",hid:"delete_or_backspace",w:1.0},
-     {l:"RET",hid:"return_or_enter",w:1.5}],
-    // Row 5: function row
-    [{l:"ESC",hid:"escape",w:1.3,special:true},
-     {l:"TAB",hid:"tab",w:1.0},
-     {l:"F1",hid:"f1"},{l:"F2",hid:"f2"},{l:"F3",hid:"f3"},{l:"F4",hid:"f4"},
-     {l:"F5",hid:"f5"},{l:"F6",hid:"f6"},{l:"F7",hid:"f7"},{l:"F8",hid:"f8"},
-     {l:"F9",hid:"f9"},{l:"F10",hid:"f10"}],
+     {l:"BSP",hid:"delete_or_backspace",w:1.2},
+     {l:"TAB",hid:"tab",w:1.0}],
   ];
 
   p.setup=function(){
@@ -1400,11 +1399,15 @@ new p5(function(p){
   function buildKeys(){
     const pad=8,gapX=3,gapY=3;
     const rows=kbLayout.length;
+    const retW=40;// width reserved for Return key on right
     const rowH=(p.height-pad*2-(rows-1)*gapY)/rows;
+    const availW=p.width-pad*2-retW-gapX;// leave room for Return
     keys=[];
     kbLayout.forEach((row,ri)=>{
       const totalW=row.reduce((s,k)=>s+(k.w||1),0);
-      const unitW=(p.width-pad*2-(row.length-1)*gapX)/totalW;
+      // Row 0 and row 4 use full width (no Return column)
+      const rowAvailW=(ri===0||ri===4)?p.width-pad*2:availW;
+      const unitW=(rowAvailW-(row.length-1)*gapX)/totalW;
       let x=pad;
       row.forEach(k=>{
         const w=(k.w||1)*unitW+((k.w||1)>1?((k.w||1)-1)*gapX:0);
@@ -1412,6 +1415,10 @@ new p5(function(p){
         x+=w+gapX;
       });
     });
+    // Add Return key spanning rows 1-3
+    const ry=pad+retKey.startRow*(rowH+gapY);
+    const rh=retKey.spanRows*rowH+(retKey.spanRows-1)*gapY;
+    keys.push({...retKey,x:p.width-pad-retW,y:ry,bw:retW,bh:rh});
   }
 
   p.windowResized=function(){resize()};
@@ -1471,6 +1478,8 @@ new p5(function(p){
       let glowAlpha=0;
 
       if(k.special){keyColor=[40,10,5];borderColor=RED;textColor=RED}
+      else if(k.sw){keyColor=[40,5,5];borderColor=RED;textColor=RED;glowAlpha=15}
+      else if(k.ret){keyColor=[5,30,10];borderColor=[0,220,80];textColor=[0,220,80];glowAlpha=10}
       else if(k.mod==="shiftlock"){
         keyColor=modActive?[40,20,0]:[20,10,0];
         borderColor=AMBER;textColor=AMBER;
@@ -1624,8 +1633,11 @@ new p5(function(p){
     return keys.find(k=>x>=k.x&&x<=k.x+k.bw&&y>=k.y&&y<=k.y+k.bh);
   }
 
+  let swLongTimer=null;
+
   function fireKey(k){
-    if(!k||k.mod)return;
+    if(!k||k.mod||k.sw)return;
+    if(k.action){send(k.action);if(navigator.vibrate)navigator.vibrate(30);return}
     const modList=getActiveModList();
     if(modList.length>0){
       sendKeypress(k.hid,modList);
@@ -1652,7 +1664,12 @@ new p5(function(p){
     const k=hitTest(x,y);
     if(!k)return;
     pressed=k;pressFlash=1;
-    if(k.mod){
+    if(k.sw){
+      // SuperWhisper: short tap = toggle, long press = paste
+      clearTimeout(swLongTimer);
+      swLongTimer=setTimeout(()=>{send(k.long);if(navigator.vibrate)navigator.vibrate(50);swLongTimer="fired"},500);
+      if(navigator.vibrate)navigator.vibrate(30);
+    } else if(k.mod){
       if(k.mod==="shiftlock"){sShiftLock=!sShiftLock;sMods.shift=sShiftLock}
       else{sMods[k.mod]=!sMods[k.mod]}
       if(navigator.vibrate)navigator.vibrate(30);
@@ -1664,6 +1681,12 @@ new p5(function(p){
 
   function handleRelease(){
     stopRepeat();
+    // SuperWhisper: if long timer hasn't fired, do short tap action
+    if(pressed&&pressed.sw&&swLongTimer!=="fired"){
+      clearTimeout(swLongTimer);
+      send(pressed.action);
+    }
+    swLongTimer=null;
     pressed=null;
   }
 
