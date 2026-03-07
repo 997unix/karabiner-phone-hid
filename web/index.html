@@ -119,11 +119,22 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
 /* Replay tab */
 .replay-page{min-width:100%;scroll-snap-align:start;display:flex;flex-direction:column;
   padding:10px;gap:8px;background:#0a0a0a}
+.replay-body{flex:1;display:flex;gap:8px;min-height:0}
 .replay-page textarea{flex:1;background:#111;color:#00ff41;border:1px solid #00ff41;
   border-radius:8px;padding:12px;font-family:monospace;font-size:16px;line-height:1.4;
-  resize:none;outline:none;-webkit-appearance:none}
+  resize:none;outline:none;-webkit-appearance:none;min-height:0}
 .replay-page textarea::placeholder{color:rgba(0,255,65,0.3)}
 .replay-page textarea:focus{border-color:#00ff90;box-shadow:0 0 8px rgba(0,255,65,0.2)}
+.replay-gutter{width:48px;flex-shrink:0;background:#111;border:1px solid rgba(0,255,65,0.3);
+  border-radius:8px;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
+  display:flex;flex-direction:column;gap:2px;padding:4px 2px}
+.replay-gutter::-webkit-scrollbar{display:none}
+.replay-hist{background:rgba(0,255,65,0.1);border:1px solid rgba(0,255,65,0.2);
+  border-radius:4px;padding:4px 3px;font-family:monospace;font-size:8px;line-height:1.2;
+  color:rgba(0,255,65,0.7);word-break:break-all;cursor:pointer;flex-shrink:0;
+  -webkit-tap-highlight-color:transparent;min-height:32px;overflow:hidden;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.replay-hist:active{background:rgba(0,255,65,0.3)}
 .replay-status{color:#00ff41;font-family:monospace;font-size:12px;text-align:center;
   padding:4px 0;min-height:24px}
 .replay-btns{display:flex;gap:8px}
@@ -181,7 +192,10 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
   <div class="p5-page" id="tab8"></div>
   <!-- Replay: Text-to-HID replay -->
   <div class="replay-page" id="tab9">
-    <textarea id="replay-text" placeholder="Type or dictate text here..." autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false"></textarea>
+    <div class="replay-body">
+      <textarea id="replay-text" placeholder="Type or dictate text here..." autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false"></textarea>
+      <div class="replay-gutter" id="replay-gutter"></div>
+    </div>
     <div class="replay-status" id="replay-status">IDLE</div>
     <div class="replay-btns">
       <button id="replay-speed" class="replay-btn">FAST</button>
@@ -2419,11 +2433,55 @@ new p5(function(p){
   const sendBtn=document.getElementById("replay-send");
   const clearBtn=document.getElementById("replay-clear");
   const speedBtn=document.getElementById("replay-speed");
+  const gutter=document.getElementById("replay-gutter");
 
   let sending=false;
   let charDelay=30;
   const speeds=[{ms:30,label:"FAST"},{ms:60,label:"MED"},{ms:120,label:"SLOW"}];
   let speedIdx=0;
+
+  // History: persisted in localStorage
+  const HIST_KEY="replay_history";
+  const MAX_HIST=50;
+  let history=[];
+  try{history=JSON.parse(localStorage.getItem(HIST_KEY)||"[]")}catch(e){history=[]}
+
+  function saveHistory(){
+    try{localStorage.setItem(HIST_KEY,JSON.stringify(history.slice(0,MAX_HIST)))}catch(e){}
+  }
+
+  function addToHistory(text){
+    // Deduplicate: remove if already exists
+    history=history.filter(h=>h!==text);
+    history.unshift(text);
+    if(history.length>MAX_HIST)history.length=MAX_HIST;
+    saveHistory();
+    renderGutter();
+  }
+
+  function renderGutter(){
+    gutter.innerHTML="";
+    if(history.length===0){
+      const empty=document.createElement("div");
+      empty.style.cssText="color:rgba(0,255,65,0.3);font-family:monospace;font-size:8px;text-align:center;padding:8px 2px";
+      empty.textContent="No history";
+      gutter.appendChild(empty);
+      return;
+    }
+    history.forEach((text,idx)=>{
+      const el=document.createElement("div");
+      el.className="replay-hist";
+      el.textContent=text;
+      el.addEventListener("click",()=>{
+        ta.value=text;
+        ta.focus();
+        if(navigator.vibrate)navigator.vibrate(20);
+      });
+      gutter.appendChild(el);
+    });
+  }
+
+  renderGutter();
 
   speedBtn.addEventListener("click",function(){
     speedIdx=(speedIdx+1)%speeds.length;
@@ -2468,14 +2526,20 @@ new p5(function(p){
     sending=false;
     sendBtn.textContent="SEND";
     sendBtn.classList.remove("stop");
-    statusEl.textContent=done?"DONE":"STOPPED";
+
+    if(done){
+      addToHistory(text);
+      statusEl.textContent="DONE";
+    } else {
+      statusEl.textContent="STOPPED";
+    }
     setTimeout(()=>{if(statusEl.textContent==="DONE"||statusEl.textContent==="STOPPED")statusEl.textContent="IDLE"},3000);
     // Auto-return to caller tab after successful send
     if(done&&replayReturnTab!==null){
       const ret=replayReturnTab;
       replayReturnTab=null;
       ta.value="";
-      setTimeout(()=>switchToTab(ret),500);
+      setTimeout(()=>switchToTab(ret),600);
     }
   }
 })();
