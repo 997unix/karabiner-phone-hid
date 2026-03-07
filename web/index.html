@@ -2472,32 +2472,26 @@ new p5(function(p){
       const el=document.createElement("div");
       el.className="replay-hist";
       el.textContent=text;
-      let longTimer=null;
-      let didLong=false;
-      el.addEventListener("touchstart",(e)=>{
-        didLong=false;
-        longTimer=setTimeout(()=>{
-          didLong=true;
-          // Long press: append to textarea
+      let lastTap=0;
+      el.addEventListener("click",()=>{
+        const now=Date.now();
+        if(now-lastTap<400){
+          // Double-tap: append to textarea
           ta.value=ta.value?ta.value+"\n"+text:text;
           ta.focus();
           if(navigator.vibrate)navigator.vibrate([20,30,20]);
-        },500);
-      },{passive:true});
-      el.addEventListener("touchend",()=>{
-        clearTimeout(longTimer);
-        if(!didLong){
-          // Short tap: replace textarea
-          ta.value=text;
-          ta.focus();
-          if(navigator.vibrate)navigator.vibrate(20);
+          lastTap=0;
+        } else {
+          // Single tap: replace textarea
+          lastTap=now;
+          setTimeout(()=>{
+            if(lastTap===now){
+              ta.value=text;
+              ta.focus();
+              if(navigator.vibrate)navigator.vibrate(20);
+            }
+          },400);
         }
-      });
-      el.addEventListener("touchcancel",()=>{clearTimeout(longTimer)});
-      // Mouse fallback
-      el.addEventListener("click",(e)=>{
-        if(!didLong){ta.value=text;ta.focus();if(navigator.vibrate)navigator.vibrate(20)}
-        didLong=false;
       });
       gutter.appendChild(el);
     });
