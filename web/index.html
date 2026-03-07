@@ -308,7 +308,7 @@ const tabs = [
     // Arrow row — will be rendered specially
     "arrows",
   ]},
-  { name:"KBDv2", layout:"kb",
+  { name:"KBDv2", layout:"kb", v2:true,
     swSplit:[
       {action:"superwhisper_toggle",label:"SuperWhisper",color:"#e74c3c",long:"superwhisper_paste"},
       {action:"_goto_replay",label:"Replay \u270F",color:"#2980b9"},
@@ -323,6 +323,7 @@ const tabs = [
       {action:"key_f9",label:"F9",color:"#444",css:"fk",hid:"f9"},{action:"key_f10",label:"F10",color:"#444",css:"fk",hid:"f10"},
       {action:"key_f11",label:"F11",color:"#444",css:"fk",hid:"f11"},{action:"key_f12",label:"F12",color:"#444",css:"fk",hid:"f12"},
     ],
+    "gap2",
     // Command row: Esc, Copy Mode, PgUp, PgDn, tmate-attn
     [
       {action:"key_escape",label:"Esc",color:"#c0392b",css:"wide",hid:"escape"},
@@ -330,6 +331,18 @@ const tabs = [
       {action:"tmux_page_up",label:"Pg Up",color:"#16a085",css:"wide"},
       {action:"tmux_page_down",label:"Pg Dn",color:"#16a085",css:"wide"},
       {action:"teammate_attention",label:"tmate-attn",color:"#e67e22",css:"wide"},
+    ],
+    "gap2",
+    // Shifted number row (symbols)
+    [
+      {label:"~",hid:"grave_accent_and_tilde",shift:true,color:"#3a3a3a",css:"fk"},
+      {label:"!",hid:"1",shift:true,color:"#3a3a3a",css:"fk"},{label:"@",hid:"2",shift:true,color:"#3a3a3a",css:"fk"},
+      {label:"#",hid:"3",shift:true,color:"#3a3a3a",css:"fk"},{label:"$",hid:"4",shift:true,color:"#3a3a3a",css:"fk"},
+      {label:"%",hid:"5",shift:true,color:"#3a3a3a",css:"fk"},{label:"^",hid:"6",shift:true,color:"#3a3a3a",css:"fk"},
+      {label:"&",hid:"7",shift:true,color:"#3a3a3a",css:"fk"},{label:"*",hid:"8",shift:true,color:"#3a3a3a",css:"fk"},
+      {label:"(",hid:"9",shift:true,color:"#3a3a3a",css:"fk"},{label:")",hid:"0",shift:true,color:"#3a3a3a",css:"fk"},
+      {label:"_",hid:"hyphen",shift:true,color:"#3a3a3a",css:"fk"},{label:"+",hid:"equal_sign",shift:true,color:"#3a3a3a",css:"fk"},
+      {action:"key_delete",label:"Del",color:"#555",css:"fk wide",hid:"delete_forward"},
     ],
     "gap",
     // Number row
@@ -603,10 +616,11 @@ tabs.forEach((tab,i)=>{
     // Keyboard area
     const kbDiv=document.createElement("div");
     kbDiv.className="kb";
+    if(tab.v2)kbDiv.style.gap="6px";
     tab.rows.forEach(row=>{
-      if(row==="gap"){
+      if(row==="gap"||row==="gap2"){
         const gap=document.createElement("div");
-        gap.style.height="6px";
+        gap.style.height=row==="gap2"?"12px":"6px";
         kbDiv.appendChild(gap);
       } else if(row==="arrows"){
         // Inverted-T arrow cluster
@@ -636,7 +650,12 @@ tabs.forEach((tab,i)=>{
           el.className="key"+(b.css?" "+b.css:"");
           el.textContent=b.label;
           el.style.background=b.color;
-          wireBtn(el,b);
+          if(b.shift&&b.hid&&!b.action){
+            // Shifted symbol key — send keypress with shift
+            el.onclick=()=>{sendKeypress(b.hid,["shift"]);if(navigator.vibrate)navigator.vibrate(30)};
+          } else {
+            wireBtn(el,b);
+          }
           rowEl.appendChild(el);
         });
         kbDiv.appendChild(rowEl);
