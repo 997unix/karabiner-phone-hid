@@ -149,47 +149,38 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
 
 <div class="tabs" id="tabs">
   <button data-idx="0" class="active">tmate/tmux</button>
-  <button data-idx="1">Terminal</button>
-  <button data-idx="2">YouTube</button>
-  <button data-idx="3">Keyboard</button>
-  <button data-idx="4">Numpad</button>
-  <button data-idx="5">Type</button>
-  <button data-idx="6">Test</button>
-  <button data-idx="7">YT-SF</button>
-  <button data-idx="8">KB-SF</button>
-  <button data-idx="9">SCI-FI</button>
-  <button data-idx="10">QWERTY+</button>
-  <button data-idx="11">1-Hand</button>
-  <button data-idx="12">Replay</button>
+  <button data-idx="1">Keyboard</button>
+  <button data-idx="2">KBDv2</button>
+  <button data-idx="3">Numpad</button>
+  <button data-idx="4">YT-SF</button>
+  <button data-idx="5">KB-SF</button>
+  <button data-idx="6">SCI-FI</button>
+  <button data-idx="7">QWERTY+</button>
+  <button data-idx="8">1-Hand</button>
+  <button data-idx="9">Replay</button>
 </div>
 
 <div class="swipe" id="swipe">
   <!-- Teammate -->
   <div class="page"><div class="grid" id="tab0"></div></div>
-  <!-- Terminal -->
-  <div class="page"><div class="grid" id="tab1"></div></div>
-  <!-- YouTube Remote -->
-  <div class="page"><div class="grid" id="tab2"></div></div>
   <!-- Keyboard -->
-  <div class="kb-page" id="tab3"></div>
+  <div class="kb-page" id="tab1"></div>
+  <!-- KBDv2 -->
+  <div class="kb-page" id="tab2"></div>
   <!-- Numpad -->
-  <div class="kb-page" id="tab4"></div>
-  <!-- Type -->
-  <div class="pk-page" id="tab5"></div>
-  <!-- Test -->
-  <div class="pk-page" id="tab6"></div>
+  <div class="kb-page" id="tab3"></div>
   <!-- YT-SF: Sci-Fi YouTube Remote -->
-  <div class="p5-page" id="tab7"></div>
+  <div class="p5-page" id="tab4"></div>
   <!-- KB-SF: Sci-Fi Keyboard -->
-  <div class="p5-page" id="tab8"></div>
+  <div class="p5-page" id="tab5"></div>
   <!-- SCI-FI: Original sci-fi keyboard -->
-  <div class="p5-page" id="tab9"></div>
+  <div class="p5-page" id="tab6"></div>
   <!-- QWERTY+: Research-optimized adaptive QWERTY -->
-  <div class="p5-page" id="tab10"></div>
+  <div class="p5-page" id="tab7"></div>
   <!-- 1-Hand: MessagEase-style one-handed -->
-  <div class="p5-page" id="tab11"></div>
+  <div class="p5-page" id="tab8"></div>
   <!-- Replay: Text-to-HID replay -->
-  <div class="replay-page" id="tab12">
+  <div class="replay-page" id="tab9">
     <textarea id="replay-text" placeholder="Type or dictate text here..." autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false"></textarea>
     <div class="replay-status" id="replay-status">IDLE</div>
     <div class="replay-btns">
@@ -220,34 +211,6 @@ const tabs = [
     {action:"tmux_exit_copy",label:"Exit Copy",color:"#e67e22"},
     {action:null,label:"",color:"transparent"},
     {action:"arrow_right",label:"Right",color:"#1abc9c"},
-  ]},
-  { name:"Terminal", buttons:[
-    {action:"superwhisper_toggle",label:"SW",color:"#e74c3c",long:"superwhisper_paste"},
-    {action:"return",label:"Return",color:"#3498db"},
-    {action:"tmux_prefix",label:"Prefix",color:"#9b59b6"},
-    {action:"tmux_copy_mode",label:"Copy Mode",color:"#2ecc71"},
-    {action:"tmux_scroll_up",label:"Scr Up",color:"#1abc9c"},
-    {action:"tmux_scroll_down",label:"Scr Dn",color:"#1abc9c"},
-    {action:"tmux_page_up",label:"Pg Up",color:"#16a085"},
-    {action:"tmux_page_down",label:"Pg Dn",color:"#16a085"},
-    {action:"tmux_exit_copy",label:"Exit Copy",color:"#e67e22"},
-    {action:"tmux_split_h",label:"Split H",color:"#8e44ad"},
-    {action:"tmux_split_v",label:"Split V",color:"#8e44ad"},
-    {action:"tmux_next_pane",label:"Next Pane",color:"#2980b9"},
-  ]},
-  { name:"YouTube", buttons:[
-    {action:"yt_prev_video",label:"Prev Vid",color:"#8e44ad"},
-    {action:"yt_play_pause",label:"Play/Pause",color:"#c0392b",span:1},
-    {action:"yt_next_video",label:"Next Vid",color:"#8e44ad"},
-    {action:"yt_back_10",label:"\u25C0 10s",color:"#2980b9"},
-    {action:"yt_mute",label:"Mute",color:"#e67e22"},
-    {action:"yt_fwd_10",label:"10s \u25B6",color:"#2980b9"},
-    {action:"yt_vol_down",label:"Vol -",color:"#16a085"},
-    {action:"yt_fullscreen",label:"Fullscreen",color:"#27ae60"},
-    {action:"yt_vol_up",label:"Vol +",color:"#16a085"},
-    {action:"yt_speed_down",label:"Speed -",color:"#1abc9c"},
-    {action:"yt_captions",label:"CC",color:"#e67e22"},
-    {action:"yt_speed_up",label:"Speed +",color:"#1abc9c"},
   ]},
   { name:"Keyboard", layout:"kb",
     sw:{action:"superwhisper_toggle",label:"SuperWhisper",long:"superwhisper_paste"},
@@ -331,6 +294,87 @@ const tabs = [
     // Arrow row — will be rendered specially
     "arrows",
   ]},
+  { name:"KBDv2", layout:"kb",
+    sw:{action:"superwhisper_toggle",label:"SuperWhisper",long:"superwhisper_paste"},
+    rows:[
+    // F-keys
+    [
+      {action:"key_f1",label:"F1",color:"#444",css:"fk",hid:"f1"},{action:"key_f2",label:"F2",color:"#444",css:"fk",hid:"f2"},
+      {action:"key_f3",label:"F3",color:"#444",css:"fk",hid:"f3"},{action:"key_f4",label:"F4",color:"#444",css:"fk",hid:"f4"},
+      {action:"key_f5",label:"F5",color:"#444",css:"fk",hid:"f5"},{action:"key_f6",label:"F6",color:"#444",css:"fk",hid:"f6"},
+      {action:"key_f7",label:"F7",color:"#444",css:"fk",hid:"f7"},{action:"key_f8",label:"F8",color:"#444",css:"fk",hid:"f8"},
+      {action:"key_f9",label:"F9",color:"#444",css:"fk",hid:"f9"},{action:"key_f10",label:"F10",color:"#444",css:"fk",hid:"f10"},
+      {action:"key_f11",label:"F11",color:"#444",css:"fk",hid:"f11"},{action:"key_f12",label:"F12",color:"#444",css:"fk",hid:"f12"},
+    ],
+    // Command row: Esc, Copy Mode, PgUp, PgDn, tmate-attn
+    [
+      {action:"key_escape",label:"Esc",color:"#c0392b",css:"wide",hid:"escape"},
+      {action:"tmux_copy_mode",label:"Scroll Bk",color:"#2ecc71",css:"wide"},
+      {action:"tmux_page_up",label:"Pg Up",color:"#16a085",css:"wide"},
+      {action:"tmux_page_down",label:"Pg Dn",color:"#16a085",css:"wide"},
+      {action:"teammate_attention",label:"tmate-attn",color:"#e67e22",css:"wide"},
+    ],
+    "gap",
+    // Number row
+    [
+      {action:"key_grave",label:"`",color:"#444",hid:"grave_accent_and_tilde"},
+      {action:"key_1",label:"1",color:"#333",hid:"1"},{action:"key_2",label:"2",color:"#333",hid:"2"},
+      {action:"key_3",label:"3",color:"#333",hid:"3"},{action:"key_4",label:"4",color:"#333",hid:"4"},
+      {action:"key_5",label:"5",color:"#333",hid:"5"},{action:"key_6",label:"6",color:"#333",hid:"6"},
+      {action:"key_7",label:"7",color:"#333",hid:"7"},{action:"key_8",label:"8",color:"#333",hid:"8"},
+      {action:"key_9",label:"9",color:"#333",hid:"9"},{action:"key_0",label:"0",color:"#333",hid:"0"},
+      {action:"key_hyphen",label:"-",color:"#444",hid:"hyphen"},{action:"key_equal",label:"=",color:"#444",hid:"equal_sign"},
+      {action:"key_backspace",label:"\u232B",color:"#555",css:"wide",hid:"delete_or_backspace",repeat:true},
+    ],
+    "gap",
+    // QWERTY row
+    [
+      {action:"key_tab",label:"Tab",color:"#555",css:"wide",hid:"tab"},
+      {action:"key_q",label:"Q",color:"#333",hid:"q"},{action:"key_w",label:"W",color:"#333",hid:"w"},
+      {action:"key_e",label:"E",color:"#333",hid:"e"},{action:"key_r",label:"R",color:"#333",hid:"r"},
+      {action:"key_t",label:"T",color:"#333",hid:"t"},{action:"key_y",label:"Y",color:"#333",hid:"y"},
+      {action:"key_u",label:"U",color:"#333",hid:"u"},{action:"key_i",label:"I",color:"#333",hid:"i"},
+      {action:"key_o",label:"O",color:"#333",hid:"o"},{action:"key_p",label:"P",color:"#333",hid:"p"},
+      {action:"key_open_bracket",label:"[",color:"#444",hid:"open_bracket"},{action:"key_close_bracket",label:"]",color:"#444",hid:"close_bracket"},
+      {action:"key_backslash",label:"\\",color:"#444",hid:"backslash"},
+    ],
+    // Home row — left Enter replaced with Ctrl
+    [
+      {action:"mod_ctrl",label:"Ctrl",color:"#2c3e50",css:"wider"},
+      {action:"key_a",label:"A",color:"#333",hid:"a"},{action:"key_s",label:"S",color:"#333",hid:"s"},
+      {action:"key_d",label:"D",color:"#333",hid:"d"},{action:"key_f",label:"F",color:"#333",hid:"f"},
+      {action:"key_g",label:"G",color:"#333",hid:"g"},{action:"key_h",label:"H",color:"#333",hid:"h"},
+      {action:"key_j",label:"J",color:"#333",hid:"j"},{action:"key_k",label:"K",color:"#333",hid:"k"},
+      {action:"key_l",label:"L",color:"#333",hid:"l"},{action:"key_semicolon",label:";",color:"#444",hid:"semicolon"},
+      {action:"key_quote",label:"'",color:"#444",hid:"quote"},
+      {action:"key_enter",label:"\u21B5",color:"#27ae60",css:"wider",hid:"return_or_enter"},
+    ],
+    // Bottom letter row
+    [
+      {action:"key_z",label:"Z",color:"#333",hid:"z"},{action:"key_x",label:"X",color:"#333",hid:"x"},
+      {action:"key_c",label:"C",color:"#333",hid:"c"},{action:"key_v",label:"V",color:"#333",hid:"v"},
+      {action:"key_b",label:"B",color:"#333",hid:"b"},{action:"key_n",label:"N",color:"#333",hid:"n"},
+      {action:"key_m",label:"M",color:"#333",hid:"m"},{action:"key_comma",label:",",color:"#444",hid:"comma"},
+      {action:"key_period",label:".",color:"#444",hid:"period"},{action:"key_slash",label:"/",color:"#444",hid:"slash"},
+    ],
+    // Modifier + space row
+    [
+      {action:"mod_ctrl",label:"Ctrl",color:"#2c3e50"},
+      {action:"mod_option",label:"Opt",color:"#8e44ad"},
+      {action:"mod_command",label:"Cmd",color:"#2980b9"},
+      {action:"key_space",label:"",color:"#444",css:"space",hid:"spacebar",repeat:true},
+      {action:"mod_command",label:"Cmd",color:"#2980b9"},
+      {action:"mod_option",label:"Opt",color:"#8e44ad"},
+      {action:"mod_ctrl",label:"Ctrl",color:"#2c3e50"},
+    ],
+    // Shift keys
+    [
+      {action:"mod_shift",label:"Shift",color:"#7f8c8d",css:"wider"},
+      {action:"mod_shift",label:"Shift",color:"#7f8c8d",css:"wider"},
+    ],
+    // Arrow row
+    "arrows",
+  ]},
   { name:"Numpad", layout:"numpad",
     sw:{action:"superwhisper_toggle",label:"SuperWhisper",long:"superwhisper_paste"},
     controlPad:[
@@ -366,163 +410,6 @@ const tabs = [
       {action:"numpad_0",label:"0",color:"#333",colSpan:2},
       {action:"numpad_decimal",label:".",color:"#444"},
     ],
-  },
-  { name:"Type", layout:"phone",
-    sw:{action:"superwhisper_toggle",label:"SuperWhisper",long:"superwhisper_paste"},
-    // Shifted symbols block (top)
-    shifted:[
-    [
-      {label:"~",hid:"grave_accent_and_tilde",shift:true,color:"#3a3a3a"},
-      {label:"!",hid:"1",shift:true,color:"#3a3a3a"},{label:"@",hid:"2",shift:true,color:"#3a3a3a"},
-      {label:"#",hid:"3",shift:true,color:"#3a3a3a"},{label:"$",hid:"4",shift:true,color:"#3a3a3a"},
-      {label:"%",hid:"5",shift:true,color:"#3a3a3a"},{label:"^",hid:"6",shift:true,color:"#3a3a3a"},
-      {label:"&",hid:"7",shift:true,color:"#3a3a3a"},{label:"*",hid:"8",shift:true,color:"#3a3a3a"},
-      {label:"(",hid:"9",shift:true,color:"#3a3a3a"},{label:")",hid:"0",shift:true,color:"#3a3a3a"},
-      {label:"_",hid:"hyphen",shift:true,color:"#3a3a3a"},{label:"+",hid:"equal_sign",shift:true,color:"#3a3a3a"},
-    ],[
-      {label:"{",hid:"open_bracket",shift:true,color:"#3a3a3a"},{label:"}",hid:"close_bracket",shift:true,color:"#3a3a3a"},
-      {label:"|",hid:"backslash",shift:true,color:"#3a3a3a"},{label:":",hid:"semicolon",shift:true,color:"#3a3a3a"},
-      {label:"\"",hid:"quote",shift:true,color:"#3a3a3a"},{label:"<",hid:"comma",shift:true,color:"#3a3a3a"},
-      {label:">",hid:"period",shift:true,color:"#3a3a3a"},{label:"?",hid:"slash",shift:true,color:"#3a3a3a"},
-    ],
-    ],
-    // Regular keyboard (middle)
-    rows:[
-    [
-      {action:"key_q",label:"Q",color:"#333",hid:"q"},{action:"key_w",label:"W",color:"#333",hid:"w"},
-      {action:"key_e",label:"E",color:"#333",hid:"e"},{action:"key_r",label:"R",color:"#333",hid:"r"},
-      {action:"key_t",label:"T",color:"#333",hid:"t"},{action:"key_y",label:"Y",color:"#333",hid:"y"},
-      {action:"key_u",label:"U",color:"#333",hid:"u"},{action:"key_i",label:"I",color:"#333",hid:"i"},
-      {action:"key_o",label:"O",color:"#333",hid:"o"},{action:"key_p",label:"P",color:"#333",hid:"p"},
-    ],[
-      {action:"key_a",label:"A",color:"#333",hid:"a"},{action:"key_s",label:"S",color:"#333",hid:"s"},
-      {action:"key_d",label:"D",color:"#333",hid:"d"},{action:"key_f",label:"F",color:"#333",hid:"f"},
-      {action:"key_g",label:"G",color:"#333",hid:"g"},{action:"key_h",label:"H",color:"#333",hid:"h"},
-      {action:"key_j",label:"J",color:"#333",hid:"j"},{action:"key_k",label:"K",color:"#333",hid:"k"},
-      {action:"key_l",label:"L",color:"#333",hid:"l"},
-    ],[
-      {action:"key_z",label:"Z",color:"#333",hid:"z"},{action:"key_x",label:"X",color:"#333",hid:"x"},
-      {action:"key_c",label:"C",color:"#333",hid:"c"},{action:"key_v",label:"V",color:"#333",hid:"v"},
-      {action:"key_b",label:"B",color:"#333",hid:"b"},{action:"key_n",label:"N",color:"#333",hid:"n"},
-      {action:"key_m",label:"M",color:"#333",hid:"m"},
-    ],[
-      {action:"key_grave",label:"`",color:"#444",hid:"grave_accent_and_tilde"},
-      {action:"key_1",label:"1",color:"#444",hid:"1"},{action:"key_2",label:"2",color:"#444",hid:"2"},
-      {action:"key_3",label:"3",color:"#444",hid:"3"},{action:"key_4",label:"4",color:"#444",hid:"4"},
-      {action:"key_5",label:"5",color:"#444",hid:"5"},{action:"key_6",label:"6",color:"#444",hid:"6"},
-      {action:"key_7",label:"7",color:"#444",hid:"7"},{action:"key_8",label:"8",color:"#444",hid:"8"},
-      {action:"key_9",label:"9",color:"#444",hid:"9"},{action:"key_0",label:"0",color:"#444",hid:"0"},
-    ],[
-      {action:"key_hyphen",label:"-",color:"#444",hid:"hyphen"},{action:"key_equal",label:"=",color:"#444",hid:"equal_sign"},
-      {action:"key_open_bracket",label:"[",color:"#444",hid:"open_bracket"},{action:"key_close_bracket",label:"]",color:"#444",hid:"close_bracket"},
-      {action:"key_semicolon",label:";",color:"#444",hid:"semicolon"},{action:"key_quote",label:"'",color:"#444",hid:"quote"},
-      {action:"key_comma",label:",",color:"#444",hid:"comma"},{action:"key_period",label:".",color:"#444",hid:"period"},
-      {action:"key_slash",label:"/",color:"#444",hid:"slash"},{action:"key_backslash",label:"\\",color:"#444",hid:"backslash"},
-    ],
-    ],
-    // Bottom bar: modifiers, space/enter/esc/bksp, numpad
-    bottom:{
-      mods:[
-        {action:"shift_lock",label:"\u21EA",color:"#e74c3c"},
-        {action:"mod_shift",label:"\u21E7",color:"#7f8c8d"},
-        {action:"mod_ctrl",label:"Ctrl",color:"#2c3e50"},
-        {action:"mod_command",label:"Cmd",color:"#2980b9"},
-      ],
-      mid:[
-        {action:"key_space",label:"Space",color:"#444",hid:"spacebar",repeat:true,css:"space"},
-        {action:"key_enter",label:"\u21B5",color:"#27ae60",hid:"return_or_enter"},
-        {action:"key_escape",label:"Esc",color:"#c0392b",hid:"escape"},
-        {action:"key_backspace",label:"\u232B",color:"#555",hid:"delete_or_backspace",repeat:true},
-        {action:"key_tab",label:"Tab",color:"#555",hid:"tab"},
-      ],
-      nums:[
-        {action:"key_7",label:"7",color:"#444",hid:"7"},{action:"key_8",label:"8",color:"#444",hid:"8"},{action:"key_9",label:"9",color:"#444",hid:"9"},
-        {action:"key_4",label:"4",color:"#444",hid:"4"},{action:"key_5",label:"5",color:"#444",hid:"5"},{action:"key_6",label:"6",color:"#444",hid:"6"},
-        {action:"key_1",label:"1",color:"#444",hid:"1"},{action:"key_2",label:"2",color:"#444",hid:"2"},{action:"key_3",label:"3",color:"#444",hid:"3"},
-      ],
-    },
-  },
-  // Test tab: shifted block → numbers → Esc+QWERTY → bottom bar
-  { name:"Test", layout:"phone2",
-    sw:{action:"superwhisper_toggle",label:"SuperWhisper",long:"superwhisper_paste"},
-    // Shifted symbols block (top)
-    shifted:[
-    [
-      {label:"~",hid:"grave_accent_and_tilde",shift:true,color:"#3a3a3a"},
-      {label:"!",hid:"1",shift:true,color:"#3a3a3a"},{label:"@",hid:"2",shift:true,color:"#3a3a3a"},
-      {label:"#",hid:"3",shift:true,color:"#3a3a3a"},{label:"$",hid:"4",shift:true,color:"#3a3a3a"},
-      {label:"%",hid:"5",shift:true,color:"#3a3a3a"},{label:"^",hid:"6",shift:true,color:"#3a3a3a"},
-      {label:"&",hid:"7",shift:true,color:"#3a3a3a"},{label:"*",hid:"8",shift:true,color:"#3a3a3a"},
-      {label:"(",hid:"9",shift:true,color:"#3a3a3a"},{label:")",hid:"0",shift:true,color:"#3a3a3a"},
-    ],[
-      {label:"{",hid:"open_bracket",shift:true,color:"#3a3a3a"},{label:"}",hid:"close_bracket",shift:true,color:"#3a3a3a"},
-      {label:"|",hid:"backslash",shift:true,color:"#3a3a3a"},{label:":",hid:"semicolon",shift:true,color:"#3a3a3a"},
-      {label:"\"",hid:"quote",shift:true,color:"#3a3a3a"},{label:"<",hid:"comma",shift:true,color:"#3a3a3a"},
-      {label:">",hid:"period",shift:true,color:"#3a3a3a"},{label:"?",hid:"slash",shift:true,color:"#3a3a3a"},
-      {label:"_",hid:"hyphen",shift:true,color:"#3a3a3a"},{label:"+",hid:"equal_sign",shift:true,color:"#3a3a3a"},
-    ],
-    ],
-    // Number + punctuation rows
-    numbers:[
-    [
-      {action:"key_grave",label:"`",color:"#444",hid:"grave_accent_and_tilde"},
-      {action:"key_1",label:"1",color:"#444",hid:"1"},{action:"key_2",label:"2",color:"#444",hid:"2"},
-      {action:"key_3",label:"3",color:"#444",hid:"3"},{action:"key_4",label:"4",color:"#444",hid:"4"},
-      {action:"key_5",label:"5",color:"#444",hid:"5"},{action:"key_6",label:"6",color:"#444",hid:"6"},
-      {action:"key_7",label:"7",color:"#444",hid:"7"},{action:"key_8",label:"8",color:"#444",hid:"8"},
-      {action:"key_9",label:"9",color:"#444",hid:"9"},{action:"key_0",label:"0",color:"#444",hid:"0"},
-    ],[
-      {action:"key_hyphen",label:"-",color:"#444",hid:"hyphen"},{action:"key_equal",label:"=",color:"#444",hid:"equal_sign"},
-      {action:"key_open_bracket",label:"[",color:"#444",hid:"open_bracket"},{action:"key_close_bracket",label:"]",color:"#444",hid:"close_bracket"},
-      {action:"key_semicolon",label:";",color:"#444",hid:"semicolon"},{action:"key_quote",label:"'",color:"#444",hid:"quote"},
-      {action:"key_comma",label:",",color:"#444",hid:"comma"},{action:"key_period",label:".",color:"#444",hid:"period"},
-      {action:"key_slash",label:"/",color:"#444",hid:"slash"},{action:"key_backslash",label:"\\",color:"#444",hid:"backslash"},
-    ],
-    ],
-    // Esc + QWERTY block
-    qwerty:{
-      esc:{action:"key_escape",label:"Esc",color:"#c0392b",hid:"escape",css:"esc"},
-      rows:[
-      [
-        {action:"key_q",label:"Q",color:"#333",hid:"q"},{action:"key_w",label:"W",color:"#333",hid:"w"},
-        {action:"key_e",label:"E",color:"#333",hid:"e"},{action:"key_r",label:"R",color:"#333",hid:"r"},
-        {action:"key_t",label:"T",color:"#333",hid:"t"},{action:"key_y",label:"Y",color:"#333",hid:"y"},
-        {action:"key_u",label:"U",color:"#333",hid:"u"},{action:"key_i",label:"I",color:"#333",hid:"i"},
-        {action:"key_o",label:"O",color:"#333",hid:"o"},{action:"key_p",label:"P",color:"#333",hid:"p"},
-      ],[
-        {action:"key_a",label:"A",color:"#333",hid:"a"},{action:"key_s",label:"S",color:"#333",hid:"s"},
-        {action:"key_d",label:"D",color:"#333",hid:"d"},{action:"key_f",label:"F",color:"#333",hid:"f"},
-        {action:"key_g",label:"G",color:"#333",hid:"g"},{action:"key_h",label:"H",color:"#333",hid:"h"},
-        {action:"key_j",label:"J",color:"#333",hid:"j"},{action:"key_k",label:"K",color:"#333",hid:"k"},
-        {action:"key_l",label:"L",color:"#333",hid:"l"},
-      ],[
-        {action:"key_z",label:"Z",color:"#333",hid:"z"},{action:"key_x",label:"X",color:"#333",hid:"x"},
-        {action:"key_c",label:"C",color:"#333",hid:"c"},{action:"key_v",label:"V",color:"#333",hid:"v"},
-        {action:"key_b",label:"B",color:"#333",hid:"b"},{action:"key_n",label:"N",color:"#333",hid:"n"},
-        {action:"key_m",label:"M",color:"#333",hid:"m"},
-      ],
-      ],
-    },
-    // Bottom bar: modifiers | space+tab | numpad+return | delete
-    bottom:{
-      mods:[
-        {action:"shift_lock",label:"\u21EA Lock",color:"#ff4757"},
-        {action:"mod_shift",label:"\u21E7 Shift",color:"#ffa502"},
-        {action:"mod_ctrl",label:"Ctrl",color:"#3742fa"},
-        {action:"mod_command",label:"Cmd",color:"#2ed573"},
-      ],
-      mid:[
-        {action:"key_space",label:"Space",color:"#444",hid:"spacebar",repeat:true},
-        {action:"key_tab",label:"Tab",color:"#555",hid:"tab"},
-      ],
-      nums:[
-        {action:"key_7",label:"7",color:"#444",hid:"7"},{action:"key_8",label:"8",color:"#444",hid:"8"},{action:"key_9",label:"9",color:"#444",hid:"9"},
-        {action:"key_4",label:"4",color:"#444",hid:"4"},{action:"key_5",label:"5",color:"#444",hid:"5"},{action:"key_6",label:"6",color:"#444",hid:"6"},
-        {action:"key_1",label:"1",color:"#444",hid:"1"},{action:"key_2",label:"2",color:"#444",hid:"2"},{action:"key_3",label:"3",color:"#444",hid:"3"},
-      ],
-      ret:{action:"key_enter",label:"\u21B5",color:"#27ae60",hid:"return_or_enter"},
-      del:{action:"key_backspace",label:"\u232B Delete",color:"#555",hid:"delete_or_backspace",repeat:true},
-    },
   },
 ];
 
@@ -1086,7 +973,7 @@ new p5(function(p){
 
   p.setup=function(){
     const c=p.createCanvas(100,100);
-    c.parent("tab7");
+    c.parent("tab4");
     c.elt.style.touchAction="pan-x";
     p.textAlign(p.CENTER,p.CENTER);
     p.textFont("monospace");
@@ -1095,7 +982,7 @@ new p5(function(p){
   };
 
   function resize(){
-    const el=document.getElementById("tab7");
+    const el=document.getElementById("tab4");
     p.resizeCanvas(el.clientWidth,el.clientHeight);
     buildButtons();
   }
@@ -1236,7 +1123,7 @@ new p5(function(p){
     if(pressed){send(pressed.action);if(navigator.vibrate)navigator.vibrate(30)}
     pressed=null;
   };
-},"tab7");
+},"tab4");
 
 // ═══════════════════════════════════════════════════════════════
 // SCI-FI Keyboard (KB-SF) — phosphor green CRT aesthetic
@@ -1290,7 +1177,7 @@ new p5(function(p){
 
   p.setup=function(){
     const c=p.createCanvas(100,100);
-    c.parent("tab8");
+    c.parent("tab5");
     c.elt.style.touchAction="pan-x";
     p.textAlign(p.CENTER,p.CENTER);
     p.textFont("monospace");
@@ -1298,7 +1185,7 @@ new p5(function(p){
   };
 
   function resize(){
-    const el=document.getElementById("tab8");
+    const el=document.getElementById("tab5");
     p.resizeCanvas(el.clientWidth,el.clientHeight);
     buildKeys();
   }
@@ -1478,7 +1365,7 @@ new p5(function(p){
   p.touchMoved=function(){return true};
   p.mousePressed=function(){handlePress(p.mouseX,p.mouseY)};
   p.mouseReleased=function(){handleRelease()};
-},"tab8");
+},"tab5");
 
 // ═══════════════════════════════════════════════════════════════
 // SCI-FI Terminal Keyboard — phosphor green CRT aesthetic
@@ -1539,7 +1426,7 @@ new p5(function(p){
 
   p.setup=function(){
     const c=p.createCanvas(100,100);
-    c.parent("tab9");
+    c.parent("tab6");
     c.elt.style.touchAction="pan-x";
     p.textAlign(p.CENTER,p.CENTER);
     p.textFont("monospace");
@@ -1548,7 +1435,7 @@ new p5(function(p){
   };
 
   function resize(){
-    const el=document.getElementById("tab9");
+    const el=document.getElementById("tab6");
     p.resizeCanvas(el.clientWidth,el.clientHeight);
     buildKeys();
   }
@@ -1858,7 +1745,7 @@ new p5(function(p){
   p.touchMoved=function(){return true};
   p.mousePressed=function(){handlePress(p.mouseX,p.mouseY)};
   p.mouseReleased=function(){handleRelease()};
-},"tab9");
+},"tab6");
 
 // ═══════════════════════════════════════════════════════════════
 // QWERTY+ — Research-optimized adaptive QWERTY (sci-fi CRT)
@@ -1920,7 +1807,7 @@ new p5(function(p){
 
   p.setup=function(){
     const c=p.createCanvas(100,100);
-    c.parent("tab10");
+    c.parent("tab7");
     c.elt.style.touchAction="pan-x";
     p.textAlign(p.CENTER,p.CENTER);
     p.textFont("monospace");
@@ -1928,7 +1815,7 @@ new p5(function(p){
   };
 
   function resize(){
-    const el=document.getElementById("tab10");
+    const el=document.getElementById("tab7");
     p.resizeCanvas(el.clientWidth,el.clientHeight);
     buildKeys();
   }
@@ -2147,7 +2034,7 @@ new p5(function(p){
   p.touchMoved=function(){return true};
   p.mousePressed=function(){handlePress(p.mouseX,p.mouseY)};
   p.mouseReleased=function(){handleRelease()};
-},"tab10");
+},"tab7");
 
 // ═══════════════════════════════════════════════════════════════
 // 1-Hand — MessagEase-style 3x3 tap+swipe grid (sci-fi CRT)
@@ -2213,7 +2100,7 @@ new p5(function(p){
 
   p.setup=function(){
     const c=p.createCanvas(100,100);
-    c.parent("tab11");
+    c.parent("tab8");
     c.elt.style.touchAction="pan-x";
     p.textAlign(p.CENTER,p.CENTER);
     p.textFont("monospace");
@@ -2221,7 +2108,7 @@ new p5(function(p){
   };
 
   function resize(){
-    const el=document.getElementById("tab11");
+    const el=document.getElementById("tab8");
     p.resizeCanvas(el.clientWidth,el.clientHeight);
     buildCells();
   }
@@ -2475,7 +2362,7 @@ new p5(function(p){
   p.touchEnded=function(){handleRelease(lastTouchX,lastTouchY);return true};
   p.mousePressed=function(){handlePress(p.mouseX,p.mouseY)};
   p.mouseReleased=function(){handleRelease(p.mouseX,p.mouseY)};
-},"tab11");
+},"tab8");
 
 // Replay — Text-to-HID replay (plain HTML)
 (function(){
