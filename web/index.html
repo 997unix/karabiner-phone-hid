@@ -295,7 +295,10 @@ const tabs = [
     "arrows",
   ]},
   { name:"KBDv2", layout:"kb",
-    sw:{action:"superwhisper_toggle",label:"SuperWhisper",long:"superwhisper_paste"},
+    swSplit:[
+      {action:"superwhisper_toggle",label:"SuperWhisper",color:"#e74c3c",long:"superwhisper_paste"},
+      {action:"_goto_replay",label:"Replay \u270F",color:"#2980b9"},
+    ],
     rows:[
     // F-keys
     [
@@ -529,8 +532,29 @@ function wireBtn(el,b){
 tabs.forEach((tab,i)=>{
   const container=document.getElementById("tab"+i);
   if(tab.layout==="kb"){
-    // SuperWhisper banner
-    if(tab.sw){
+    // SuperWhisper banner (single or split)
+    if(tab.swSplit){
+      const wrap=document.createElement("div");
+      wrap.style.cssText="display:flex;gap:4px;margin-bottom:6px;flex-shrink:0";
+      tab.swSplit.forEach(b=>{
+        const el=document.createElement("button");
+        el.className="kb-sw";
+        el.style.marginBottom="0";
+        el.textContent=b.label;
+        if(b.color)el.style.background=b.color;
+        if(b.action==="_goto_replay"){
+          el.addEventListener("click",()=>{
+            replayReturnTab=i;
+            switchToTab(9);// Replay tab index
+            if(navigator.vibrate)navigator.vibrate(30);
+          });
+        } else {
+          wireBtn(el,b);
+        }
+        wrap.appendChild(el);
+      });
+      container.appendChild(wrap);
+    } else if(tab.sw){
       const sw=document.createElement("button");
       sw.className="kb-sw";
       sw.textContent=tab.sw.label;
@@ -910,8 +934,15 @@ swipe.addEventListener("scroll",()=>{
 // Tab tap → scroll
 tabBtns.forEach(b=>b.addEventListener("click",()=>{
   const idx=parseInt(b.dataset.idx);
-  swipe.scrollTo({left:idx*swipe.clientWidth,behavior:"smooth"});
+  switchToTab(idx);
 }));
+
+function switchToTab(idx){
+  swipe.scrollTo({left:idx*swipe.clientWidth,behavior:"smooth"});
+}
+
+// Replay return-to-caller: set before navigating to Replay tab
+var replayReturnTab=null;
 
 function connect(){
   const host=location.hostname||"127.0.0.1";
@@ -2439,6 +2470,13 @@ new p5(function(p){
     sendBtn.classList.remove("stop");
     statusEl.textContent=done?"DONE":"STOPPED";
     setTimeout(()=>{if(statusEl.textContent==="DONE"||statusEl.textContent==="STOPPED")statusEl.textContent="IDLE"},3000);
+    // Auto-return to caller tab after successful send
+    if(done&&replayReturnTab!==null){
+      const ret=replayReturnTab;
+      replayReturnTab=null;
+      ta.value="";
+      setTimeout(()=>switchToTab(ret),500);
+    }
   }
 })();
 </script>
