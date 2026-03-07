@@ -160,38 +160,20 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
 
 <div class="tabs" id="tabs">
   <button data-idx="0" class="active">tmate/tmux</button>
-  <button data-idx="1">Keyboard</button>
-  <button data-idx="2">KBDv2</button>
+  <button data-idx="1">KBDv2</button>
+  <button data-idx="2">Replay</button>
   <button data-idx="3">Numpad</button>
-  <button data-idx="4">YT-SF</button>
-  <button data-idx="5">KB-SF</button>
-  <button data-idx="6">SCI-FI</button>
-  <button data-idx="7">QWERTY+</button>
-  <button data-idx="8">1-Hand</button>
-  <button data-idx="9">Replay</button>
+  <button data-idx="4">YT Remote</button>
+  <button data-idx="5">1-Hand</button>
 </div>
 
 <div class="swipe" id="swipe">
   <!-- Teammate -->
   <div class="page"><div class="grid" id="tab0"></div></div>
-  <!-- Keyboard -->
-  <div class="kb-page" id="tab1"></div>
   <!-- KBDv2 -->
-  <div class="kb-page" id="tab2"></div>
-  <!-- Numpad -->
-  <div class="kb-page" id="tab3"></div>
-  <!-- YT-SF: Sci-Fi YouTube Remote -->
-  <div class="p5-page" id="tab4"></div>
-  <!-- KB-SF: Sci-Fi Keyboard -->
-  <div class="p5-page" id="tab5"></div>
-  <!-- SCI-FI: Original sci-fi keyboard -->
-  <div class="p5-page" id="tab6"></div>
-  <!-- QWERTY+: Research-optimized adaptive QWERTY -->
-  <div class="p5-page" id="tab7"></div>
-  <!-- 1-Hand: MessagEase-style one-handed -->
-  <div class="p5-page" id="tab8"></div>
+  <div class="kb-page" id="tab1"></div>
   <!-- Replay: Text-to-HID replay -->
-  <div class="replay-page" id="tab9">
+  <div class="replay-page" id="tab2">
     <div class="replay-body">
       <textarea id="replay-text" placeholder="Type or dictate text here..." autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false"></textarea>
       <div class="replay-gutter" id="replay-gutter"></div>
@@ -203,6 +185,12 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
       <button id="replay-send" class="replay-btn send">SEND</button>
     </div>
   </div>
+  <!-- Numpad -->
+  <div class="kb-page" id="tab3"></div>
+  <!-- YT Remote -->
+  <div class="p5-page" id="tab4"></div>
+  <!-- 1-Hand -->
+  <div class="p5-page" id="tab5"></div>
 </div>
 
 <div id="status" class="disconnected"><span class="dot"></span><span id="stxt">Disconnected</span></div>
@@ -225,88 +213,6 @@ const tabs = [
     {action:"tmux_exit_copy",label:"Exit Copy",color:"#e67e22"},
     {action:null,label:"",color:"transparent"},
     {action:"arrow_right",label:"Right",color:"#1abc9c"},
-  ]},
-  { name:"Keyboard", layout:"kb",
-    sw:{action:"superwhisper_toggle",label:"SuperWhisper",long:"superwhisper_paste"},
-    esc:{action:"key_escape",label:"Esc",color:"#c0392b"},
-    controlPad:[
-      {action:"key_insert",label:"Ins",color:"#555"},
-      {action:"key_home",label:"Home",color:"#555"},
-      {action:"key_page_up",label:"PgUp",color:"#555"},
-      {action:"key_delete",label:"Del",color:"#555"},
-      {action:"key_end",label:"End",color:"#555"},
-      {action:"key_page_down",label:"PgDn",color:"#555"},
-    ],
-    rows:[
-    // F-keys (Esc moved to standalone bar)
-    [
-      {action:"key_f1",label:"F1",color:"#444",css:"fk",hid:"f1"},{action:"key_f2",label:"F2",color:"#444",css:"fk",hid:"f2"},
-      {action:"key_f3",label:"F3",color:"#444",css:"fk",hid:"f3"},{action:"key_f4",label:"F4",color:"#444",css:"fk",hid:"f4"},
-      {action:"key_f5",label:"F5",color:"#444",css:"fk",hid:"f5"},{action:"key_f6",label:"F6",color:"#444",css:"fk",hid:"f6"},
-      {action:"key_f7",label:"F7",color:"#444",css:"fk",hid:"f7"},{action:"key_f8",label:"F8",color:"#444",css:"fk",hid:"f8"},
-      {action:"key_f9",label:"F9",color:"#444",css:"fk",hid:"f9"},{action:"key_f10",label:"F10",color:"#444",css:"fk",hid:"f10"},
-      {action:"key_f11",label:"F11",color:"#444",css:"fk",hid:"f11"},{action:"key_f12",label:"F12",color:"#444",css:"fk",hid:"f12"},
-    ],
-    "gap",
-    // Number row
-    [
-      {action:"key_grave",label:"`",color:"#444",hid:"grave_accent_and_tilde"},
-      {action:"key_1",label:"1",color:"#333",hid:"1"},{action:"key_2",label:"2",color:"#333",hid:"2"},
-      {action:"key_3",label:"3",color:"#333",hid:"3"},{action:"key_4",label:"4",color:"#333",hid:"4"},
-      {action:"key_5",label:"5",color:"#333",hid:"5"},{action:"key_6",label:"6",color:"#333",hid:"6"},
-      {action:"key_7",label:"7",color:"#333",hid:"7"},{action:"key_8",label:"8",color:"#333",hid:"8"},
-      {action:"key_9",label:"9",color:"#333",hid:"9"},{action:"key_0",label:"0",color:"#333",hid:"0"},
-      {action:"key_hyphen",label:"-",color:"#444",hid:"hyphen"},{action:"key_equal",label:"=",color:"#444",hid:"equal_sign"},
-      {action:"key_backspace",label:"\u232B",color:"#555",css:"wide",hid:"delete_or_backspace",repeat:true},
-    ],
-    "gap",
-    // QWERTY row
-    [
-      {action:"key_tab",label:"Tab",color:"#555",css:"wide",hid:"tab"},
-      {action:"key_q",label:"Q",color:"#333",hid:"q"},{action:"key_w",label:"W",color:"#333",hid:"w"},
-      {action:"key_e",label:"E",color:"#333",hid:"e"},{action:"key_r",label:"R",color:"#333",hid:"r"},
-      {action:"key_t",label:"T",color:"#333",hid:"t"},{action:"key_y",label:"Y",color:"#333",hid:"y"},
-      {action:"key_u",label:"U",color:"#333",hid:"u"},{action:"key_i",label:"I",color:"#333",hid:"i"},
-      {action:"key_o",label:"O",color:"#333",hid:"o"},{action:"key_p",label:"P",color:"#333",hid:"p"},
-      {action:"key_open_bracket",label:"[",color:"#444",hid:"open_bracket"},{action:"key_close_bracket",label:"]",color:"#444",hid:"close_bracket"},
-      {action:"key_backslash",label:"\\",color:"#444",hid:"backslash"},
-    ],
-    // Home row
-    [
-      {action:"key_enter",label:"\u21B5",color:"#27ae60",css:"wider",hid:"return_or_enter"},
-      {action:"key_a",label:"A",color:"#333",hid:"a"},{action:"key_s",label:"S",color:"#333",hid:"s"},
-      {action:"key_d",label:"D",color:"#333",hid:"d"},{action:"key_f",label:"F",color:"#333",hid:"f"},
-      {action:"key_g",label:"G",color:"#333",hid:"g"},{action:"key_h",label:"H",color:"#333",hid:"h"},
-      {action:"key_j",label:"J",color:"#333",hid:"j"},{action:"key_k",label:"K",color:"#333",hid:"k"},
-      {action:"key_l",label:"L",color:"#333",hid:"l"},{action:"key_semicolon",label:";",color:"#444",hid:"semicolon"},
-      {action:"key_quote",label:"'",color:"#444",hid:"quote"},
-      {action:"key_enter",label:"\u21B5",color:"#27ae60",css:"wider",hid:"return_or_enter"},
-    ],
-    // Bottom letter row
-    [
-      {action:"key_z",label:"Z",color:"#333",hid:"z"},{action:"key_x",label:"X",color:"#333",hid:"x"},
-      {action:"key_c",label:"C",color:"#333",hid:"c"},{action:"key_v",label:"V",color:"#333",hid:"v"},
-      {action:"key_b",label:"B",color:"#333",hid:"b"},{action:"key_n",label:"N",color:"#333",hid:"n"},
-      {action:"key_m",label:"M",color:"#333",hid:"m"},{action:"key_comma",label:",",color:"#444",hid:"comma"},
-      {action:"key_period",label:".",color:"#444",hid:"period"},{action:"key_slash",label:"/",color:"#444",hid:"slash"},
-    ],
-    // Modifier + space row
-    [
-      {action:"mod_ctrl",label:"Ctrl",color:"#2c3e50"},
-      {action:"mod_option",label:"Opt",color:"#8e44ad"},
-      {action:"mod_command",label:"Cmd",color:"#2980b9"},
-      {action:"key_space",label:"",color:"#444",css:"space",hid:"spacebar",repeat:true},
-      {action:"mod_command",label:"Cmd",color:"#2980b9"},
-      {action:"mod_option",label:"Opt",color:"#8e44ad"},
-      {action:"mod_ctrl",label:"Ctrl",color:"#2c3e50"},
-    ],
-    // Shift keys
-    [
-      {action:"mod_shift",label:"Shift",color:"#7f8c8d",css:"wider"},
-      {action:"mod_shift",label:"Shift",color:"#7f8c8d",css:"wider"},
-    ],
-    // Arrow row — will be rendered specially
-    "arrows",
   ]},
   { name:"KBDv2", layout:"kb", v2:true,
     swSplit:[
@@ -405,6 +311,7 @@ const tabs = [
     // Arrow row
     "arrows",
   ]},
+  null, // tab2 = Replay (rendered as HTML, not from tabs array)
   { name:"Numpad", layout:"numpad",
     sw:{action:"superwhisper_toggle",label:"SuperWhisper",long:"superwhisper_paste"},
     controlPad:[
@@ -557,6 +464,7 @@ function wireBtn(el,b){
 
 // Build button grids
 tabs.forEach((tab,i)=>{
+  if(!tab)return;// skip null placeholders (e.g. Replay)
   const container=document.getElementById("tab"+i);
   if(tab.layout==="kb"){
     // SuperWhisper banner (single or split)
@@ -572,7 +480,7 @@ tabs.forEach((tab,i)=>{
         if(b.action==="_goto_replay"){
           el.addEventListener("click",()=>{
             replayReturnTab=i;
-            switchToTab(9);// Replay tab index
+            switchToTab(2);// Replay tab index
             if(navigator.vibrate)navigator.vibrate(30);
           });
         } else {
@@ -997,1109 +905,136 @@ function send(action){
 connect();
 
 // ═══════════════════════════════════════════════════════════════
-// SCI-FI YouTube Remote — phosphor green CRT aesthetic
+// YouTube Remote — classic remote control layout
+// Large play/pause, d-pad style volume/seek, bottom utility row
 // ═══════════════════════════════════════════════════════════════
 new p5(function(p){
-  let buttons=[];
+  let btns=[];
   let pressed=null;
-  let pressFlash=0;
-  let bootFrame=0;
-  const bootDuration=40;
-  let scanOffset=0;
-
-  const GREEN=[0,255,65];
-  const DIM_GREEN=[0,180,45];
-  const DARK_GREEN=[0,60,15];
-  const AMBER=[255,176,0];
-  const RED=[255,50,30];
-  const CYAN=[0,200,220];
-  const BG=[2,8,2];
-  const GRID_COLOR=[0,40,10];
-
-  const layout=[
-    // Row 0: transport
-    {l:"PREV",action:"yt_prev_video",col:0,row:0,w:1,h:1,color:AMBER,icon:"<<"},
-    {l:"PLAY",action:"yt_play_pause",col:1,row:0,w:1,h:1.3,color:RED,icon:"||>"},
-    {l:"NEXT",action:"yt_next_video",col:2,row:0,w:1,h:1,color:AMBER,icon:">>"},
-    // Row 1: seek
-    {l:"-10s",action:"yt_back_10",col:0,row:1,w:1,h:1,color:CYAN,icon:"<"},
-    {l:"MUTE",action:"yt_mute",col:1,row:1,w:1,h:1,color:DIM_GREEN,icon:"X"},
-    {l:"+10s",action:"yt_fwd_10",col:2,row:1,w:1,h:1,color:CYAN,icon:">"},
-    // Row 2: volume + fullscreen
-    {l:"VOL-",action:"yt_vol_down",col:0,row:2,w:1,h:1,color:DIM_GREEN,icon:"-"},
-    {l:"FULL",action:"yt_fullscreen",col:1,row:2,w:1,h:1.3,color:GREEN,icon:"[]"},
-    {l:"VOL+",action:"yt_vol_up",col:2,row:2,w:1,h:1,color:DIM_GREEN,icon:"+"},
-    // Row 3: speed + CC
-    {l:"SLOW",action:"yt_speed_down",col:0,row:3,w:1,h:1,color:DIM_GREEN,icon:"<"},
-    {l:"CC",action:"yt_captions",col:1,row:3,w:1,h:1,color:AMBER,icon:"T"},
-    {l:"FAST",action:"yt_speed_up",col:2,row:3,w:1,h:1,color:DIM_GREEN,icon:">"},
-  ];
+  let flashAlpha=0;
+  const BG=[18,18,24];
+  const SILVER=[160,165,175];
+  const RED=[220,50,40];
+  const BLUE=[60,120,200];
+  const TEAL=[40,180,160];
+  const DARK=[40,42,50];
+  const DGRAY=[55,58,66];
+  const AMBER=[220,170,40];
 
   p.setup=function(){
     const c=p.createCanvas(100,100);
     c.parent("tab4");
     c.elt.style.touchAction="pan-x";
     p.textAlign(p.CENTER,p.CENTER);
-    p.textFont("monospace");
-    resize();
-    bootFrame=0;
+    p.textFont("system-ui,sans-serif");
+    rebuild();
   };
 
-  function resize(){
+  function rebuild(){
     const el=document.getElementById("tab4");
     p.resizeCanvas(el.clientWidth,el.clientHeight);
-    buildButtons();
+    const W=p.width,H=p.height;
+    const pad=14,gap=8;
+    const col3W=(W-pad*2-gap*2)/3;
+    const col2W=(W-pad*2-gap)/2;
+    btns=[];
+    let y=pad;
+
+    // Row 1: PREV | PLAY/PAUSE | NEXT (tall)
+    const transportH=H*0.16;
+    btns.push({l:"\u25C0\u25C0",sub:"PREV",a:"yt_prev_video",x:pad,y,w:col3W,h:transportH,bg:DARK,fg:SILVER,r:12});
+    btns.push({l:"\u25B6\u2759\u2759",sub:"",a:"yt_play_pause",x:pad+col3W+gap,y,w:col3W,h:transportH,bg:RED,fg:[255,255,255],r:24,big:true});
+    btns.push({l:"\u25B6\u25B6",sub:"NEXT",a:"yt_next_video",x:pad+2*(col3W+gap),y,w:col3W,h:transportH,bg:DARK,fg:SILVER,r:12});
+    y+=transportH+gap*1.5;
+
+    // Row 2: -10s | MUTE | +10s
+    const seekH=H*0.10;
+    btns.push({l:"\u25C0 10s",a:"yt_back_10",x:pad,y,w:col3W,h:seekH,bg:DGRAY,fg:BLUE,r:8});
+    btns.push({l:"\uD83D\uDD07",sub:"MUTE",a:"yt_mute",x:pad+col3W+gap,y,w:col3W,h:seekH,bg:DGRAY,fg:AMBER,r:8});
+    btns.push({l:"10s \u25B6",a:"yt_fwd_10",x:pad+2*(col3W+gap),y,w:col3W,h:seekH,bg:DGRAY,fg:BLUE,r:8});
+    y+=seekH+gap*1.5;
+
+    // Row 3: VOL- | FULLSCREEN | VOL+ (tall)
+    const volH=H*0.18;
+    btns.push({l:"VOL \u2212",a:"yt_vol_down",x:pad,y,w:col3W,h:volH,bg:DARK,fg:TEAL,r:10});
+    btns.push({l:"\u26F6",sub:"FULL",a:"yt_fullscreen",x:pad+col3W+gap,y,w:col3W,h:volH,bg:[30,80,70],fg:[200,255,240],r:16});
+    btns.push({l:"VOL +",a:"yt_vol_up",x:pad+2*(col3W+gap),y,w:col3W,h:volH,bg:DARK,fg:TEAL,r:10});
+    y+=volH+gap*1.5;
+
+    // Row 4: SPEED- | CC | SPEED+
+    const spdH=H*0.10;
+    btns.push({l:"\u25C0 Speed",a:"yt_speed_down",x:pad,y,w:col3W,h:spdH,bg:DGRAY,fg:SILVER,r:8});
+    btns.push({l:"CC",a:"yt_captions",x:pad+col3W+gap,y,w:col3W,h:spdH,bg:DGRAY,fg:AMBER,r:8});
+    btns.push({l:"Speed \u25B6",a:"yt_speed_up",x:pad+2*(col3W+gap),y,w:col3W,h:spdH,bg:DGRAY,fg:SILVER,r:8});
   }
 
-  function buildButtons(){
-    const pad=12,gap=6,cols=3,rows=4;
-    const cellW=(p.width-pad*2-(cols-1)*gap)/cols;
-    const cellH=(p.height-pad*2-20-(rows-1)*gap)/rows;// 20 for status bar
-    buttons=layout.map(b=>{
-      const x=pad+b.col*(cellW+gap);
-      const y=22+pad+b.row*(cellH+gap);
-      return {...b,x,y,bw:b.w*cellW+(b.w-1)*gap,bh:b.h*cellH+(b.h-1)*gap};
-    });
-  }
-
-  p.windowResized=function(){resize()};
+  p.windowResized=function(){rebuild()};
 
   p.draw=function(){
     p.background(...BG);
-    if(bootFrame<bootDuration){drawBoot();bootFrame++;return}
+    if(flashAlpha>0)flashAlpha-=0.04;
 
-    // Scanlines
-    scanOffset=(scanOffset+0.5)%4;
-    p.stroke(0,20,5,40);p.strokeWeight(1);
-    for(let y=scanOffset;y<p.height;y+=4)p.line(0,y,p.width,y);
+    // Subtle divider lines between sections
+    p.stroke(50,52,60);p.strokeWeight(1);
 
-    // Grid
-    p.stroke(...GRID_COLOR,25);p.strokeWeight(0.5);
-    for(let x=0;x<p.width;x+=20)p.line(x,0,x,p.height);
-    for(let y=0;y<p.height;y+=20)p.line(0,y,p.width,y);
-
-    if(pressFlash>0)pressFlash-=0.05;
-
-    // Draw buttons
-    buttons.forEach(b=>{
-      const isPressed=pressed===b;
-      let keyBG=[0,20,5];
-      let border=DARK_GREEN;
-      let text=b.color;
-      let glow=0;
-
-      if(isPressed){keyBG=[0,60,15];border=b.color;text=[200,255,200];glow=50}
-
-      // Glow
-      if(glow>0||(isPressed&&pressFlash>0)){
-        const ga=Math.max(glow,pressFlash*60);
-        p.noStroke();p.fill(border[0],border[1],border[2],ga);
-        p.rect(b.x-2,b.y-2,b.bw+4,b.bh+4,4);
-      }
-
+    btns.forEach(b=>{
+      const hit=pressed===b;
+      // Shadow
+      p.noStroke();p.fill(0,0,0,60);
+      p.rect(b.x+2,b.y+2,b.w,b.h,b.r);
       // Body
-      p.fill(...keyBG);p.stroke(...border);p.strokeWeight(1);
-      p.rect(b.x,b.y,b.bw,b.bh,3);
-
-      // Inner highlight
-      p.stroke(border[0],border[1],border[2],40);
-      p.line(b.x+2,b.y+1,b.x+b.bw-2,b.y+1);
-      p.line(b.x+1,b.y+2,b.x+1,b.y+b.bh-2);
-
-      // Corner dots
-      p.noStroke();p.fill(...border,50);
-      const d=2;
-      p.circle(b.x+4,b.y+4,d);p.circle(b.x+b.bw-4,b.y+4,d);
-      p.circle(b.x+4,b.y+b.bh-4,d);p.circle(b.x+b.bw-4,b.y+b.bh-4,d);
-
+      const bg=hit?[b.bg[0]+30,b.bg[1]+30,b.bg[2]+30]:b.bg;
+      p.fill(...bg);p.stroke(70,72,80);p.strokeWeight(1);
+      p.rect(b.x,b.y,b.w,b.h,b.r);
+      // Top highlight
+      p.noStroke();p.fill(255,255,255,hit?20:12);
+      p.rect(b.x+2,b.y+1,b.w-4,b.h*0.35,b.r,b.r,0,0);
       // Label
-      p.noStroke();p.fill(...text);
-      const sz=b.l.length>3?10:12;
-      p.textSize(sz);
-      if(p.random()>0.995)p.fill(...text,150);
-      p.text(b.l,b.x+b.bw/2,b.y+b.bh/2);
+      p.noStroke();
+      const fg=hit?[255,255,255]:b.fg;
+      p.fill(...fg);
+      if(b.big){
+        p.textSize(28);
+        p.text(b.l,b.x+b.w/2,b.y+b.h/2);
+      } else {
+        p.textSize(b.l.length>6?11:13);
+        if(b.sub){
+          p.text(b.l,b.x+b.w/2,b.y+b.h/2-6);
+          p.textSize(9);p.fill(fg[0],fg[1],fg[2],150);
+          p.text(b.sub,b.x+b.w/2,b.y+b.h/2+8);
+        } else {
+          p.text(b.l,b.x+b.w/2,b.y+b.h/2);
+        }
+      }
     });
 
-    // Status bar
-    p.noStroke();p.fill(0,15,4);p.rect(0,0,p.width,18);
-    p.fill(...DIM_GREEN,180);p.textSize(8);
-    p.textAlign(p.LEFT,p.TOP);
-    p.text("YT:REMOTE",4,4);
-    p.textAlign(p.RIGHT,p.TOP);
-    p.text("STREAM:ACTIVE",p.width-4,4);
-    p.textAlign(p.CENTER,p.CENTER);
-    p.stroke(...DARK_GREEN,80);p.line(0,18,p.width,18);
-
-    // Vignette
-    drawVignette();
-
-    // Phosphor bloom
-    if(pressed&&pressFlash>0.5){
-      p.noStroke();p.fill(0,255,65,pressFlash*15);
-      p.circle(pressed.x+pressed.bw/2,pressed.y+pressed.bh/2,pressed.bw*1.3);
+    // Flash overlay on press
+    if(pressed&&flashAlpha>0){
+      p.noStroke();p.fill(255,255,255,flashAlpha*30);
+      p.rect(pressed.x,pressed.y,pressed.w,pressed.h,pressed.r);
     }
   };
 
-  function drawBoot(){
-    p.fill(...GREEN);p.textSize(11);p.textAlign(p.LEFT,p.TOP);
-    const lines=["KARABINER-HID MEDIA TERMINAL v1.0","INIT DISPLAY .......... OK","LOAD YOUTUBE KEYMAP ... OK","STREAM INTERFACE ...... OK","","REMOTE READY _"];
-    const shown=Math.floor(p.map(bootFrame,0,bootDuration,0,lines.length+1));
-    for(let i=0;i<Math.min(shown,lines.length);i++){
-      if(i===shown-1&&p.random()>0.6)continue;
-      p.fill(...GREEN);p.text(lines[i],12,12+i*16);
-    }
-    p.stroke(0,20,5,30);p.strokeWeight(1);
-    for(let y=0;y<p.height;y+=3)p.line(0,y,p.width,y);
-    p.textAlign(p.CENTER,p.CENTER);
-  }
-
-  function drawVignette(){
-    p.noStroke();
-    for(let i=0;i<20;i++){
-      const a=p.map(i,0,20,30,0);p.fill(0,0,0,a);
-      p.rect(0,0,p.width,i);p.rect(0,p.height-i,p.width,i);
-      p.rect(0,0,i,p.height);p.rect(p.width-i,0,i,p.height);
-    }
-  }
-
-  function hitTest(x,y){return buttons.find(b=>x>=b.x&&x<=b.x+b.bw&&y>=b.y&&y<=b.y+b.bh)}
+  function hitTest(x,y){return btns.find(b=>x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h)}
 
   p.touchStarted=function(e){
     if(!e.target||e.target.tagName!=="CANVAS")return true;
     const t=p.touches.length?p.touches[0]:{x:p.mouseX,y:p.mouseY};
     const k=hitTest(t.x,t.y);
-    if(k||bootFrame<bootDuration){
-      if(bootFrame<bootDuration){bootFrame=bootDuration;return false}
-      pressed=k;pressFlash=1;return false;
-    }
+    if(k){pressed=k;flashAlpha=1;return false}
     return true;
   };
   p.touchEnded=function(){
-    if(pressed){send(pressed.action);if(navigator.vibrate)navigator.vibrate(30)}
+    if(pressed){send(pressed.a);if(navigator.vibrate)navigator.vibrate(30)}
     pressed=null;return true;
   };
   p.touchMoved=function(){return true};
-  p.mousePressed=function(){
-    if(bootFrame<bootDuration){bootFrame=bootDuration;return}
-    pressed=hitTest(p.mouseX,p.mouseY);if(pressed)pressFlash=1;
-  };
+  p.mousePressed=function(){pressed=hitTest(p.mouseX,p.mouseY);if(pressed)flashAlpha=1};
   p.mouseReleased=function(){
-    if(pressed){send(pressed.action);if(navigator.vibrate)navigator.vibrate(30)}
+    if(pressed){send(pressed.a);if(navigator.vibrate)navigator.vibrate(30)}
     pressed=null;
   };
 },"tab4");
-
-// ═══════════════════════════════════════════════════════════════
-// SCI-FI Keyboard (KB-SF) — phosphor green CRT aesthetic
-// Same layout as SCI-FI tab but without Return column (compact)
-// ═══════════════════════════════════════════════════════════════
-new p5(function(p){
-  let keys=[];
-  let pressed=null;
-  let pressFlash=0;
-  let bootFrame=0;
-  const bootDuration=50;
-  let scanOffset=0;
-  let repeatTimer=null,repeatInterval=null;
-  const pMods={shift:false,control:false,option:false,command:false};
-  let pShiftLock=false;
-
-  const GREEN=[0,255,65];
-  const DIM_GREEN=[0,180,45];
-  const DARK_GREEN=[0,60,15];
-  const AMBER=[255,176,0];
-  const RED=[255,50,30];
-  const BG=[2,8,2];
-  const GRID_COLOR=[0,40,10];
-
-  const retKey={l:"RET",hid:"return_or_enter",spanRows:3,startRow:1,ret:true};
-
-  const kbLayout=[
-    [{l:"ESC",hid:"escape",w:1.2,special:true},
-     {l:"SW",action:"superwhisper_toggle",w:1.2,sw:true,long:"superwhisper_paste"},
-     {l:"`",hid:"grave_accent_and_tilde",sl:"~"},{l:"1",hid:"1",sl:"!"},{l:"2",hid:"2",sl:"@"},
-     {l:"3",hid:"3",sl:"#"},{l:"4",hid:"4",sl:"$"},{l:"5",hid:"5",sl:"%"},
-     {l:"6",hid:"6",sl:"^"},{l:"7",hid:"7",sl:"&"},{l:"8",hid:"8",sl:"*"},
-     {l:"9",hid:"9",sl:"("},{l:"0",hid:"0",sl:")"},
-     {l:"-",hid:"hyphen",sl:"_"},{l:"=",hid:"equal_sign",sl:"+"}],
-    [{l:"Q",hid:"q"},{l:"W",hid:"w"},{l:"E",hid:"e"},{l:"R",hid:"r"},{l:"T",hid:"t"},
-     {l:"Y",hid:"y"},{l:"U",hid:"u"},{l:"I",hid:"i"},{l:"O",hid:"o"},{l:"P",hid:"p"},
-     {l:"[",hid:"open_bracket",sl:"{"},{l:"]",hid:"close_bracket",sl:"}"}],
-    [{l:"A",hid:"a"},{l:"S",hid:"s"},{l:"D",hid:"d"},{l:"F",hid:"f"},{l:"G",hid:"g"},
-     {l:"H",hid:"h"},{l:"J",hid:"j"},{l:"K",hid:"k"},{l:"L",hid:"l"},
-     {l:";",hid:"semicolon",sl:":"},{l:"'",hid:"quote",sl:"\""},{l:"\\",hid:"backslash",sl:"|"}],
-    [{l:"Z",hid:"z"},{l:"X",hid:"x"},{l:"C",hid:"c"},{l:"V",hid:"v"},{l:"B",hid:"b"},
-     {l:"N",hid:"n"},{l:"M",hid:"m"},{l:",",hid:"comma",sl:"<"},
-     {l:".",hid:"period",sl:">"},{l:"/",hid:"slash",sl:"?"}],
-    [{l:"SHIFT",mod:"shift",w:1.5},
-     {l:"CTRL",mod:"control",w:1.2},{l:"OPT",mod:"option",w:1.0},
-     {l:"",hid:"spacebar",w:3.5,space:true},
-     {l:"CMD",mod:"command",w:1.2},
-     {l:"BSP",hid:"delete_or_backspace",w:1.2},
-     {l:"TAB",hid:"tab",w:1.0}],
-  ];
-
-  p.setup=function(){
-    const c=p.createCanvas(100,100);
-    c.parent("tab5");
-    c.elt.style.touchAction="pan-x";
-    p.textAlign(p.CENTER,p.CENTER);
-    p.textFont("monospace");
-    resize();bootFrame=0;
-  };
-
-  function resize(){
-    const el=document.getElementById("tab5");
-    p.resizeCanvas(el.clientWidth,el.clientHeight);
-    buildKeys();
-  }
-
-  function buildKeys(){
-    const pad=8,gapX=3,gapY=3;
-    const rows=kbLayout.length;
-    const retW=40;
-    const rowH=(p.height-pad*2-(rows-1)*gapY)/rows;
-    const availW=p.width-pad*2-retW-gapX;
-    keys=[];
-    kbLayout.forEach((row,ri)=>{
-      const totalW=row.reduce((s,k)=>s+(k.w||1),0);
-      const rowAvailW=(ri===0||ri===4)?p.width-pad*2:availW;
-      const unitW=(rowAvailW-(row.length-1)*gapX)/totalW;
-      let x=pad;
-      row.forEach(k=>{
-        const w=(k.w||1)*unitW+((k.w||1)>1?((k.w||1)-1)*gapX:0);
-        keys.push({...k,x,y:pad+ri*(rowH+gapY),bw:w,bh:rowH});
-        x+=w+gapX;
-      });
-    });
-    const ry=pad+retKey.startRow*(rowH+gapY);
-    const rh=retKey.spanRows*rowH+(retKey.spanRows-1)*gapY;
-    keys.push({...retKey,x:p.width-pad-retW,y:ry,bw:retW,bh:rh});
-  }
-
-  p.windowResized=function(){resize()};
-
-  function isModActive(mod){return mod==="shiftlock"?pShiftLock:pMods[mod]}
-  function getActiveModList(){const a=[];for(const k in pMods)if(pMods[k])a.push(k);return a}
-  function clearPMods(){for(const k in pMods)pMods[k]=false;if(pShiftLock)pMods.shift=true}
-  function getLabel(k){return(!k.sl)?k.l:(pMods.shift?k.sl:k.l)}
-
-  let swLongTimer=null;
-
-  function fireKey(k){
-    if(!k||k.mod||k.sw)return;
-    if(k.action){send(k.action);if(navigator.vibrate)navigator.vibrate(30);return}
-    const ml=getActiveModList();
-    if(ml.length>0){sendKeypress(k.hid,ml);clearPMods()}else{sendKeypress(k.hid,[])}
-    if(navigator.vibrate)navigator.vibrate(30);
-  }
-
-  function startRepeat(k){stopRepeat();repeatTimer=setTimeout(()=>{repeatInterval=setInterval(()=>fireKey(k),80)},500)}
-  function stopRepeat(){clearTimeout(repeatTimer);clearInterval(repeatInterval);repeatTimer=null;repeatInterval=null}
-
-  function handlePress(x,y){
-    if(bootFrame<bootDuration){bootFrame=bootDuration;return}
-    const k=hitTest(x,y);if(!k)return;
-    pressed=k;pressFlash=1;
-    if(k.sw){
-      clearTimeout(swLongTimer);
-      swLongTimer=setTimeout(()=>{send(k.long);if(navigator.vibrate)navigator.vibrate(50);swLongTimer="fired"},500);
-      if(navigator.vibrate)navigator.vibrate(30);
-    } else if(k.mod){
-      if(k.mod==="shiftlock"){pShiftLock=!pShiftLock;pMods.shift=pShiftLock}
-      else{pMods[k.mod]=!pMods[k.mod]}
-      if(navigator.vibrate)navigator.vibrate(30);
-    } else {fireKey(k);startRepeat(k)}
-  }
-
-  function handleRelease(){
-    stopRepeat();
-    if(pressed&&pressed.sw&&swLongTimer!=="fired"){clearTimeout(swLongTimer);send(pressed.action)}
-    swLongTimer=null;pressed=null;
-  }
-
-  function hitTest(x,y){return keys.find(k=>x>=k.x&&x<=k.x+k.bw&&y>=k.y&&y<=k.y+k.bh)}
-
-  p.draw=function(){
-    p.background(...BG);
-    if(bootFrame<bootDuration){drawBoot();bootFrame++;return}
-
-    scanOffset=(scanOffset+0.5)%4;
-    p.stroke(0,20,5,40);p.strokeWeight(1);
-    for(let y=scanOffset;y<p.height;y+=4)p.line(0,y,p.width,y);
-    p.stroke(...GRID_COLOR,30);p.strokeWeight(0.5);
-    for(let x=0;x<p.width;x+=20)p.line(x,0,x,p.height);
-    for(let y=0;y<p.height;y+=20)p.line(0,y,p.width,y);
-
-    if(pressFlash>0)pressFlash-=0.04;
-
-    keys.forEach(k=>{
-      const isPressed=pressed===k;
-      const isMod=!!k.mod;
-      const modActive=isMod&&isModActive(k.mod);
-      let keyColor=DIM_GREEN,borderColor=DARK_GREEN,textColor=GREEN,glowAlpha=0;
-
-      if(k.special){keyColor=[40,10,5];borderColor=RED;textColor=RED}
-      else if(k.sw){keyColor=[40,5,5];borderColor=RED;textColor=RED;glowAlpha=15}
-      else if(k.ret){keyColor=[5,30,10];borderColor=[0,220,80];textColor=[0,220,80];glowAlpha=10}
-      else if(k.mod==="shiftlock"){keyColor=modActive?[40,20,0]:[20,10,0];borderColor=AMBER;textColor=AMBER;glowAlpha=modActive?40:0}
-      else if(isMod){keyColor=modActive?[0,40,10]:[0,15,5];borderColor=modActive?GREEN:DIM_GREEN;textColor=modActive?GREEN:DIM_GREEN;glowAlpha=modActive?30:0}
-      else if(isPressed){keyColor=[0,80,20];borderColor=GREEN;textColor=[200,255,200];glowAlpha=60}
-      else{keyColor=[0,20,5];borderColor=DARK_GREEN;textColor=DIM_GREEN}
-
-      if(glowAlpha>0||(isPressed&&pressFlash>0)){
-        const ga=Math.max(glowAlpha,pressFlash*80);
-        p.noStroke();p.fill(borderColor[0],borderColor[1],borderColor[2],ga);
-        p.rect(k.x-2,k.y-2,k.bw+4,k.bh+4,4);
-      }
-
-      p.fill(...keyColor);p.stroke(...borderColor);p.strokeWeight(1);
-      p.rect(k.x,k.y,k.bw,k.bh,3);
-      p.stroke(borderColor[0],borderColor[1],borderColor[2],40);
-      p.line(k.x+2,k.y+1,k.x+k.bw-2,k.y+1);
-      p.line(k.x+1,k.y+2,k.x+1,k.y+k.bh-2);
-
-      p.noStroke();p.fill(...borderColor,50);
-      const d=2;
-      p.circle(k.x+4,k.y+4,d);p.circle(k.x+k.bw-4,k.y+4,d);
-      p.circle(k.x+4,k.y+k.bh-4,d);p.circle(k.x+k.bw-4,k.y+k.bh-4,d);
-
-      if(k.space){
-        p.stroke(...borderColor,60);p.strokeWeight(1);
-        const cy=k.y+k.bh/2;p.line(k.x+10,cy,k.x+k.bw-10,cy);
-        for(let dx=k.x+20;dx<k.x+k.bw-20;dx+=12){p.stroke(...GREEN,30);p.line(dx,cy-2,dx,cy+2)}
-      }
-
-      p.noStroke();p.fill(...textColor);
-      const label=getLabel(k);
-      const sz=label.length>3?9:(label.length>2?10:12);
-      p.textSize(sz);
-      if(p.random()>0.995)p.fill(...textColor,150);
-      p.text(label,k.x+k.bw/2,k.y+k.bh/2);
-
-      if(modActive){p.fill(...borderColor);p.rect(k.x+3,k.y+k.bh-4,k.bw-6,2,1)}
-    });
-
-    // Status bar
-    p.noStroke();p.fill(0,15,4);p.rect(0,0,p.width,14);
-    p.fill(...DIM_GREEN,180);p.textSize(8);
-    p.textAlign(p.LEFT,p.TOP);
-    const modStr=getActiveModList().map(m=>m.toUpperCase()).join("+");
-    p.text("HID:KB-SF",4,2);
-    p.textAlign(p.RIGHT,p.TOP);
-    p.text(modStr||"---",p.width-4,2);
-    p.textAlign(p.CENTER,p.CENTER);
-    p.stroke(...DARK_GREEN,80);p.line(0,14,p.width,14);
-
-    drawVignette();
-    if(pressed&&!pressed.mod&&pressFlash>0.5){
-      p.noStroke();p.fill(0,255,65,pressFlash*20);
-      p.circle(pressed.x+pressed.bw/2,pressed.y+pressed.bh/2,pressed.bw*1.5);
-    }
-  };
-
-  function drawBoot(){
-    p.fill(...GREEN);p.textSize(11);p.textAlign(p.LEFT,p.TOP);
-    const lines=["KARABINER-HID KEYBOARD v2.0","INIT PHOSPHOR DISPLAY ... OK","SCAN HID INTERFACE ...... OK","LOAD KEYMAP ............. OK","MODIFIER SUBSYSTEM ...... OK","","KEYBOARD READY _"];
-    const shown=Math.floor(p.map(bootFrame,0,bootDuration,0,lines.length+1));
-    for(let i=0;i<Math.min(shown,lines.length);i++){
-      if(i===shown-1&&p.random()>0.6)continue;
-      p.fill(...GREEN);p.text(lines[i],12,12+i*16);
-    }
-    p.stroke(0,20,5,30);p.strokeWeight(1);
-    for(let y=0;y<p.height;y+=3)p.line(0,y,p.width,y);
-    p.textAlign(p.CENTER,p.CENTER);
-  }
-
-  function drawVignette(){
-    p.noStroke();
-    for(let i=0;i<20;i++){const a=p.map(i,0,20,30,0);p.fill(0,0,0,a);
-      p.rect(0,0,p.width,i);p.rect(0,p.height-i,p.width,i);
-      p.rect(0,0,i,p.height);p.rect(p.width-i,0,i,p.height)}
-  }
-
-  p.touchStarted=function(e){
-    if(!e.target||e.target.tagName!=="CANVAS")return true;
-    const t=p.touches.length?p.touches[0]:{x:p.mouseX,y:p.mouseY};
-    const k=hitTest(t.x,t.y);
-    if(k||bootFrame<bootDuration){handlePress(t.x,t.y);return false}
-    return true;
-  };
-  p.touchEnded=function(){handleRelease();return true};
-  p.touchMoved=function(){return true};
-  p.mousePressed=function(){handlePress(p.mouseX,p.mouseY)};
-  p.mouseReleased=function(){handleRelease()};
-},"tab5");
-
-// ═══════════════════════════════════════════════════════════════
-// SCI-FI Terminal Keyboard — phosphor green CRT aesthetic
-// ═══════════════════════════════════════════════════════════════
-new p5(function(p){
-  let keys=[];
-  let pressed=null;
-  let pressFlash=0;
-  let bootFrame=0;
-  const bootDuration=60;// frames
-  let scanOffset=0;
-  let repeatTimer=null,repeatInterval=null;
-  // Modifier state
-  const sMods={shift:false,control:false,option:false,command:false};
-  let sShiftLock=false;
-
-  // Colors
-  const GREEN=[0,255,65];
-  const DIM_GREEN=[0,180,45];
-  const DARK_GREEN=[0,60,15];
-  const AMBER=[255,176,0];
-  const RED=[255,50,30];
-  const BG=[2,8,2];
-  const GRID_COLOR=[0,40,10];
-
-  // Return key is placed separately — spans rows 1-3 on the right
-  const retKey={l:"RET",hid:"return_or_enter",spanRows:3,startRow:1,special:false,ret:true};
-
-  const kbLayout=[
-    // Row 0: ESC + SuperWhisper + number row
-    [{l:"ESC",hid:"escape",w:1.2,special:true},
-     {l:"SW",action:"superwhisper_toggle",w:1.2,sw:true,long:"superwhisper_paste"},
-     {l:"`",hid:"grave_accent_and_tilde",sl:"~"},{l:"1",hid:"1",sl:"!"},{l:"2",hid:"2",sl:"@"},
-     {l:"3",hid:"3",sl:"#"},{l:"4",hid:"4",sl:"$"},{l:"5",hid:"5",sl:"%"},
-     {l:"6",hid:"6",sl:"^"},{l:"7",hid:"7",sl:"&"},{l:"8",hid:"8",sl:"*"},
-     {l:"9",hid:"9",sl:"("},{l:"0",hid:"0",sl:")"},
-     {l:"-",hid:"hyphen",sl:"_"},{l:"=",hid:"equal_sign",sl:"+"}],
-    // Row 1: QWERTY + brackets  (RET on right, spans 3 rows)
-    [{l:"Q",hid:"q"},{l:"W",hid:"w"},{l:"E",hid:"e"},{l:"R",hid:"r"},{l:"T",hid:"t"},
-     {l:"Y",hid:"y"},{l:"U",hid:"u"},{l:"I",hid:"i"},{l:"O",hid:"o"},{l:"P",hid:"p"},
-     {l:"[",hid:"open_bracket",sl:"{"},{l:"]",hid:"close_bracket",sl:"}"}],
-    // Row 2: home row
-    [{l:"A",hid:"a"},{l:"S",hid:"s"},{l:"D",hid:"d"},{l:"F",hid:"f"},{l:"G",hid:"g"},
-     {l:"H",hid:"h"},{l:"J",hid:"j"},{l:"K",hid:"k"},{l:"L",hid:"l"},
-     {l:";",hid:"semicolon",sl:":"},{l:"'",hid:"quote",sl:"\""},{l:"\\",hid:"backslash",sl:"|"}],
-    // Row 3: bottom letters
-    [{l:"Z",hid:"z"},{l:"X",hid:"x"},{l:"C",hid:"c"},{l:"V",hid:"v"},{l:"B",hid:"b"},
-     {l:"N",hid:"n"},{l:"M",hid:"m"},{l:",",hid:"comma",sl:"<"},
-     {l:".",hid:"period",sl:">"},{l:"/",hid:"slash",sl:"?"}],
-    // Row 4: modifiers + space
-    [{l:"SHIFT",mod:"shift",w:1.5},
-     {l:"CTRL",mod:"control",w:1.2},{l:"OPT",mod:"option",w:1.0},
-     {l:"",hid:"spacebar",w:3.5,space:true},
-     {l:"CMD",mod:"command",w:1.2},
-     {l:"BSP",hid:"delete_or_backspace",w:1.2},
-     {l:"TAB",hid:"tab",w:1.0}],
-  ];
-
-  p.setup=function(){
-    const c=p.createCanvas(100,100);
-    c.parent("tab6");
-    c.elt.style.touchAction="pan-x";
-    p.textAlign(p.CENTER,p.CENTER);
-    p.textFont("monospace");
-    resize();
-    bootFrame=0;
-  };
-
-  function resize(){
-    const el=document.getElementById("tab6");
-    p.resizeCanvas(el.clientWidth,el.clientHeight);
-    buildKeys();
-  }
-
-  function buildKeys(){
-    const pad=8,gapX=3,gapY=3;
-    const rows=kbLayout.length;
-    const retW=40;// width reserved for Return key on right
-    const rowH=(p.height-pad*2-(rows-1)*gapY)/rows;
-    const availW=p.width-pad*2-retW-gapX;// leave room for Return
-    keys=[];
-    kbLayout.forEach((row,ri)=>{
-      const totalW=row.reduce((s,k)=>s+(k.w||1),0);
-      // Row 0 and row 4 use full width (no Return column)
-      const rowAvailW=(ri===0||ri===4)?p.width-pad*2:availW;
-      const unitW=(rowAvailW-(row.length-1)*gapX)/totalW;
-      let x=pad;
-      row.forEach(k=>{
-        const w=(k.w||1)*unitW+((k.w||1)>1?((k.w||1)-1)*gapX:0);
-        keys.push({...k,x,y:pad+ri*(rowH+gapY),bw:w,bh:rowH});
-        x+=w+gapX;
-      });
-    });
-    // Add Return key spanning rows 1-3
-    const ry=pad+retKey.startRow*(rowH+gapY);
-    const rh=retKey.spanRows*rowH+(retKey.spanRows-1)*gapY;
-    keys.push({...retKey,x:p.width-pad-retW,y:ry,bw:retW,bh:rh});
-  }
-
-  p.windowResized=function(){resize()};
-
-  function isModActive(mod){
-    if(mod==="shiftlock")return sShiftLock;
-    return sMods[mod];
-  }
-  function getActiveModList(){
-    const a=[];for(const k in sMods)if(sMods[k])a.push(k);return a;
-  }
-  function clearSMods(){
-    for(const k in sMods)sMods[k]=false;
-    if(sShiftLock)sMods.shift=true;
-  }
-  function getLabel(k){
-    if(!k.sl)return k.l;
-    return sMods.shift?k.sl:k.l;
-  }
-
-  p.draw=function(){
-    p.background(...BG);
-
-    // Boot sequence
-    if(bootFrame<bootDuration){
-      drawBoot();
-      bootFrame++;
-      return;
-    }
-
-    // CRT scanlines
-    scanOffset=(scanOffset+0.5)%4;
-    p.stroke(0,20,5,40);
-    p.strokeWeight(1);
-    for(let y=scanOffset;y<p.height;y+=4){
-      p.line(0,y,p.width,y);
-    }
-
-    // Subtle grid
-    p.stroke(...GRID_COLOR,30);
-    p.strokeWeight(0.5);
-    for(let x=0;x<p.width;x+=20)p.line(x,0,x,p.height);
-    for(let y=0;y<p.height;y+=20)p.line(0,y,p.width,y);
-
-    if(pressFlash>0)pressFlash-=0.04;
-
-    // Draw keys
-    keys.forEach(k=>{
-      const isPressed=pressed===k;
-      const isMod=!!k.mod;
-      const modActive=isMod&&isModActive(k.mod);
-
-      // Key color logic
-      let keyColor=DIM_GREEN;
-      let borderColor=DARK_GREEN;
-      let textColor=GREEN;
-      let glowAlpha=0;
-
-      if(k.special){keyColor=[40,10,5];borderColor=RED;textColor=RED}
-      else if(k.sw){keyColor=[40,5,5];borderColor=RED;textColor=RED;glowAlpha=15}
-      else if(k.ret){keyColor=[5,30,10];borderColor=[0,220,80];textColor=[0,220,80];glowAlpha=10}
-      else if(k.mod==="shiftlock"){
-        keyColor=modActive?[40,20,0]:[20,10,0];
-        borderColor=AMBER;textColor=AMBER;
-        glowAlpha=modActive?40:0;
-      } else if(isMod){
-        keyColor=modActive?[0,40,10]:[0,15,5];
-        borderColor=modActive?GREEN:DIM_GREEN;
-        textColor=modActive?GREEN:DIM_GREEN;
-        glowAlpha=modActive?30:0;
-      } else if(isPressed){
-        keyColor=[0,80,20];borderColor=GREEN;textColor=[200,255,200];
-        glowAlpha=60;
-      } else {
-        keyColor=[0,20,5];borderColor=DARK_GREEN;textColor=DIM_GREEN;
-      }
-
-      // Glow
-      if(glowAlpha>0||(isPressed&&pressFlash>0)){
-        const ga=Math.max(glowAlpha,pressFlash*80);
-        p.noStroke();
-        p.fill(borderColor[0],borderColor[1],borderColor[2],ga);
-        p.rect(k.x-2,k.y-2,k.bw+4,k.bh+4,4);
-      }
-
-      // Key body
-      p.fill(...keyColor);
-      p.stroke(...borderColor);
-      p.strokeWeight(1);
-      p.rect(k.x,k.y,k.bw,k.bh,3);
-
-      // Inner border highlight (top-left light)
-      p.stroke(borderColor[0],borderColor[1],borderColor[2],40);
-      p.line(k.x+2,k.y+1,k.x+k.bw-2,k.y+1);
-      p.line(k.x+1,k.y+2,k.x+1,k.y+k.bh-2);
-
-      // Corner dots — sci-fi detail
-      p.noStroke();
-      p.fill(...borderColor,50);
-      const d=2;
-      p.circle(k.x+4,k.y+4,d);
-      p.circle(k.x+k.bw-4,k.y+4,d);
-      p.circle(k.x+4,k.y+k.bh-4,d);
-      p.circle(k.x+k.bw-4,k.y+k.bh-4,d);
-
-      // Space bar line decoration
-      if(k.space){
-        p.stroke(...borderColor,60);
-        p.strokeWeight(1);
-        const cy=k.y+k.bh/2;
-        p.line(k.x+10,cy,k.x+k.bw-10,cy);
-        // Dashes
-        for(let dx=k.x+20;dx<k.x+k.bw-20;dx+=12){
-          p.stroke(...GREEN,30);
-          p.line(dx,cy-2,dx,cy+2);
-        }
-      }
-
-      // Label
-      p.noStroke();
-      p.fill(...textColor);
-      const label=getLabel(k);
-      const sz=label.length>3?9:(label.length>2?10:12);
-      p.textSize(sz);
-      // Slight text flicker
-      if(p.random()>0.995)p.fill(...textColor,150);
-      p.text(label,k.x+k.bw/2,k.y+k.bh/2);
-
-      // Active mod indicator bar
-      if(modActive){
-        p.fill(...borderColor);
-        p.rect(k.x+3,k.y+k.bh-4,k.bw-6,2,1);
-      }
-    });
-
-    // Top status bar
-    drawStatusBar();
-
-    // CRT vignette
-    drawVignette();
-
-    // Phosphor bloom on press
-    if(pressed&&!pressed.mod&&pressFlash>0.5){
-      p.noStroke();
-      p.fill(0,255,65,pressFlash*20);
-      p.circle(pressed.x+pressed.bw/2,pressed.y+pressed.bh/2,pressed.bw*1.5);
-    }
-  };
-
-  function drawBoot(){
-    p.fill(...GREEN);
-    p.textSize(11);
-    p.textAlign(p.LEFT,p.TOP);
-    const lines=[
-      "KARABINER-HID TERMINAL v2.1.7",
-      "INIT PHOSPHOR DISPLAY ........... OK",
-      "SCAN USB HID INTERFACE .......... OK",
-      "CONNECT VIRTUAL KEYBOARD ........ OK",
-      "LOAD KEYMAP ISO-8859-1 .......... OK",
-      "WEBSOCKET UPLINK ................ OK",
-      "MODIFIER SUBSYSTEM .............. OK",
-      "",
-      "SYSTEM READY _"
-    ];
-    const shown=Math.floor(p.map(bootFrame,0,bootDuration,0,lines.length+1));
-    for(let i=0;i<Math.min(shown,lines.length);i++){
-      // Flicker the last line
-      if(i===shown-1&&p.random()>0.6)continue;
-      p.fill(...GREEN);
-      p.text(lines[i],12,12+i*16);
-    }
-    // Scanlines during boot too
-    p.stroke(0,20,5,30);
-    p.strokeWeight(1);
-    for(let y=0;y<p.height;y+=3)p.line(0,y,p.width,y);
-    p.textAlign(p.CENTER,p.CENTER);
-  }
-
-  function drawStatusBar(){
-    const y=2;
-    p.noStroke();
-    p.fill(0,15,4);
-    p.rect(0,0,p.width,14);
-    p.fill(...DIM_GREEN,180);
-    p.textSize(8);
-    p.textAlign(p.LEFT,p.TOP);
-    const modStr=getActiveModList().map(m=>m.toUpperCase()).join("+");
-    p.text("HID:ACTIVE",4,y);
-    p.textAlign(p.RIGHT,p.TOP);
-    p.text(modStr||"---",p.width-4,y);
-    p.textAlign(p.CENTER,p.CENTER);
-    // Separator line
-    p.stroke(...DARK_GREEN,80);
-    p.line(0,14,p.width,14);
-  }
-
-  function drawVignette(){
-    // Corner shadows for CRT curve illusion
-    const r=p.width*0.7;
-    p.noStroke();
-    for(let i=0;i<20;i++){
-      const a=p.map(i,0,20,30,0);
-      p.fill(0,0,0,a);
-      p.rect(0,0,p.width,i);
-      p.rect(0,p.height-i,p.width,i);
-      p.rect(0,0,i,p.height);
-      p.rect(p.width-i,0,i,p.height);
-    }
-  }
-
-  function hitTest(x,y){
-    return keys.find(k=>x>=k.x&&x<=k.x+k.bw&&y>=k.y&&y<=k.y+k.bh);
-  }
-
-  let swLongTimer=null;
-
-  function fireKey(k){
-    if(!k||k.mod||k.sw)return;
-    if(k.action){send(k.action);if(navigator.vibrate)navigator.vibrate(30);return}
-    const modList=getActiveModList();
-    if(modList.length>0){
-      sendKeypress(k.hid,modList);
-      clearSMods();
-    } else {
-      sendKeypress(k.hid,[]);
-    }
-    if(navigator.vibrate)navigator.vibrate(30);
-  }
-
-  function startRepeat(k){
-    stopRepeat();
-    repeatTimer=setTimeout(()=>{
-      repeatInterval=setInterval(()=>fireKey(k),80);
-    },500);
-  }
-  function stopRepeat(){
-    clearTimeout(repeatTimer);clearInterval(repeatInterval);
-    repeatTimer=null;repeatInterval=null;
-  }
-
-  function handlePress(x,y){
-    if(bootFrame<bootDuration){bootFrame=bootDuration;return}
-    const k=hitTest(x,y);
-    if(!k)return;
-    pressed=k;pressFlash=1;
-    if(k.sw){
-      // SuperWhisper: short tap = toggle, long press = paste
-      clearTimeout(swLongTimer);
-      swLongTimer=setTimeout(()=>{send(k.long);if(navigator.vibrate)navigator.vibrate(50);swLongTimer="fired"},500);
-      if(navigator.vibrate)navigator.vibrate(30);
-    } else if(k.mod){
-      if(k.mod==="shiftlock"){sShiftLock=!sShiftLock;sMods.shift=sShiftLock}
-      else{sMods[k.mod]=!sMods[k.mod]}
-      if(navigator.vibrate)navigator.vibrate(30);
-    } else {
-      fireKey(k);
-      startRepeat(k);
-    }
-  }
-
-  function handleRelease(){
-    stopRepeat();
-    // SuperWhisper: if long timer hasn't fired, do short tap action
-    if(pressed&&pressed.sw&&swLongTimer!=="fired"){
-      clearTimeout(swLongTimer);
-      send(pressed.action);
-    }
-    swLongTimer=null;
-    pressed=null;
-  }
-
-  p.touchStarted=function(e){
-    if(!e.target||e.target.tagName!=="CANVAS")return true;
-    const t=p.touches.length?p.touches[0]:{x:p.mouseX,y:p.mouseY};
-    const k=hitTest(t.x,t.y);
-    if(k||bootFrame<bootDuration){handlePress(t.x,t.y);return false}
-    return true;
-  };
-  p.touchEnded=function(){handleRelease();return true};
-  p.touchMoved=function(){return true};
-  p.mousePressed=function(){handlePress(p.mouseX,p.mouseY)};
-  p.mouseReleased=function(){handleRelease()};
-},"tab6");
-
-// ═══════════════════════════════════════════════════════════════
-// QWERTY+ — Research-optimized adaptive QWERTY (sci-fi CRT)
-// Adaptive hit targets: frequent keys (E,T,A,O,I,N,S,R) get
-// ~20% larger invisible touch areas (Bi & Zhai, CHI 2013)
-// ═══════════════════════════════════════════════════════════════
-new p5(function(p){
-  let keys=[];
-  let pressed=null;
-  let pressFlash=0;
-  let bootFrame=0;
-  const bootDuration=50;
-  let scanOffset=0;
-  let repeatTimer=null,repeatInterval=null;
-  const qMods={shift:false,control:false,option:false,command:false};
-  let qShiftLock=false;
-
-  const GREEN=[0,255,65];
-  const DIM_GREEN=[0,180,45];
-  const DARK_GREEN=[0,60,15];
-  const AMBER=[255,176,0];
-  const RED=[255,50,30];
-  const BG=[2,8,2];
-  const GRID_COLOR=[0,40,10];
-  // Frequency-weighted keys get a cyan tint
-  const FREQ_GREEN=[0,220,180];
-
-  // Letter frequency weights (English, for hit target expansion)
-  const freqMap={e:12.7,t:9.1,a:8.2,o:7.5,i:7.0,n:6.7,s:6.3,r:6.0,
-    h:5.3,d:4.3,l:4.0,u:2.8,c:2.8,m:2.4,f:2.2,w:2.0,y:2.0,g:2.0,
-    p:1.9,b:1.5,v:1.0,k:0.8,j:0.2,x:0.2,q:0.1,z:0.1};
-
-  const retKey={l:"RET",hid:"return_or_enter",spanRows:3,startRow:1,ret:true};
-
-  const kbLayout=[
-    [{l:"ESC",hid:"escape",w:1.2,special:true},
-     {l:"SW",action:"superwhisper_toggle",w:1.2,sw:true,long:"superwhisper_paste"},
-     {l:"`",hid:"grave_accent_and_tilde",sl:"~"},{l:"1",hid:"1",sl:"!"},{l:"2",hid:"2",sl:"@"},
-     {l:"3",hid:"3",sl:"#"},{l:"4",hid:"4",sl:"$"},{l:"5",hid:"5",sl:"%"},
-     {l:"6",hid:"6",sl:"^"},{l:"7",hid:"7",sl:"&"},{l:"8",hid:"8",sl:"*"},
-     {l:"9",hid:"9",sl:"("},{l:"0",hid:"0",sl:")"},
-     {l:"-",hid:"hyphen",sl:"_"},{l:"=",hid:"equal_sign",sl:"+"}],
-    [{l:"Q",hid:"q"},{l:"W",hid:"w"},{l:"E",hid:"e"},{l:"R",hid:"r"},{l:"T",hid:"t"},
-     {l:"Y",hid:"y"},{l:"U",hid:"u"},{l:"I",hid:"i"},{l:"O",hid:"o"},{l:"P",hid:"p"},
-     {l:"[",hid:"open_bracket",sl:"{"},{l:"]",hid:"close_bracket",sl:"}"}],
-    [{l:"A",hid:"a"},{l:"S",hid:"s"},{l:"D",hid:"d"},{l:"F",hid:"f"},{l:"G",hid:"g"},
-     {l:"H",hid:"h"},{l:"J",hid:"j"},{l:"K",hid:"k"},{l:"L",hid:"l"},
-     {l:";",hid:"semicolon",sl:":"},{l:"'",hid:"quote",sl:"\""},{l:"\\",hid:"backslash",sl:"|"}],
-    [{l:"Z",hid:"z"},{l:"X",hid:"x"},{l:"C",hid:"c"},{l:"V",hid:"v"},{l:"B",hid:"b"},
-     {l:"N",hid:"n"},{l:"M",hid:"m"},{l:",",hid:"comma",sl:"<"},
-     {l:".",hid:"period",sl:">"},{l:"/",hid:"slash",sl:"?"}],
-    [{l:"SHIFT",mod:"shift",w:1.5},
-     {l:"CTRL",mod:"control",w:1.2},{l:"OPT",mod:"option",w:1.0},
-     {l:"",hid:"spacebar",w:3.5,space:true},
-     {l:"CMD",mod:"command",w:1.2},
-     {l:"BSP",hid:"delete_or_backspace",w:1.2},
-     {l:"TAB",hid:"tab",w:1.0}],
-  ];
-
-  p.setup=function(){
-    const c=p.createCanvas(100,100);
-    c.parent("tab7");
-    c.elt.style.touchAction="pan-x";
-    p.textAlign(p.CENTER,p.CENTER);
-    p.textFont("monospace");
-    resize();bootFrame=0;
-  };
-
-  function resize(){
-    const el=document.getElementById("tab7");
-    p.resizeCanvas(el.clientWidth,el.clientHeight);
-    buildKeys();
-  }
-
-  function getFreq(hid){
-    if(!hid||hid.length!==1)return 0;
-    return freqMap[hid]||0;
-  }
-
-  function buildKeys(){
-    const pad=8,gapX=3,gapY=3;
-    const rows=kbLayout.length;
-    const retW=40;
-    const rowH=(p.height-pad*2-(rows-1)*gapY)/rows;
-    const availW=p.width-pad*2-retW-gapX;
-    keys=[];
-    kbLayout.forEach((row,ri)=>{
-      const totalW=row.reduce((s,k)=>s+(k.w||1),0);
-      const rowAvailW=(ri===0||ri===4)?p.width-pad*2:availW;
-      const unitW=(rowAvailW-(row.length-1)*gapX)/totalW;
-      let x=pad;
-      row.forEach(k=>{
-        const w=(k.w||1)*unitW+((k.w||1)>1?((k.w||1)-1)*gapX:0);
-        const freq=getFreq(k.hid);
-        // Adaptive hit target: expand by up to 20% for high-freq keys
-        const expand=freq>5?0.2:freq>2?0.1:0;
-        keys.push({...k,x,y:pad+ri*(rowH+gapY),bw:w,bh:rowH,freq,expand,
-          // Hit target bounds (larger than visual)
-          hx:x-w*expand/2, hy:pad+ri*(rowH+gapY)-rowH*expand/2,
-          hw:w*(1+expand), hh:rowH*(1+expand)});
-        x+=w+gapX;
-      });
-    });
-    const ry=pad+retKey.startRow*(rowH+gapY);
-    const rh=retKey.spanRows*rowH+(retKey.spanRows-1)*gapY;
-    const rk={...retKey,x:p.width-pad-retW,y:ry,bw:retW,bh:rh,freq:0,expand:0};
-    rk.hx=rk.x;rk.hy=rk.y;rk.hw=rk.bw;rk.hh=rk.bh;
-    keys.push(rk);
-  }
-
-  p.windowResized=function(){resize()};
-
-  function isModActive(mod){return mod==="shiftlock"?qShiftLock:qMods[mod]}
-  function getActiveModList(){const a=[];for(const k in qMods)if(qMods[k])a.push(k);return a}
-  function clearQMods(){for(const k in qMods)qMods[k]=false;if(qShiftLock)qMods.shift=true}
-  function getLabel(k){return(!k.sl)?k.l:(qMods.shift?k.sl:k.l)}
-
-  let swLongTimer=null;
-
-  function fireKey(k){
-    if(!k||k.mod||k.sw)return;
-    if(k.action){send(k.action);if(navigator.vibrate)navigator.vibrate(30);return}
-    const ml=getActiveModList();
-    if(ml.length>0){sendKeypress(k.hid,ml);clearQMods()}else{sendKeypress(k.hid,[])}
-    if(navigator.vibrate)navigator.vibrate(30);
-  }
-
-  function startRepeat(k){stopRepeat();repeatTimer=setTimeout(()=>{repeatInterval=setInterval(()=>fireKey(k),80)},500)}
-  function stopRepeat(){clearTimeout(repeatTimer);clearInterval(repeatInterval);repeatTimer=null;repeatInterval=null}
-
-  function handlePress(x,y){
-    if(bootFrame<bootDuration){bootFrame=bootDuration;return}
-    const k=hitTest(x,y);if(!k)return;
-    pressed=k;pressFlash=1;
-    if(k.sw){
-      clearTimeout(swLongTimer);
-      swLongTimer=setTimeout(()=>{send(k.long);if(navigator.vibrate)navigator.vibrate(50);swLongTimer="fired"},500);
-      if(navigator.vibrate)navigator.vibrate(30);
-    } else if(k.mod){
-      if(k.mod==="shiftlock"){qShiftLock=!qShiftLock;qMods.shift=qShiftLock}
-      else{qMods[k.mod]=!qMods[k.mod]}
-      if(navigator.vibrate)navigator.vibrate(30);
-    } else {fireKey(k);startRepeat(k)}
-  }
-
-  function handleRelease(){
-    stopRepeat();
-    if(pressed&&pressed.sw&&swLongTimer!=="fired"){clearTimeout(swLongTimer);send(pressed.action)}
-    swLongTimer=null;pressed=null;
-  }
-
-  // Adaptive hit test — uses expanded invisible hit areas
-  function hitTest(x,y){
-    // Priority: exact visual hit first, then expanded hit area
-    let exact=keys.find(k=>x>=k.x&&x<=k.x+k.bw&&y>=k.y&&y<=k.y+k.bh);
-    if(exact)return exact;
-    // Expanded hit targets — prefer highest frequency
-    let best=null,bestFreq=-1;
-    keys.forEach(k=>{
-      if(x>=k.hx&&x<=k.hx+k.hw&&y>=k.hy&&y<=k.hy+k.hh){
-        if((k.freq||0)>bestFreq){best=k;bestFreq=k.freq||0}
-      }
-    });
-    return best;
-  }
-
-  p.draw=function(){
-    p.background(...BG);
-    if(bootFrame<bootDuration){drawBoot();bootFrame++;return}
-
-    scanOffset=(scanOffset+0.5)%4;
-    p.stroke(0,20,5,40);p.strokeWeight(1);
-    for(let y=scanOffset;y<p.height;y+=4)p.line(0,y,p.width,y);
-    p.stroke(...GRID_COLOR,30);p.strokeWeight(0.5);
-    for(let x=0;x<p.width;x+=20)p.line(x,0,x,p.height);
-    for(let y=0;y<p.height;y+=20)p.line(0,y,p.width,y);
-
-    if(pressFlash>0)pressFlash-=0.04;
-
-    keys.forEach(k=>{
-      const isPressed=pressed===k;
-      const isMod=!!k.mod;
-      const modActive=isMod&&isModActive(k.mod);
-      const isFreq=k.freq>5;// high-frequency letter
-      let keyColor=DIM_GREEN,borderColor=DARK_GREEN,textColor=GREEN,glowAlpha=0;
-
-      if(k.special){keyColor=[40,10,5];borderColor=RED;textColor=RED}
-      else if(k.sw){keyColor=[40,5,5];borderColor=RED;textColor=RED;glowAlpha=15}
-      else if(k.ret){keyColor=[5,30,10];borderColor=[0,220,80];textColor=[0,220,80];glowAlpha=10}
-      else if(k.mod==="shiftlock"){keyColor=modActive?[40,20,0]:[20,10,0];borderColor=AMBER;textColor=AMBER;glowAlpha=modActive?40:0}
-      else if(isMod){keyColor=modActive?[0,40,10]:[0,15,5];borderColor=modActive?GREEN:DIM_GREEN;textColor=modActive?GREEN:DIM_GREEN;glowAlpha=modActive?30:0}
-      else if(isPressed){keyColor=[0,80,20];borderColor=GREEN;textColor=[200,255,200];glowAlpha=60}
-      else if(isFreq){
-        // High-frequency keys get a subtle cyan tint
-        keyColor=[0,25,12];borderColor=FREQ_GREEN;textColor=FREQ_GREEN;glowAlpha=5;
-      } else {
-        keyColor=[0,20,5];borderColor=DARK_GREEN;textColor=DIM_GREEN;
-      }
-
-      if(glowAlpha>0||(isPressed&&pressFlash>0)){
-        const ga=Math.max(glowAlpha,pressFlash*80);
-        p.noStroke();p.fill(borderColor[0],borderColor[1],borderColor[2],ga);
-        p.rect(k.x-2,k.y-2,k.bw+4,k.bh+4,4);
-      }
-
-      p.fill(...keyColor);p.stroke(...borderColor);p.strokeWeight(1);
-      p.rect(k.x,k.y,k.bw,k.bh,3);
-      p.stroke(borderColor[0],borderColor[1],borderColor[2],40);
-      p.line(k.x+2,k.y+1,k.x+k.bw-2,k.y+1);
-      p.line(k.x+1,k.y+2,k.x+1,k.y+k.bh-2);
-
-      p.noStroke();p.fill(...borderColor,50);
-      const d=2;
-      p.circle(k.x+4,k.y+4,d);p.circle(k.x+k.bw-4,k.y+4,d);
-      p.circle(k.x+4,k.y+k.bh-4,d);p.circle(k.x+k.bw-4,k.y+k.bh-4,d);
-
-      // Frequency indicator: tiny bar at bottom of high-freq keys
-      if(isFreq&&!isMod&&!k.special&&!k.sw&&!k.ret){
-        const barW=p.map(k.freq,5,13,k.bw*0.3,k.bw*0.8);
-        p.fill(...FREQ_GREEN,60);
-        p.rect(k.x+(k.bw-barW)/2,k.y+k.bh-3,barW,2,1);
-      }
-
-      if(k.space){
-        p.stroke(...borderColor,60);p.strokeWeight(1);
-        const cy=k.y+k.bh/2;p.line(k.x+10,cy,k.x+k.bw-10,cy);
-        for(let dx=k.x+20;dx<k.x+k.bw-20;dx+=12){p.stroke(...GREEN,30);p.line(dx,cy-2,dx,cy+2)}
-      }
-
-      p.noStroke();p.fill(...textColor);
-      const label=getLabel(k);
-      const sz=label.length>3?9:(label.length>2?10:12);
-      p.textSize(sz);
-      if(p.random()>0.995)p.fill(...textColor,150);
-      p.text(label,k.x+k.bw/2,k.y+k.bh/2);
-
-      if(modActive){p.fill(...borderColor);p.rect(k.x+3,k.y+k.bh-4,k.bw-6,2,1)}
-    });
-
-    // Status bar
-    p.noStroke();p.fill(0,15,4);p.rect(0,0,p.width,14);
-    p.fill(...DIM_GREEN,180);p.textSize(8);
-    p.textAlign(p.LEFT,p.TOP);
-    const modStr=getActiveModList().map(m=>m.toUpperCase()).join("+");
-    p.text("QWERTY+ ADAPTIVE",4,2);
-    p.textAlign(p.RIGHT,p.TOP);
-    p.text(modStr||"---",p.width-4,2);
-    p.textAlign(p.CENTER,p.CENTER);
-    p.stroke(...DARK_GREEN,80);p.line(0,14,p.width,14);
-
-    drawVignette();
-    if(pressed&&!pressed.mod&&pressFlash>0.5){
-      p.noStroke();p.fill(0,255,65,pressFlash*20);
-      p.circle(pressed.x+pressed.bw/2,pressed.y+pressed.bh/2,pressed.bw*1.5);
-    }
-  };
-
-  function drawBoot(){
-    p.fill(...GREEN);p.textSize(11);p.textAlign(p.LEFT,p.TOP);
-    const lines=["KARABINER-HID QWERTY+ v1.0","INIT ADAPTIVE ENGINE .... OK","FREQ ANALYSIS ........... OK","HIT TARGET EXPANSION .... OK","LOAD KEYMAP ............. OK","","ADAPTIVE KEYBOARD READY _"];
-    const shown=Math.floor(p.map(bootFrame,0,bootDuration,0,lines.length+1));
-    for(let i=0;i<Math.min(shown,lines.length);i++){
-      if(i===shown-1&&p.random()>0.6)continue;
-      p.fill(...GREEN);p.text(lines[i],12,12+i*16);
-    }
-    p.stroke(0,20,5,30);p.strokeWeight(1);
-    for(let y=0;y<p.height;y+=3)p.line(0,y,p.width,y);
-    p.textAlign(p.CENTER,p.CENTER);
-  }
-
-  function drawVignette(){
-    p.noStroke();
-    for(let i=0;i<20;i++){const a=p.map(i,0,20,30,0);p.fill(0,0,0,a);
-      p.rect(0,0,p.width,i);p.rect(0,p.height-i,p.width,i);
-      p.rect(0,0,i,p.height);p.rect(p.width-i,0,i,p.height)}
-  }
-
-  p.touchStarted=function(e){
-    if(!e.target||e.target.tagName!=="CANVAS")return true;
-    const t=p.touches.length?p.touches[0]:{x:p.mouseX,y:p.mouseY};
-    const k=hitTest(t.x,t.y);
-    if(k||bootFrame<bootDuration){handlePress(t.x,t.y);return false}
-    return true;
-  };
-  p.touchEnded=function(){handleRelease();return true};
-  p.touchMoved=function(){return true};
-  p.mousePressed=function(){handlePress(p.mouseX,p.mouseY)};
-  p.mouseReleased=function(){handleRelease()};
-},"tab7");
-
 // ═══════════════════════════════════════════════════════════════
 // 1-Hand — MessagEase-style 3x3 tap+swipe grid (sci-fi CRT)
 // ANI/HOR/TES layout: tap center letter, swipe toward surrounding
@@ -2164,7 +1099,7 @@ new p5(function(p){
 
   p.setup=function(){
     const c=p.createCanvas(100,100);
-    c.parent("tab8");
+    c.parent("tab5");
     c.elt.style.touchAction="pan-x";
     p.textAlign(p.CENTER,p.CENTER);
     p.textFont("monospace");
@@ -2172,7 +1107,7 @@ new p5(function(p){
   };
 
   function resize(){
-    const el=document.getElementById("tab8");
+    const el=document.getElementById("tab5");
     p.resizeCanvas(el.clientWidth,el.clientHeight);
     buildCells();
   }
@@ -2426,7 +1361,7 @@ new p5(function(p){
   p.touchEnded=function(){handleRelease(lastTouchX,lastTouchY);return true};
   p.mousePressed=function(){handlePress(p.mouseX,p.mouseY)};
   p.mouseReleased=function(){handleRelease(p.mouseX,p.mouseY)};
-},"tab8");
+},"tab5");
 
 // Replay — Text-to-HID replay (plain HTML)
 (function(){
