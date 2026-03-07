@@ -198,7 +198,7 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
     </div>
     <div class="replay-status" id="replay-status">IDLE</div>
     <div class="replay-btns">
-      <button id="replay-speed" class="replay-btn">FAST</button>
+      <button id="replay-speed" class="replay-btn">TURBO</button>
       <button id="replay-clear" class="replay-btn">CLEAR</button>
       <button id="replay-send" class="replay-btn send">SEND</button>
     </div>
@@ -2455,8 +2455,8 @@ new p5(function(p){
   const gutter=document.getElementById("replay-gutter");
 
   let sending=false;
-  let charDelay=30;
-  const speeds=[{ms:30,label:"FAST"},{ms:60,label:"MED"},{ms:120,label:"SLOW"}];
+  let charDelay=5;
+  const speeds=[{ms:5,label:"TURBO"},{ms:10,label:"FAST"},{ms:30,label:"MED"},{ms:80,label:"SLOW"}];
   let speedIdx=0;
 
   // History: persisted in localStorage
