@@ -1107,6 +1107,62 @@ function initMouseTab(container,tabIdx){
   let tapEnded=[];
   let lastTwoTapTime=0;
 
+  // Scroll momentum
+  let scrollVx=0,scrollVy=0;
+  let momentumRAF=null;
+  function startMomentum(){
+    cancelAnimationFrame(momentumRAF);
+    const decay=0.92;
+    function tick(){
+      scrollVx*=decay;scrollVy*=decay;
+      const vw=clamp8(Math.round(scrollVy));
+      const hw=clamp8(Math.round(scrollVx));
+      if(Math.abs(scrollVx)<0.3&&Math.abs(scrollVy)<0.3){momentumRAF=null;return}
+      if(vw!==0||hw!==0)sendPointing(0,0,0,vw,hw);
+      momentumRAF=requestAnimationFrame(tick);
+    }
+    momentumRAF=requestAnimationFrame(tick);
+  }
+  function stopMomentum(){cancelAnimationFrame(momentumRAF);momentumRAF=null;scrollVx=0;scrollVy=0}
+
+  // Edge scrolling: auto-move cursor when near trackpad edges
+  const EDGE_ZONE=30; // px from edge
+  const EDGE_SPEED=3; // px per frame
+  let edgeRAF=null;
+  let edgeX=0,edgeY=0;
+  function updateEdge(x,y){
+    const rect=pad.getBoundingClientRect();
+    const lx=x-rect.left,ly=y-rect.top;
+    edgeX=0;edgeY=0;
+    if(lx<EDGE_ZONE)edgeX=-EDGE_SPEED;
+    else if(lx>rect.width-EDGE_ZONE)edgeX=EDGE_SPEED;
+    if(ly<EDGE_ZONE)edgeY=-EDGE_SPEED;
+    else if(ly>rect.height-EDGE_ZONE)edgeY=EDGE_SPEED;
+    if((edgeX||edgeY)&&!edgeRAF)startEdge();
+    else if(!edgeX&&!edgeY&&edgeRAF)stopEdge();
+  }
+  function startEdge(){
+    function tick(){
+      if(!edgeX&&!edgeY){edgeRAF=null;return}
+      sendPointing(heldBtns,clamp8(edgeX),clamp8(edgeY),0,0);
+      edgeRAF=requestAnimationFrame(tick);
+    }
+    edgeRAF=requestAnimationFrame(tick);
+  }
+  function stopEdge(){cancelAnimationFrame(edgeRAF);edgeRAF=null;edgeX=0;edgeY=0}
+
+  // Cursor trail
+  function addTrailDot(x,y){
+    const d=document.createElement("div");
+    d.style.cssText="position:absolute;width:6px;height:6px;border-radius:3px;background:rgba(78,204,163,0.5);pointer-events:none;transition:opacity 0.4s;";
+    const rect=pad.getBoundingClientRect();
+    d.style.left=(x-rect.left-3)+"px";
+    d.style.top=(y-rect.top-3)+"px";
+    pad.appendChild(d);
+    requestAnimationFrame(()=>d.style.opacity="0");
+    setTimeout(()=>d.remove(),450);
+  }
+
   // App switcher mode: Cmd held, one-finger taps send Tab
   let appSwitcher=false;
 
@@ -1119,6 +1175,7 @@ function initMouseTab(container,tabIdx){
     const now=Date.now();
     const touchCount=e.touches.length;
 
+    stopMomentum();
     for(const t of e.changedTouches){
       mt[t.identifier]={x:t.clientX,y:t.clientY,startX:t.clientX,startY:t.clientY,startTime:now};
     }
@@ -1194,12 +1251,10 @@ function initMouseTab(container,tabIdx){
       prev.x=t.clientX;prev.y=t.clientY;
 
       if(slowScroll){
-        // Slow scroll mode: 1-finger drag sends scroll at very low speed
         const vw=clamp8(Math.round(-dy*0.02*mouseSens));
         const hw=clamp8(Math.round(dx*0.02*mouseSens));
         if(vw!==0||hw!==0)sendPointing(0,0,0,vw,hw);
       } else {
-        // Cancel long-press if finger moved significantly
         if(longPressTimer){
           const orig=mt[Object.keys(mt)[0]];
           if(orig){
@@ -1209,9 +1264,14 @@ function initMouseTab(container,tabIdx){
         }
         const ax=clamp8(accel(dx));
         const ay=clamp8(accel(dy));
-        if(ax!==0||ay!==0)sendPointing(heldBtns,ax,ay,0,0);
+        if(ax!==0||ay!==0){
+          sendPointing(heldBtns,ax,ay,0,0);
+          addTrailDot(t.clientX,t.clientY);
+          updateEdge(t.clientX,t.clientY);
+        }
       }
     } else if(count===2){
+      stopMomentum();
       let tdx=0,tdy=0,n=0;
       for(const t of e.changedTouches){
         const prev=mt[t.identifier];
@@ -1222,6 +1282,8 @@ function initMouseTab(container,tabIdx){
       if(n>0){
         const vw=clamp8(Math.round(-tdy/n*0.06*mouseSens));
         const hw=clamp8(Math.round(tdx/n*0.06*mouseSens));
+        // Track velocity for momentum
+        scrollVx=hw*0.5;scrollVy=vw*0.5;
         if(vw!==0||hw!==0)sendPointing(0,0,0,vw,hw);
       }
     } else if(count===3){
@@ -1243,6 +1305,10 @@ function initMouseTab(container,tabIdx){
   pad.addEventListener("touchend",(e)=>{
     e.preventDefault();e.stopPropagation();
     clearTimeout(longPressTimer);longPressTimer=null;
+    stopEdge();
+
+    // Track if this was a 2-finger scroll ending (for momentum)
+    const wasScrolling=Object.keys(mt).length===2&&e.changedTouches.length>0;
 
     for(const t of e.changedTouches){
       const prev=mt[t.identifier];
@@ -1260,6 +1326,11 @@ function initMouseTab(container,tabIdx){
       slowScroll=false;
       tapEnded=[];
       return;
+    }
+
+    // Start scroll momentum when 2-finger scroll ends
+    if(wasScrolling&&remaining===0&&(Math.abs(scrollVx)>0.5||Math.abs(scrollVy)>0.5)){
+      startMomentum();
     }
 
     // App switcher mode
@@ -1289,24 +1360,24 @@ function initMouseTab(container,tabIdx){
     if(!isTap)return;
 
     if(allEnded.length===1){
-      // Single tap → left click
+      // Single tap → left click (short tick)
       mouseRipple(allEnded[0].endX,allEnded[0].endY);
       sendPointing(1,0,0,0,0);
       setTimeout(()=>sendPointing(0,0,0,0,0),30);
-      if(navigator.vibrate)navigator.vibrate(20);
+      if(navigator.vibrate)navigator.vibrate(10);
     } else if(allEnded.length===2){
-      // Single two-finger tap → right click, record time for double-tap detection
+      // Single two-finger tap → right click (double pulse)
       mouseRipple(allEnded[0].endX,allEnded[0].endY);
       sendPointing(2,0,0,0,0);
       setTimeout(()=>sendPointing(0,0,0,0,0),30);
-      if(navigator.vibrate)navigator.vibrate([20,30,20]);
+      if(navigator.vibrate)navigator.vibrate([15,50,15]);
       lastTwoTapTime=now;
     } else if(allEnded.length===3){
-      // Three-finger tap → middle click
+      // Three-finger tap → middle click (triple pulse)
       mouseRipple(allEnded[0].endX,allEnded[0].endY);
       sendPointing(4,0,0,0,0);
       setTimeout(()=>sendPointing(0,0,0,0,0),30);
-      if(navigator.vibrate)navigator.vibrate([20,30,20,30,20]);
+      if(navigator.vibrate)navigator.vibrate([10,40,10,40,10]);
     }
   },{passive:false});
 
@@ -1315,6 +1386,7 @@ function initMouseTab(container,tabIdx){
     tapEnded=[];
     clearTimeout(longPressTimer);longPressTimer=null;
     slowScroll=false;
+    stopMomentum();stopEdge();
     if(appSwitcher){sendKeyUp();appSwitcher=false}
   });
 
