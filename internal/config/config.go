@@ -187,7 +187,7 @@ func defaultActions() map[string]ActionDefinition {
 		{
 			Name:  "teammate_attention",
 			Label: "tmate-attn",
-			Steps: []protocol.KeyStep{{Key: "c", Modifiers: []string{"control"}}},
+			Steps: []protocol.KeyStep{{Key: "backslash", Modifiers: []string{"control"}}},
 		},
 		{
 			Name:  "paste",

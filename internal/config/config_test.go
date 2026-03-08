@@ -122,7 +122,7 @@ func TestTeammateActions(t *testing.T) {
 	}{
 		{"teammate_accept", "tab", nil},
 		{"teammate_reject", "escape", nil},
-		{"teammate_attention", "c", []string{"control"}},
+		{"teammate_attention", "backslash", []string{"control"}},
 		{"paste", "v", []string{"command"}},
 	}
 
