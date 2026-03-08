@@ -21,7 +21,9 @@ static karabiner_client_t* cgo_client_create(void* context) {
 import "C"
 import (
 	"fmt"
+	"log"
 	"sync"
+	"time"
 	"unsafe"
 )
 
@@ -33,6 +35,8 @@ type KarabinerPoster struct {
 	pointingReady chan struct{}
 	readyDots         int // counts "keyboard ready" heartbeat dots
 	pointingReadyDots int // counts "pointing ready" heartbeat dots
+	lastPointingReady time.Time // last POINTING_READY callback
+	watchdogStop      chan struct{}
 }
 
 // posters tracks active KarabinerPoster instances for the C callback.
@@ -84,16 +88,21 @@ func goKarabinerCallback(status C.karabiner_status_t, context unsafe.Pointer) {
 		} else {
 			fmt.Print(".")
 		}
+		poster.mu.Lock()
+		poster.lastPointingReady = time.Now()
+		poster.mu.Unlock()
 		select {
 		case poster.pointingReady <- struct{}{}:
 		default:
 		}
 	case C.KARABINER_STATUS_ERROR:
-		fmt.Println("[Karabiner] Error occurred")
+		log.Println("[Karabiner] Error occurred, re-initializing pointing device")
+		C.karabiner_client_init_pointing(poster.client)
 	case C.KARABINER_STATUS_CONNECT_FAILED:
-		fmt.Println("[Karabiner] Connection failed")
+		log.Println("[Karabiner] Connection failed, re-initializing pointing device")
+		C.karabiner_client_init_pointing(poster.client)
 	case C.KARABINER_STATUS_CLOSED:
-		fmt.Println("[Karabiner] Connection closed")
+		log.Println("[Karabiner] Connection closed, re-initializing pointing device")
 	}
 }
 
@@ -203,6 +212,40 @@ func (p *KarabinerPoster) ReleasePointing() error {
 
 	C.karabiner_send_pointing_release(p.client)
 	return nil
+}
+
+// StartPointingWatchdog monitors the pointing device and re-initializes it
+// if the POINTING_READY heartbeat stops for more than 60 seconds.
+func (p *KarabinerPoster) StartPointingWatchdog() {
+	p.watchdogStop = make(chan struct{})
+	go func() {
+		ticker := time.NewTicker(30 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				p.mu.Lock()
+				last := p.lastPointingReady
+				client := p.client
+				p.mu.Unlock()
+				if client != nil && !last.IsZero() && time.Since(last) > 60*time.Second {
+					log.Printf("[Karabiner] Pointing device heartbeat stale (%s ago), re-initializing", time.Since(last).Round(time.Second))
+					p.mu.Lock()
+					C.karabiner_client_init_pointing(p.client)
+					p.mu.Unlock()
+				}
+			case <-p.watchdogStop:
+				return
+			}
+		}
+	}()
+}
+
+// StopPointingWatchdog stops the pointing device watchdog.
+func (p *KarabinerPoster) StopPointingWatchdog() {
+	if p.watchdogStop != nil {
+		close(p.watchdogStop)
+	}
 }
 
 // Close destroys the client.

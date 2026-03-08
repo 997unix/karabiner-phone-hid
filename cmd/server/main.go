@@ -66,6 +66,9 @@ func main() {
 	poster.WaitPointingReady()
 	log.Println("[Server] Pointing device ready")
 
+	poster.StartPointingWatchdog()
+	defer poster.StopPointingWatchdog()
+
 	// Create dispatcher and router
 	dispatcher := hid.NewDispatcher(poster)
 	router := server.NewRouter(dispatcher, registry)
