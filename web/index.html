@@ -1110,6 +1110,10 @@ function initMouseTab(container,tabIdx){
   // App switcher mode: Cmd held, one-finger taps send Tab
   let appSwitcher=false;
 
+  // Slow scroll mode: long-press then drag
+  let slowScroll=false;
+  let longPressTimer=null;
+
   pad.addEventListener("touchstart",(e)=>{
     e.preventDefault();e.stopPropagation();
     const now=Date.now();
@@ -1133,12 +1137,33 @@ function initMouseTab(container,tabIdx){
     if(touchCount===2&&now-lastTwoTapTime<400){
       appSwitcher=true;
       showMouseGesture("App Switcher");
-      // Send Cmd+Tab to open switcher
       sendKeyDown("tab",["command"]);
-      // Release Tab but keep Cmd held
       setTimeout(()=>sendKeyDown("",["command"]),50);
       if(navigator.vibrate)navigator.vibrate([20,40,20]);
       lastTwoTapTime=0;
+      clearTimeout(longPressTimer);longPressTimer=null;
+      return;
+    }
+
+    // Start long-press timer for single finger
+    clearTimeout(longPressTimer);
+    if(touchCount===1){
+      longPressTimer=setTimeout(()=>{
+        // Check finger hasn't moved much
+        const ids=Object.keys(mt);
+        if(ids.length===1){
+          const t=mt[ids[0]];
+          const dist=Math.sqrt((t.x-t.startX)**2+(t.y-t.startY)**2);
+          if(dist<10){
+            slowScroll=true;
+            showMouseGesture("Slow Scroll");
+            if(navigator.vibrate)navigator.vibrate(30);
+          }
+        }
+        longPressTimer=null;
+      },500);
+    } else {
+      longPressTimer=null;
     }
   },{passive:false});
 
@@ -1167,9 +1192,25 @@ function initMouseTab(container,tabIdx){
       const dx=t.clientX-prev.x;
       const dy=t.clientY-prev.y;
       prev.x=t.clientX;prev.y=t.clientY;
-      const ax=clamp8(accel(dx));
-      const ay=clamp8(accel(dy));
-      if(ax!==0||ay!==0)sendPointing(heldBtns,ax,ay,0,0);
+
+      if(slowScroll){
+        // Slow scroll mode: 1-finger drag sends scroll at very low speed
+        const vw=clamp8(Math.round(-dy*0.02*mouseSens));
+        const hw=clamp8(Math.round(dx*0.02*mouseSens));
+        if(vw!==0||hw!==0)sendPointing(0,0,0,vw,hw);
+      } else {
+        // Cancel long-press if finger moved significantly
+        if(longPressTimer){
+          const orig=mt[Object.keys(mt)[0]];
+          if(orig){
+            const dist=Math.sqrt((orig.x-orig.startX)**2+(orig.y-orig.startY)**2);
+            if(dist>10){clearTimeout(longPressTimer);longPressTimer=null}
+          }
+        }
+        const ax=clamp8(accel(dx));
+        const ay=clamp8(accel(dy));
+        if(ax!==0||ay!==0)sendPointing(heldBtns,ax,ay,0,0);
+      }
     } else if(count===2){
       let tdx=0,tdy=0,n=0;
       for(const t of e.changedTouches){
@@ -1201,6 +1242,8 @@ function initMouseTab(container,tabIdx){
 
   pad.addEventListener("touchend",(e)=>{
     e.preventDefault();e.stopPropagation();
+    clearTimeout(longPressTimer);longPressTimer=null;
+
     for(const t of e.changedTouches){
       const prev=mt[t.identifier];
       if(prev){
@@ -1212,15 +1255,20 @@ function initMouseTab(container,tabIdx){
 
     const remaining=Object.keys(mt).length;
 
+    // Slow scroll mode: exit on finger lift
+    if(slowScroll&&remaining===0){
+      slowScroll=false;
+      tapEnded=[];
+      return;
+    }
+
     // App switcher mode
     if(appSwitcher){
       if(remaining===0){
-        // All fingers lifted → select app (release Cmd)
         sendKeyUp();
         appSwitcher=false;
         tapEnded=[];
       }
-      // Otherwise one finger still down — waiting for tap cycle
       return;
     }
 
@@ -1265,6 +1313,8 @@ function initMouseTab(container,tabIdx){
   pad.addEventListener("touchcancel",(e)=>{
     for(const t of e.changedTouches)delete mt[t.identifier];
     tapEnded=[];
+    clearTimeout(longPressTimer);longPressTimer=null;
+    slowScroll=false;
     if(appSwitcher){sendKeyUp();appSwitcher=false}
   });
 
