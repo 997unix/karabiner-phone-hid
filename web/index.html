@@ -150,6 +150,28 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
   padding:0;overflow:hidden}
 .p5-page canvas{width:100%!important;height:100%!important;display:block;touch-action:pan-x}
 
+/* Mouse trackpad */
+.mouse-wrap{display:flex;flex-direction:column;flex:1;min-height:0}
+.mouse-topbar{display:flex;flex-shrink:0;gap:6px;padding:8px 8px 4px}
+.mouse-topbar button{flex:1;border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;
+  padding:12px 0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.mouse-topbar button:active{opacity:0.7;transform:scale(0.97)}
+.mouse-pad{flex:1;touch-action:none;position:relative;overflow:hidden;min-height:0}
+.mouse-pad .ripple{position:absolute;border-radius:50%;background:rgba(78,204,163,0.3);
+  pointer-events:none;animation:ripple-fade 0.4s ease-out forwards}
+.mouse-pad .gesture-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:rgba(0,0,0,0.85);border:1px solid #4ecca3;border-radius:12px;
+  padding:16px 24px;font-size:16px;font-weight:700;color:#4ecca3;
+  pointer-events:none;opacity:0;transition:opacity 0.2s}
+.mouse-pad .gesture-overlay.show{opacity:1}
+.mouse-btns{display:flex;flex-shrink:0;border-top:1px solid #333}
+.mouse-btns button{flex:1;background:none;border:none;border-right:1px solid #333;
+  color:#888;font-size:13px;font-weight:600;padding:12px 0;cursor:pointer;
+  -webkit-tap-highlight-color:transparent}
+.mouse-btns button:last-child{border-right:none}
+.mouse-btns button:active{background:rgba(78,204,163,0.1);color:#e6e6e6}
+.mouse-btns button.held{background:rgba(78,204,163,0.15);color:#4ecca3}
+
 /* Status bar */
 #status{padding:8px 16px;text-align:center;font-size:13px;flex-shrink:0}
 .dot{display:inline-block;width:8px;height:8px;border-radius:4px;margin-right:6px;vertical-align:middle}
@@ -164,6 +186,7 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
   <button data-idx="2">Replay</button>
   <button data-idx="3">Numpad</button>
   <button data-idx="4">YT Remote</button>
+  <button data-idx="5">Mouse</button>
 </div>
 
 <div class="swipe" id="swipe">
@@ -188,9 +211,11 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
   <div class="kb-page" id="tab3"></div>
   <!-- YT Remote -->
   <div class="p5-page" id="tab4"></div>
+  <!-- Mouse -->
+  <div class="page" id="tab5" style="padding:0;justify-content:stretch"></div>
 </div>
 
-<div id="status" class="disconnected"><span class="dot"></span><span id="stxt">Disconnected</span><a href="/mouse.html" style="color:#666;text-decoration:none;font-size:12px;margin-left:8px">Mouse</a></div>
+<div id="status" class="disconnected"><span class="dot"></span><span id="stxt">Disconnected</span></div>
 
 <script>
 const tabs = [
@@ -352,6 +377,7 @@ const tabs = [
       {action:"numpad_decimal",label:".",color:"#444"},
     ],
   },
+  { name:"Mouse", layout:"mouse" },
 ];
 
 let ws;
@@ -909,6 +935,8 @@ tabs.forEach((tab,i)=>{
         container.appendChild(delBar);
       }
     }
+  } else if(tab.layout==="mouse"){
+    initMouseTab(container,i);
   } else {
     // SwSplit banner (SuperWhisper + Replay) for standard grid tabs
     if(tab.swSplit){
@@ -985,6 +1013,240 @@ function send(action){
 }
 
 connect();
+
+// ═══════════════════════════════════════════════════════════════
+// Mouse Trackpad Tab
+// ═══════════════════════════════════════════════════════════════
+function initMouseTab(container,tabIdx){
+  container.innerHTML=`
+    <div class="mouse-wrap">
+      <div class="mouse-topbar">
+        <button id="mouse-sw" style="background:#e74c3c">SuperWhisper</button>
+        <button id="mouse-replay" style="background:#2980b9">Replay</button>
+      </div>
+      <div class="mouse-pad" id="mouse-pad">
+        <div class="gesture-overlay" id="mouse-gesture"></div>
+      </div>
+      <div class="mouse-btns">
+        <button id="mouse-btn-left">Left Click</button>
+        <button id="mouse-btn-middle">Middle</button>
+        <button id="mouse-btn-right">Right Click</button>
+      </div>
+    </div>`;
+
+  const pad=document.getElementById("mouse-pad");
+  const gestureEl=document.getElementById("mouse-gesture");
+
+  // Sensitivity
+  let mouseSens=parseFloat(localStorage.getItem("mouse_sensitivity")||"1.0");
+
+  function showMouseGesture(text){
+    gestureEl.textContent=text;
+    gestureEl.classList.add("show");
+    clearTimeout(showMouseGesture._t);
+    showMouseGesture._t=setTimeout(()=>gestureEl.classList.remove("show"),600);
+  }
+
+  // SuperWhisper button (tap=toggle, long-press=paste)
+  const swBtn=document.getElementById("mouse-sw");
+  let swTimer=null;
+  swBtn.addEventListener("touchstart",(e)=>{
+    e.preventDefault();
+    swTimer=setTimeout(()=>{send("superwhisper_paste");swTimer=null},500);
+  },{passive:false});
+  swBtn.addEventListener("touchend",(e)=>{
+    e.preventDefault();
+    if(swTimer!==null){clearTimeout(swTimer);swTimer=null;send("superwhisper_toggle")}
+  },{passive:false});
+  swBtn.addEventListener("touchcancel",()=>{clearTimeout(swTimer);swTimer=null});
+
+  // Replay button → switch to Replay tab
+  document.getElementById("mouse-replay").addEventListener("click",()=>{
+    replayReturnTab=tabIdx;
+    switchToTab(2);
+    if(navigator.vibrate)navigator.vibrate(30);
+  });
+
+  // Pointing message sender
+  function sendPointing(buttons,x,y,vw,hw){
+    if(ws&&ws.readyState===1){
+      ws.send(JSON.stringify({
+        type:"action",id:"m-"+Date.now(),action:"pointing",
+        payload:{buttons,x,y,vertical_wheel:vw,horizontal_wheel:hw}
+      }));
+    }
+  }
+
+  // Acceleration
+  function accel(delta){
+    const abs=Math.abs(delta);
+    const factor=abs<3?1:1+Math.min((abs-3)*0.15,2);
+    return Math.round(delta*factor*mouseSens);
+  }
+  function clamp8(v){return Math.max(-127,Math.min(127,v))}
+
+  // Touch state
+  let mt={};  // id → {x,y,startX,startY,startTime}
+  let lastMoveT=0;
+  let heldBtns=0;
+
+  // Two-finger double-tap detection: accumulate ended touches across rapid touchend events
+  let twoTapEnded=[];
+  let twoTapTimer=null;
+  let lastTwoTapTime=0;
+
+  pad.addEventListener("touchstart",(e)=>{
+    e.preventDefault();e.stopPropagation();
+    for(const t of e.changedTouches){
+      mt[t.identifier]={x:t.clientX,y:t.clientY,startX:t.clientX,startY:t.clientY,startTime:Date.now()};
+    }
+  },{passive:false});
+
+  pad.addEventListener("touchmove",(e)=>{
+    e.preventDefault();e.stopPropagation();
+    const now=Date.now();
+    if(now-lastMoveT<16)return;
+    lastMoveT=now;
+
+    const count=Object.keys(mt).length;
+
+    if(count===1){
+      const t=e.changedTouches[0];
+      const prev=mt[t.identifier];
+      if(!prev)return;
+      const dx=t.clientX-prev.x;
+      const dy=t.clientY-prev.y;
+      prev.x=t.clientX;prev.y=t.clientY;
+      const ax=clamp8(accel(dx));
+      const ay=clamp8(accel(dy));
+      if(ax!==0||ay!==0)sendPointing(heldBtns,ax,ay,0,0);
+    } else if(count===2){
+      let tdx=0,tdy=0,n=0;
+      for(const t of e.changedTouches){
+        const prev=mt[t.identifier];
+        if(!prev)continue;
+        tdx+=t.clientX-prev.x;tdy+=t.clientY-prev.y;
+        prev.x=t.clientX;prev.y=t.clientY;n++;
+      }
+      if(n>0){
+        const vw=clamp8(Math.round(-tdy/n*0.06*mouseSens));
+        const hw=clamp8(Math.round(tdx/n*0.06*mouseSens));
+        if(vw!==0||hw!==0)sendPointing(0,0,0,vw,hw);
+      }
+    } else if(count===3){
+      let tdx=0,tdy=0,n=0;
+      for(const t of e.changedTouches){
+        const prev=mt[t.identifier];
+        if(!prev)continue;
+        tdx+=t.clientX-prev.x;tdy+=t.clientY-prev.y;
+        prev.x=t.clientX;prev.y=t.clientY;n++;
+      }
+      if(n>0){
+        const vw=clamp8(Math.round(-tdy/n*0.02*mouseSens));
+        const hw=clamp8(Math.round(tdx/n*0.02*mouseSens));
+        if(vw!==0||hw!==0)sendPointing(0,0,0,vw,hw);
+      }
+    }
+  },{passive:false});
+
+  pad.addEventListener("touchend",(e)=>{
+    e.preventDefault();e.stopPropagation();
+    for(const t of e.changedTouches){
+      const prev=mt[t.identifier];
+      if(prev){
+        prev.endX=t.clientX;prev.endY=t.clientY;
+        twoTapEnded.push(prev);
+      }
+      delete mt[t.identifier];
+    }
+
+    // Wait until all fingers are lifted, then process
+    if(Object.keys(mt).length>0)return;
+
+    // Collect all ended touches for this gesture
+    const allEnded=[...twoTapEnded];
+    twoTapEnded=[];
+
+    const now=Date.now();
+    const isTap=allEnded.length>0&&allEnded.every(t=>{
+      const dt=now-t.startTime;
+      const dist=Math.sqrt((t.endX-t.startX)**2+(t.endY-t.startY)**2);
+      return dt<300&&dist<15;
+    });
+
+    if(!isTap)return;
+
+    if(allEnded.length===1){
+      // Single tap → left click
+      mouseRipple(allEnded[0].endX,allEnded[0].endY);
+      sendPointing(1,0,0,0,0);
+      setTimeout(()=>sendPointing(0,0,0,0,0),30);
+      if(navigator.vibrate)navigator.vibrate(20);
+    } else if(allEnded.length===2){
+      // Two-finger tap — check for double-tap
+      if(now-lastTwoTapTime<400){
+        // Double two-finger tap → Cmd+Tab
+        showMouseGesture("Cmd+Tab");
+        sendKeypress("tab",["command"]);
+        if(navigator.vibrate)navigator.vibrate([20,40,20]);
+        lastTwoTapTime=0;
+      } else {
+        // Single two-finger tap → right click
+        mouseRipple(allEnded[0].endX,allEnded[0].endY);
+        sendPointing(2,0,0,0,0);
+        setTimeout(()=>sendPointing(0,0,0,0,0),30);
+        if(navigator.vibrate)navigator.vibrate([20,30,20]);
+        lastTwoTapTime=now;
+      }
+    } else if(allEnded.length===3){
+      // Three-finger tap → middle click
+      mouseRipple(allEnded[0].endX,allEnded[0].endY);
+      sendPointing(4,0,0,0,0);
+      setTimeout(()=>sendPointing(0,0,0,0,0),30);
+      if(navigator.vibrate)navigator.vibrate([20,30,20,30,20]);
+    }
+  },{passive:false});
+
+  pad.addEventListener("touchcancel",(e)=>{
+    for(const t of e.changedTouches)delete mt[t.identifier];
+    twoTapEnded=[];
+  });
+
+  function mouseRipple(x,y){
+    const r=document.createElement("div");
+    r.className="ripple";
+    const rect=pad.getBoundingClientRect();
+    r.style.left=(x-rect.left-20)+"px";
+    r.style.top=(y-rect.top-20)+"px";
+    r.style.width="40px";r.style.height="40px";
+    pad.appendChild(r);
+    r.addEventListener("animationend",()=>r.remove());
+  }
+
+  // Physical button bar
+  function setupMouseBtn(id,bit){
+    const btn=document.getElementById(id);
+    btn.addEventListener("touchstart",(e)=>{
+      e.preventDefault();
+      heldBtns|=bit;btn.classList.add("held");
+      sendPointing(heldBtns,0,0,0,0);
+      if(navigator.vibrate)navigator.vibrate(15);
+    },{passive:false});
+    btn.addEventListener("touchend",(e)=>{
+      e.preventDefault();
+      heldBtns&=~bit;btn.classList.remove("held");
+      sendPointing(heldBtns,0,0,0,0);
+    },{passive:false});
+    btn.addEventListener("touchcancel",()=>{
+      heldBtns&=~bit;btn.classList.remove("held");
+      sendPointing(heldBtns,0,0,0,0);
+    });
+  }
+
+  setupMouseBtn("mouse-btn-left",1);
+  setupMouseBtn("mouse-btn-right",2);
+  setupMouseBtn("mouse-btn-middle",4);
+}
 
 // ═══════════════════════════════════════════════════════════════
 // YouTube Remote — classic remote control layout

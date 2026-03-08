@@ -7,6 +7,12 @@
 html,body{height:100%;overflow:hidden}
 body{font-family:system-ui;background:#1a1a2e;color:#e6e6e6;display:flex;flex-direction:column}
 
+/* Top action bar */
+.topbar{display:flex;flex-shrink:0;gap:6px;padding:8px 8px 4px}
+.topbar button{flex:1;border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;
+  padding:14px 0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.topbar button:active{opacity:0.7;transform:scale(0.97)}
+
 #trackpad{flex:1;touch-action:none;position:relative;overflow:hidden;cursor:none}
 .ripple{position:absolute;border-radius:50%;background:rgba(78,204,163,0.3);
   pointer-events:none;animation:ripple-fade 0.4s ease-out forwards}
@@ -14,6 +20,13 @@ body{font-family:system-ui;background:#1a1a2e;color:#e6e6e6;display:flex;flex-di
   0%{transform:scale(0);opacity:1}
   100%{transform:scale(2.5);opacity:0}
 }
+
+/* Gesture overlay */
+.gesture-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:rgba(0,0,0,0.85);border:1px solid #4ecca3;border-radius:12px;
+  padding:16px 24px;font-size:16px;font-weight:700;color:#4ecca3;
+  pointer-events:none;opacity:0;transition:opacity 0.2s}
+.gesture-overlay.show{opacity:1}
 
 /* Bottom bar */
 .bottom{display:flex;flex-shrink:0;border-top:1px solid #333;gap:0}
@@ -32,18 +45,16 @@ body{font-family:system-ui;background:#1a1a2e;color:#e6e6e6;display:flex;flex-di
 .dot{display:inline-block;width:8px;height:8px;border-radius:4px;margin-right:6px;vertical-align:middle}
 .connected .dot{background:#4ecca3}
 .disconnected .dot{background:#e74c3c}
-
-/* Sensitivity overlay */
-.sens-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-  background:rgba(0,0,0,0.85);border:1px solid #4ecca3;border-radius:12px;
-  padding:20px 30px;font-size:18px;font-weight:700;color:#4ecca3;
-  pointer-events:none;opacity:0;transition:opacity 0.2s}
-.sens-overlay.show{opacity:1}
 </style>
 </head><body>
 
+<div class="topbar">
+  <button id="btn-sw" style="background:#e74c3c">SuperWhisper</button>
+  <button id="btn-replay" style="background:#2980b9" onclick="location.href='/'">Replay</button>
+</div>
+
 <div id="trackpad">
-  <div class="sens-overlay" id="sens-display"></div>
+  <div class="gesture-overlay" id="gesture-display"></div>
 </div>
 
 <div class="bottom">
@@ -62,7 +73,7 @@ body{font-family:system-ui;background:#1a1a2e;color:#e6e6e6;display:flex;flex-di
 const trackpad=document.getElementById("trackpad");
 const stxt=document.getElementById("stxt");
 const sbar=document.getElementById("status");
-const sensDisplay=document.getElementById("sens-display");
+const gestureDisplay=document.getElementById("gesture-display");
 const sensLabel=document.getElementById("sens-label");
 let ws=null;
 let msgId=0;
@@ -75,19 +86,18 @@ function updateSensLabel(){
   sensLabel.textContent=sensitivity.toFixed(1)+"x";
 }
 
-function showSens(){
-  sensDisplay.textContent=sensitivity.toFixed(1)+"x";
-  sensDisplay.classList.add("show");
-  clearTimeout(showSens._t);
-  showSens._t=setTimeout(()=>sensDisplay.classList.remove("show"),800);
+function showGesture(text){
+  gestureDisplay.textContent=text;
+  gestureDisplay.classList.add("show");
+  clearTimeout(showGesture._t);
+  showGesture._t=setTimeout(()=>gestureDisplay.classList.remove("show"),600);
 }
 
-// Adjust sensitivity with 3-finger drag up/down
 sensLabel.addEventListener("click",()=>{
   sensitivity=sensitivity>=2.0?0.5:sensitivity+0.25;
   localStorage.setItem("mouse_sensitivity",sensitivity.toString());
   updateSensLabel();
-  showSens();
+  showGesture(sensitivity.toFixed(1)+"x");
 });
 
 // ── WebSocket ──
@@ -110,12 +120,37 @@ function sendPointing(buttons,x,y,vw,hw){
   }
 }
 
+function sendAction(action){
+  if(ws&&ws.readyState===1){
+    ws.send(JSON.stringify({type:"action",id:"a-"+(++msgId),action,payload:{}}));
+    if(navigator.vibrate)navigator.vibrate(30);
+  }
+}
+
+function sendKeypress(key,modifiers){
+  if(ws&&ws.readyState===1){
+    ws.send(JSON.stringify({type:"action",id:"a-"+(++msgId),action:"keypress",payload:{key,modifiers}}));
+  }
+}
+
 connect();
+
+// ── Top bar buttons ──
+const btnSW=document.getElementById("btn-sw");
+let swLongTimer=null;
+btnSW.addEventListener("touchstart",(e)=>{
+  e.preventDefault();
+  swLongTimer=setTimeout(()=>{sendAction("superwhisper_paste");swLongTimer=null},500);
+},{passive:false});
+btnSW.addEventListener("touchend",(e)=>{
+  e.preventDefault();
+  if(swLongTimer!==null){clearTimeout(swLongTimer);swLongTimer=null;sendAction("superwhisper_toggle")}
+},{passive:false});
+btnSW.addEventListener("touchcancel",()=>{clearTimeout(swLongTimer);swLongTimer=null});
 
 // ── Acceleration curve ──
 function accel(delta){
   const abs=Math.abs(delta);
-  // Below 3px: 1:1, above: gradual ramp up to ~3x
   const factor=abs<3?1:1+Math.min((abs-3)*0.15,2);
   return Math.round(delta*factor*sensitivity);
 }
@@ -125,7 +160,11 @@ function clamp8(v){return Math.max(-127,Math.min(127,v))}
 // ── Touch tracking ──
 let touches={};  // id → {x,y,startX,startY,startTime}
 let lastMoveTime=0;
-const THROTTLE_MS=16;  // ~60fps
+const THROTTLE_MS=16;
+
+// ── Double-tap tracking for 2-finger double-tap ──
+let lastTwoFingerTapTime=0;
+let tapEnded=[];  // accumulate ended touches across rapid touchend events
 
 trackpad.addEventListener("touchstart",(e)=>{
   e.preventDefault();
@@ -154,12 +193,10 @@ trackpad.addEventListener("touchmove",(e)=>{
     const ax=clamp8(accel(dx));
     const ay=clamp8(accel(dy));
     if(ax!==0||ay!==0){
-      // If a physical button is held, include its bits
       sendPointing(heldButtons,ax,ay,0,0);
     }
   } else if(count===2){
     // Two fingers → scroll
-    // Use average delta of all moving touches
     let totalDx=0,totalDy=0,n=0;
     for(const t of e.changedTouches){
       const prev=touches[t.identifier];
@@ -173,9 +210,29 @@ trackpad.addEventListener("touchmove",(e)=>{
     if(n>0){
       const dx=totalDx/n;
       const dy=totalDy/n;
-      // Scroll: invert Y for natural scrolling, scale down
-      const vw=clamp8(Math.round(-dy*0.3*sensitivity));
-      const hw=clamp8(Math.round(dx*0.3*sensitivity));
+      const vw=clamp8(Math.round(-dy*0.06*sensitivity));
+      const hw=clamp8(Math.round(dx*0.06*sensitivity));
+      if(vw!==0||hw!==0){
+        sendPointing(0,0,0,vw,hw);
+      }
+    }
+  } else if(count===3){
+    // Three fingers → slow precision scroll
+    let totalDx=0,totalDy=0,n=0;
+    for(const t of e.changedTouches){
+      const prev=touches[t.identifier];
+      if(!prev)continue;
+      totalDx+=t.clientX-prev.x;
+      totalDy+=t.clientY-prev.y;
+      prev.x=t.clientX;
+      prev.y=t.clientY;
+      n++;
+    }
+    if(n>0){
+      const dx=totalDx/n;
+      const dy=totalDy/n;
+      const vw=clamp8(Math.round(-dy*0.02*sensitivity));
+      const hw=clamp8(Math.round(dx*0.02*sensitivity));
       if(vw!==0||hw!==0){
         sendPointing(0,0,0,vw,hw);
       }
@@ -185,22 +242,21 @@ trackpad.addEventListener("touchmove",(e)=>{
 
 trackpad.addEventListener("touchend",(e)=>{
   e.preventDefault();
-  const ended=[];
   for(const t of e.changedTouches){
     const prev=touches[t.identifier];
     if(prev){
       prev.endX=t.clientX;
       prev.endY=t.clientY;
-      ended.push(prev);
+      tapEnded.push(prev);
     }
     delete touches[t.identifier];
   }
 
-  // Detect taps (short duration, minimal movement)
-  const remaining=Object.keys(touches).length;
-  if(remaining>0)return;  // Wait until all fingers lift
+  // Wait until all fingers are lifted
+  if(Object.keys(touches).length>0)return;
 
-  const allEnded=ended;
+  const allEnded=[...tapEnded];
+  tapEnded=[];
   if(allEnded.length===0)return;
 
   const now=Date.now();
@@ -215,15 +271,25 @@ trackpad.addEventListener("touchend",(e)=>{
   if(allEnded.length===1){
     // Single tap → left click
     ripple(allEnded[0].endX,allEnded[0].endY);
-    sendPointing(1,0,0,0,0);  // button down
-    setTimeout(()=>sendPointing(0,0,0,0,0),30);  // button up
+    sendPointing(1,0,0,0,0);
+    setTimeout(()=>sendPointing(0,0,0,0,0),30);
     if(navigator.vibrate)navigator.vibrate(20);
   } else if(allEnded.length===2){
-    // Two-finger tap → right click
-    ripple(allEnded[0].endX,allEnded[0].endY);
-    sendPointing(2,0,0,0,0);
-    setTimeout(()=>sendPointing(0,0,0,0,0),30);
-    if(navigator.vibrate)navigator.vibrate([20,30,20]);
+    // Two-finger tap — check for double-tap
+    if(now-lastTwoFingerTapTime<400){
+      // Double two-finger tap → Cmd+Tab
+      showGesture("Cmd+Tab");
+      sendKeypress("tab",["command"]);
+      if(navigator.vibrate)navigator.vibrate([20,40,20]);
+      lastTwoFingerTapTime=0;
+    } else {
+      // Single two-finger tap → right click
+      ripple(allEnded[0].endX,allEnded[0].endY);
+      sendPointing(2,0,0,0,0);
+      setTimeout(()=>sendPointing(0,0,0,0,0),30);
+      if(navigator.vibrate)navigator.vibrate([20,30,20]);
+      lastTwoFingerTapTime=now;
+    }
   } else if(allEnded.length===3){
     // Three-finger tap → middle click
     ripple(allEnded[0].endX,allEnded[0].endY);
@@ -235,6 +301,7 @@ trackpad.addEventListener("touchend",(e)=>{
 
 trackpad.addEventListener("touchcancel",(e)=>{
   for(const t of e.changedTouches)delete touches[t.identifier];
+  tapEnded=[];
 });
 
 // ── Visual feedback ──
@@ -255,7 +322,6 @@ let heldButtons=0;
 
 function setupButton(id,bit){
   const btn=document.getElementById(id);
-  // Touch hold: button down while held
   btn.addEventListener("touchstart",(e)=>{
     e.preventDefault();
     heldButtons|=bit;
