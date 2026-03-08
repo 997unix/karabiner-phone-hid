@@ -64,6 +64,17 @@ func (r *Router) handleAction(msg *protocol.IncomingMessage) []byte {
 		}
 		steps = seq.Steps
 
+	case "pointing":
+		pt, err := msg.ParsePointing()
+		if err != nil {
+			return r.encodeAck(msg.ID, fmt.Sprintf("invalid pointing payload: %v", err))
+		}
+		if err := r.dispatcher.DispatchPointing(pt); err != nil {
+			log.Printf("[Router] pointing dispatch error: %v", err)
+			return r.encodeAck(msg.ID, fmt.Sprintf("dispatch error: %v", err))
+		}
+		return r.encodeOK(msg.ID)
+
 	default:
 		// Named action — resolve via registry
 		resolved, ok := r.resolver.Resolve(msg.Action)

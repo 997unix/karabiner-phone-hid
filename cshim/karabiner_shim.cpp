@@ -65,6 +65,12 @@ karabiner_client_t* karabiner_client_create(karabiner_status_callback_t callback
         }
     });
 
+    c->client->virtual_hid_pointing_ready.connect([c](bool ready) {
+        if (ready && c->callback) {
+            c->callback(KARABINER_STATUS_POINTING_READY, c->context);
+        }
+    });
+
     return c;
 }
 
@@ -112,6 +118,36 @@ void karabiner_send_keyboard_release(karabiner_client_t* client) {
     client->client->async_post_report(report);
 }
 
+void karabiner_client_init_pointing(karabiner_client_t* client) {
+    if (client && client->client) {
+        client->client->async_virtual_hid_pointing_initialize();
+    }
+}
+
+void karabiner_send_pointing_report(karabiner_client_t* client,
+                                     uint32_t buttons,
+                                     int8_t x, int8_t y,
+                                     int8_t vertical_wheel,
+                                     int8_t horizontal_wheel) {
+    if (!client || !client->client) return;
+
+    vhd_driver::hid_report::pointing_input report;
+    report.buttons.insert(buttons);
+    report.x = static_cast<uint8_t>(x);
+    report.y = static_cast<uint8_t>(y);
+    report.vertical_wheel = static_cast<uint8_t>(vertical_wheel);
+    report.horizontal_wheel = static_cast<uint8_t>(horizontal_wheel);
+
+    client->client->async_post_report(report);
+}
+
+void karabiner_send_pointing_release(karabiner_client_t* client) {
+    if (!client || !client->client) return;
+
+    vhd_driver::hid_report::pointing_input report;
+    client->client->async_post_report(report);
+}
+
 void karabiner_client_destroy(karabiner_client_t* client) {
     if (client) {
         client->client = nullptr;
@@ -147,10 +183,11 @@ karabiner_client_t* karabiner_client_create(karabiner_status_callback_t callback
 
 void karabiner_client_start(karabiner_client_t* client) {
     fprintf(stderr, "[karabiner_shim] STUB: client_start\n");
-    // Simulate connected + keyboard ready
+    // Simulate connected + keyboard ready + pointing ready
     if (client && client->callback) {
         client->callback(KARABINER_STATUS_CONNECTED, client->context);
         client->callback(KARABINER_STATUS_KEYBOARD_READY, client->context);
+        client->callback(KARABINER_STATUS_POINTING_READY, client->context);
     }
 }
 
@@ -167,6 +204,23 @@ void karabiner_send_keyboard_report(karabiner_client_t* client,
 
 void karabiner_send_keyboard_release(karabiner_client_t* client) {
     fprintf(stderr, "[karabiner_shim] STUB: keyboard_release\n");
+}
+
+void karabiner_client_init_pointing(karabiner_client_t* client) {
+    fprintf(stderr, "[karabiner_shim] STUB: init_pointing\n");
+}
+
+void karabiner_send_pointing_report(karabiner_client_t* client,
+                                     uint32_t buttons,
+                                     int8_t x, int8_t y,
+                                     int8_t vertical_wheel,
+                                     int8_t horizontal_wheel) {
+    fprintf(stderr, "[karabiner_shim] STUB: pointing_report buttons=0x%x x=%d y=%d vw=%d hw=%d\n",
+            buttons, x, y, vertical_wheel, horizontal_wheel);
+}
+
+void karabiner_send_pointing_release(karabiner_client_t* client) {
+    fprintf(stderr, "[karabiner_shim] STUB: pointing_release\n");
 }
 
 void karabiner_client_destroy(karabiner_client_t* client) {

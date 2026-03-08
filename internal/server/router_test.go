@@ -123,6 +123,62 @@ func TestRouteNamedAction(t *testing.T) {
 	}
 }
 
+func TestRoutePointingAction(t *testing.T) {
+	router, mock := newTestRouter()
+
+	raw := `{"type":"action","id":"p-1","action":"pointing","payload":{"buttons":0,"x":5,"y":-3,"vertical_wheel":0,"horizontal_wheel":0}}`
+	resp := router.Route([]byte(raw))
+
+	ack := decodeAck(t, resp)
+	if ack["status"] != "ok" {
+		t.Errorf("status = %v, want ok", ack["status"])
+	}
+	if ack["id"] != "p-1" {
+		t.Errorf("id = %v, want p-1", ack["id"])
+	}
+
+	if len(mock.Calls) != 1 {
+		t.Fatalf("calls = %d, want 1", len(mock.Calls))
+	}
+	if !mock.Calls[0].Pointing {
+		t.Error("call[0] should be pointing")
+	}
+	if mock.Calls[0].X != 5 {
+		t.Errorf("x = %d, want 5", mock.Calls[0].X)
+	}
+	if mock.Calls[0].Y != -3 {
+		t.Errorf("y = %d, want -3", mock.Calls[0].Y)
+	}
+}
+
+func TestRoutePointingWithScroll(t *testing.T) {
+	router, mock := newTestRouter()
+
+	raw := `{"type":"action","id":"p-2","action":"pointing","payload":{"buttons":0,"x":0,"y":0,"vertical_wheel":-2,"horizontal_wheel":0}}`
+	resp := router.Route([]byte(raw))
+
+	ack := decodeAck(t, resp)
+	if ack["status"] != "ok" {
+		t.Errorf("status = %v, want ok", ack["status"])
+	}
+
+	if mock.Calls[0].VWheel != -2 {
+		t.Errorf("vwheel = %d, want -2", mock.Calls[0].VWheel)
+	}
+}
+
+func TestRouteInvalidPointingPayload(t *testing.T) {
+	router, _ := newTestRouter()
+
+	raw := `{"type":"action","id":"bad-p","action":"pointing","payload":"not an object"}`
+	resp := router.Route([]byte(raw))
+
+	ack := decodeAck(t, resp)
+	if ack["status"] != "error" {
+		t.Errorf("status = %v, want error", ack["status"])
+	}
+}
+
 func TestRouteUnknownAction(t *testing.T) {
 	router, _ := newTestRouter()
 

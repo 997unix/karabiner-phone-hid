@@ -71,6 +71,15 @@ func NewConfigMessage(serverName string, actions []ActionInfo) OutgoingMessage {
 	}
 }
 
+// PointingPayload is the payload for a "pointing" action.
+type PointingPayload struct {
+	Buttons         uint32 `json:"buttons"`
+	X               int8   `json:"x"`
+	Y               int8   `json:"y"`
+	VerticalWheel   int8   `json:"vertical_wheel"`
+	HorizontalWheel int8   `json:"horizontal_wheel"`
+}
+
 // ParsePayload decodes the raw payload into the appropriate type based on action.
 func (m *IncomingMessage) ParseKeypress() (*KeypressPayload, error) {
 	var p KeypressPayload
@@ -83,6 +92,15 @@ func (m *IncomingMessage) ParseKeypress() (*KeypressPayload, error) {
 // ParseSequence decodes the raw payload as a sequence.
 func (m *IncomingMessage) ParseSequence() (*SequencePayload, error) {
 	var p SequencePayload
+	if err := json.Unmarshal(m.Payload, &p); err != nil {
+		return nil, err
+	}
+	return &p, nil
+}
+
+// ParsePointing decodes the raw payload as a pointing report.
+func (m *IncomingMessage) ParsePointing() (*PointingPayload, error) {
+	var p PointingPayload
 	if err := json.Unmarshal(m.Payload, &p); err != nil {
 		return nil, err
 	}

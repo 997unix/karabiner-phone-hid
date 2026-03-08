@@ -231,6 +231,56 @@ func TestRoundTripKeypress(t *testing.T) {
 	}
 }
 
+func TestDecodePointingAction(t *testing.T) {
+	raw := `{"type":"action","id":"p-1","action":"pointing","payload":{"buttons":0,"x":5,"y":-3,"vertical_wheel":0,"horizontal_wheel":0}}`
+
+	var msg IncomingMessage
+	if err := json.Unmarshal([]byte(raw), &msg); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+
+	if msg.Action != "pointing" {
+		t.Errorf("action = %q, want %q", msg.Action, "pointing")
+	}
+
+	pt, err := msg.ParsePointing()
+	if err != nil {
+		t.Fatalf("ParsePointing: %v", err)
+	}
+	if pt.Buttons != 0 {
+		t.Errorf("buttons = %d, want 0", pt.Buttons)
+	}
+	if pt.X != 5 {
+		t.Errorf("x = %d, want 5", pt.X)
+	}
+	if pt.Y != -3 {
+		t.Errorf("y = %d, want -3", pt.Y)
+	}
+}
+
+func TestDecodePointingWithButtons(t *testing.T) {
+	raw := `{"type":"action","id":"p-2","action":"pointing","payload":{"buttons":1,"x":0,"y":0,"vertical_wheel":-2,"horizontal_wheel":3}}`
+
+	var msg IncomingMessage
+	if err := json.Unmarshal([]byte(raw), &msg); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+
+	pt, err := msg.ParsePointing()
+	if err != nil {
+		t.Fatalf("ParsePointing: %v", err)
+	}
+	if pt.Buttons != 1 {
+		t.Errorf("buttons = %d, want 1", pt.Buttons)
+	}
+	if pt.VerticalWheel != -2 {
+		t.Errorf("vertical_wheel = %d, want -2", pt.VerticalWheel)
+	}
+	if pt.HorizontalWheel != 3 {
+		t.Errorf("horizontal_wheel = %d, want 3", pt.HorizontalWheel)
+	}
+}
+
 func TestRoundTripSequence(t *testing.T) {
 	steps := []KeyStep{
 		{Key: "a", Modifiers: []string{"shift"}, DelayMs: 50},

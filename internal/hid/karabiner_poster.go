@@ -27,10 +27,11 @@ import (
 
 // KarabinerPoster sends HID reports via the Karabiner DriverKit virtual HID device.
 type KarabinerPoster struct {
-	client    *C.karabiner_client_t
-	mu        sync.Mutex
-	ready     chan struct{}
-	readyDots int // counts "keyboard ready" heartbeat dots
+	client        *C.karabiner_client_t
+	mu            sync.Mutex
+	ready         chan struct{}
+	pointingReady chan struct{}
+	readyDots     int // counts "keyboard ready" heartbeat dots
 }
 
 // posters tracks active KarabinerPoster instances for the C callback.
@@ -70,6 +71,12 @@ func goKarabinerCallback(status C.karabiner_status_t, context unsafe.Pointer) {
 		case poster.ready <- struct{}{}:
 		default:
 		}
+	case C.KARABINER_STATUS_POINTING_READY:
+		fmt.Println("[Karabiner] Pointing device ready")
+		select {
+		case poster.pointingReady <- struct{}{}:
+		default:
+		}
 	case C.KARABINER_STATUS_ERROR:
 		fmt.Println("[Karabiner] Error occurred")
 	case C.KARABINER_STATUS_CONNECT_FAILED:
@@ -93,7 +100,8 @@ func CleanupGlobal() {
 // Call WaitReady() to block until the keyboard is initialized.
 func NewKarabinerPoster() *KarabinerPoster {
 	poster := &KarabinerPoster{
-		ready: make(chan struct{}, 1),
+		ready:         make(chan struct{}, 1),
+		pointingReady: make(chan struct{}, 1),
 	}
 
 	postersMu.Lock()
@@ -140,6 +148,49 @@ func (p *KarabinerPoster) ReleaseAll() error {
 	}
 
 	C.karabiner_send_keyboard_release(p.client)
+	return nil
+}
+
+// InitPointing initializes the virtual pointing device.
+func (p *KarabinerPoster) InitPointing() {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if p.client != nil {
+		C.karabiner_client_init_pointing(p.client)
+	}
+}
+
+// WaitPointingReady blocks until the pointing device is ready.
+func (p *KarabinerPoster) WaitPointingReady() {
+	<-p.pointingReady
+}
+
+// PostPointing sends a pointing HID report.
+func (p *KarabinerPoster) PostPointing(buttons uint32, x, y, verticalWheel, horizontalWheel int8) error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	if p.client == nil {
+		return fmt.Errorf("karabiner client not initialized")
+	}
+
+	C.karabiner_send_pointing_report(p.client,
+		C.uint32_t(buttons),
+		C.int8_t(x), C.int8_t(y),
+		C.int8_t(verticalWheel), C.int8_t(horizontalWheel))
+	return nil
+}
+
+// ReleasePointing sends an empty pointing report (release all buttons).
+func (p *KarabinerPoster) ReleasePointing() error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	if p.client == nil {
+		return fmt.Errorf("karabiner client not initialized")
+	}
+
+	C.karabiner_send_pointing_release(p.client)
 	return nil
 }
 

@@ -42,3 +42,8 @@ func (d *Dispatcher) Dispatch(steps []protocol.KeyStep) error {
 	}
 	return nil
 }
+
+// DispatchPointing sends a pointing HID report.
+func (d *Dispatcher) DispatchPointing(p *protocol.PointingPayload) error {
+	return d.poster.PostPointing(p.Buttons, p.X, p.Y, p.VerticalWheel, p.HorizontalWheel)
+}

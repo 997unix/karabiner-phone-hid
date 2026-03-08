@@ -15,6 +15,7 @@ typedef enum {
     KARABINER_STATUS_OK = 0,
     KARABINER_STATUS_CONNECTED = 1,
     KARABINER_STATUS_KEYBOARD_READY = 2,
+    KARABINER_STATUS_POINTING_READY = 3,
     KARABINER_STATUS_ERROR = -1,
     KARABINER_STATUS_CONNECT_FAILED = -2,
     KARABINER_STATUS_CLOSED = -3,
@@ -49,6 +50,22 @@ void karabiner_send_keyboard_report(karabiner_client_t* client,
 
 // Send an empty keyboard report (release all keys).
 void karabiner_send_keyboard_release(karabiner_client_t* client);
+
+// Initialize the virtual pointing device.
+void karabiner_client_init_pointing(karabiner_client_t* client);
+
+// Send a pointing HID report.
+// buttons: button bitmask (bit 0=left, 1=right, 2=middle)
+// x, y: relative movement deltas (-128 to +127)
+// vertical_wheel, horizontal_wheel: scroll deltas (-128 to +127)
+void karabiner_send_pointing_report(karabiner_client_t* client,
+                                     uint32_t buttons,
+                                     int8_t x, int8_t y,
+                                     int8_t vertical_wheel,
+                                     int8_t horizontal_wheel);
+
+// Send an empty pointing report (release all buttons).
+void karabiner_send_pointing_release(karabiner_client_t* client);
 
 // Destroy the client and free resources.
 void karabiner_client_destroy(karabiner_client_t* client);

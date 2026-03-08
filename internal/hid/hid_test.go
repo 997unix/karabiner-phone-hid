@@ -271,6 +271,63 @@ func TestDispatchEmptySteps(t *testing.T) {
 	}
 }
 
+func TestDispatchPointing(t *testing.T) {
+	mock := &MockPoster{}
+	d := NewDispatcher(mock)
+
+	pt := &protocol.PointingPayload{
+		Buttons:         0,
+		X:               10,
+		Y:               -5,
+		VerticalWheel:   0,
+		HorizontalWheel: 0,
+	}
+	err := d.DispatchPointing(pt)
+	if err != nil {
+		t.Fatalf("DispatchPointing: %v", err)
+	}
+
+	if len(mock.Calls) != 1 {
+		t.Fatalf("calls = %d, want 1", len(mock.Calls))
+	}
+	if !mock.Calls[0].Pointing {
+		t.Error("call[0] should be pointing")
+	}
+	if mock.Calls[0].X != 10 {
+		t.Errorf("x = %d, want 10", mock.Calls[0].X)
+	}
+	if mock.Calls[0].Y != -5 {
+		t.Errorf("y = %d, want -5", mock.Calls[0].Y)
+	}
+}
+
+func TestDispatchPointingWithButtons(t *testing.T) {
+	mock := &MockPoster{}
+	d := NewDispatcher(mock)
+
+	pt := &protocol.PointingPayload{
+		Buttons:         1,
+		X:               0,
+		Y:               0,
+		VerticalWheel:   -2,
+		HorizontalWheel: 3,
+	}
+	err := d.DispatchPointing(pt)
+	if err != nil {
+		t.Fatalf("DispatchPointing: %v", err)
+	}
+
+	if mock.Calls[0].Buttons != 1 {
+		t.Errorf("buttons = %d, want 1", mock.Calls[0].Buttons)
+	}
+	if mock.Calls[0].VWheel != -2 {
+		t.Errorf("vwheel = %d, want -2", mock.Calls[0].VWheel)
+	}
+	if mock.Calls[0].HWheel != 3 {
+		t.Errorf("hwheel = %d, want 3", mock.Calls[0].HWheel)
+	}
+}
+
 func TestMockPosterReset(t *testing.T) {
 	mock := &MockPoster{}
 	mock.PostKeyboard(0, []uint16{0x04})

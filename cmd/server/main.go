@@ -61,6 +61,11 @@ func main() {
 	poster.WaitReady()
 	log.Println("[Server] Keyboard ready")
 
+	poster.InitPointing()
+	log.Println("[Server] Waiting for Karabiner pointing device...")
+	poster.WaitPointingReady()
+	log.Println("[Server] Pointing device ready")
+
 	// Create dispatcher and router
 	dispatcher := hid.NewDispatcher(poster)
 	router := server.NewRouter(dispatcher, registry)
