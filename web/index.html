@@ -1107,10 +1107,8 @@ function initMouseTab(container,tabIdx){
   let tapEnded=[];
   let lastTwoTapTime=0;
 
-  // App switcher mode: Cmd held, horizontal drag sends Tab/Shift+Tab
+  // App switcher mode: Cmd held, one-finger taps send Tab
   let appSwitcher=false;
-  let appSwitcherAccum=0;  // accumulated horizontal pixels
-  const APP_SWITCH_THRESH=50; // pixels per Tab press
 
   pad.addEventListener("touchstart",(e)=>{
     e.preventDefault();e.stopPropagation();
@@ -1121,10 +1119,19 @@ function initMouseTab(container,tabIdx){
       mt[t.identifier]={x:t.clientX,y:t.clientY,startX:t.clientX,startY:t.clientY,startTime:now};
     }
 
+    if(appSwitcher){
+      // In app switcher: finger coming back down = send Tab
+      if(touchCount>=2){
+        sendKeyDown("tab",["command"]);
+        setTimeout(()=>sendKeyDown("",["command"]),30);
+        if(navigator.vibrate)navigator.vibrate(15);
+      }
+      return;
+    }
+
     // Detect double-tap-and-hold: 2 fingers down within 400ms of last 2-finger tap
-    if(touchCount===2&&!appSwitcher&&now-lastTwoTapTime<400){
+    if(touchCount===2&&now-lastTwoTapTime<400){
       appSwitcher=true;
-      appSwitcherAccum=0;
       showMouseGesture("App Switcher");
       // Send Cmd+Tab to open switcher
       sendKeyDown("tab",["command"]);
@@ -1143,29 +1150,12 @@ function initMouseTab(container,tabIdx){
 
     const count=Object.keys(mt).length;
 
-    if(appSwitcher&&count>=2){
-      // App switcher mode: horizontal drag cycles apps
-      let tdx=0,n=0;
+    // In app switcher mode, ignore movement (use taps to cycle)
+    if(appSwitcher){
+      // Still update positions so deltas don't accumulate
       for(const t of e.changedTouches){
         const prev=mt[t.identifier];
-        if(!prev)continue;
-        tdx+=t.clientX-prev.x;
-        prev.x=t.clientX;prev.y=t.clientY;n++;
-      }
-      if(n>0){
-        appSwitcherAccum+=tdx/n;
-        while(appSwitcherAccum>APP_SWITCH_THRESH){
-          sendKeyDown("tab",["command"]);
-          setTimeout(()=>sendKeyDown("",["command"]),30);
-          appSwitcherAccum-=APP_SWITCH_THRESH;
-          if(navigator.vibrate)navigator.vibrate(15);
-        }
-        while(appSwitcherAccum<-APP_SWITCH_THRESH){
-          sendKeyDown("tab",["command","shift"]);
-          setTimeout(()=>sendKeyDown("",["command"]),30);
-          appSwitcherAccum+=APP_SWITCH_THRESH;
-          if(navigator.vibrate)navigator.vibrate(15);
-        }
+        if(prev){prev.x=t.clientX;prev.y=t.clientY}
       }
       return;
     }
@@ -1220,16 +1210,22 @@ function initMouseTab(container,tabIdx){
       delete mt[t.identifier];
     }
 
-    // Wait until all fingers are lifted
-    if(Object.keys(mt).length>0)return;
+    const remaining=Object.keys(mt).length;
 
-    // App switcher: release Cmd on finger lift
+    // App switcher mode
     if(appSwitcher){
-      sendKeyUp();
-      appSwitcher=false;
-      tapEnded=[];
+      if(remaining===0){
+        // All fingers lifted → select app (release Cmd)
+        sendKeyUp();
+        appSwitcher=false;
+        tapEnded=[];
+      }
+      // Otherwise one finger still down — waiting for tap cycle
       return;
     }
+
+    // Wait until all fingers are lifted for normal gestures
+    if(remaining>0)return;
 
     // Collect all ended touches for this gesture
     const allEnded=[...tapEnded];
