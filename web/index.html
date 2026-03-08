@@ -212,7 +212,7 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
   <!-- YT Remote -->
   <div class="p5-page" id="tab4"></div>
   <!-- Mouse -->
-  <div class="page" id="tab5" style="padding:0;justify-content:stretch"></div>
+  <div class="page" id="tab5" style="padding:0;justify-content:stretch;touch-action:none"></div>
 </div>
 
 <div id="status" class="disconnected"><span class="dot"></span><span id="stxt">Disconnected</span></div>
@@ -377,6 +377,7 @@ const tabs = [
       {action:"numpad_decimal",label:".",color:"#444"},
     ],
   },
+  null, // tab4 = YT Remote (rendered by p5.js, not from tabs array)
   { name:"Mouse", layout:"mouse" },
 ];
 
