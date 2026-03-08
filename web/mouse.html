@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html><head>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Phone Trackpad</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:system-ui;background:#1a1a2e;color:#e6e6e6;display:flex;flex-direction:column}
+
+#trackpad{flex:1;touch-action:none;position:relative;overflow:hidden;cursor:none}
+.ripple{position:absolute;border-radius:50%;background:rgba(78,204,163,0.3);
+  pointer-events:none;animation:ripple-fade 0.4s ease-out forwards}
+@keyframes ripple-fade{
+  0%{transform:scale(0);opacity:1}
+  100%{transform:scale(2.5);opacity:0}
+}
+
+/* Bottom bar */
+.bottom{display:flex;flex-shrink:0;border-top:1px solid #333;gap:0}
+.bottom button{flex:1;background:none;border:none;border-right:1px solid #333;
+  color:#888;font-size:13px;font-weight:600;padding:14px 0;cursor:pointer;
+  -webkit-tap-highlight-color:transparent}
+.bottom button:last-child{border-right:none}
+.bottom button:active{background:rgba(78,204,163,0.1);color:#e6e6e6}
+.bottom button.held{background:rgba(78,204,163,0.15);color:#4ecca3}
+
+/* Status bar */
+#status{padding:6px 16px;text-align:center;font-size:12px;flex-shrink:0;
+  display:flex;justify-content:space-between;align-items:center}
+#status a{color:#888;text-decoration:none;font-size:12px}
+#status a:active{color:#4ecca3}
+.dot{display:inline-block;width:8px;height:8px;border-radius:4px;margin-right:6px;vertical-align:middle}
+.connected .dot{background:#4ecca3}
+.disconnected .dot{background:#e74c3c}
+
+/* Sensitivity overlay */
+.sens-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:rgba(0,0,0,0.85);border:1px solid #4ecca3;border-radius:12px;
+  padding:20px 30px;font-size:18px;font-weight:700;color:#4ecca3;
+  pointer-events:none;opacity:0;transition:opacity 0.2s}
+.sens-overlay.show{opacity:1}
+</style>
+</head><body>
+
+<div id="trackpad">
+  <div class="sens-overlay" id="sens-display"></div>
+</div>
+
+<div class="bottom">
+  <button id="btn-left">Left Click</button>
+  <button id="btn-middle">Middle</button>
+  <button id="btn-right">Right Click</button>
+</div>
+
+<div id="status" class="disconnected">
+  <a href="/">Keyboard</a>
+  <span><span class="dot"></span><span id="stxt">Disconnected</span></span>
+  <span id="sens-label" style="color:#666;font-size:11px">1.0x</span>
+</div>
+
+<script>
+const trackpad=document.getElementById("trackpad");
+const stxt=document.getElementById("stxt");
+const sbar=document.getElementById("status");
+const sensDisplay=document.getElementById("sens-display");
+const sensLabel=document.getElementById("sens-label");
+let ws=null;
+let msgId=0;
+
+// Sensitivity
+let sensitivity=parseFloat(localStorage.getItem("mouse_sensitivity")||"1.0");
+updateSensLabel();
+
+function updateSensLabel(){
+  sensLabel.textContent=sensitivity.toFixed(1)+"x";
+}
+
+function showSens(){
+  sensDisplay.textContent=sensitivity.toFixed(1)+"x";
+  sensDisplay.classList.add("show");
+  clearTimeout(showSens._t);
+  showSens._t=setTimeout(()=>sensDisplay.classList.remove("show"),800);
+}
+
+// Adjust sensitivity with 3-finger drag up/down
+sensLabel.addEventListener("click",()=>{
+  sensitivity=sensitivity>=2.0?0.5:sensitivity+0.25;
+  localStorage.setItem("mouse_sensitivity",sensitivity.toString());
+  updateSensLabel();
+  showSens();
+});
+
+// ── WebSocket ──
+function connect(){
+  const host=location.hostname||"127.0.0.1";
+  const port=location.port||"8765";
+  ws=new WebSocket("ws://"+host+":"+port+"/ws");
+  ws.onopen=()=>{sbar.className="connected";stxt.textContent="Connected"};
+  ws.onclose=()=>{sbar.className="disconnected";stxt.textContent="Reconnecting...";setTimeout(connect,2000)};
+  ws.onerror=()=>{};
+  ws.onmessage=()=>{};
+}
+
+function sendPointing(buttons,x,y,vw,hw){
+  if(ws&&ws.readyState===1){
+    ws.send(JSON.stringify({
+      type:"action",id:"m-"+(++msgId),action:"pointing",
+      payload:{buttons,x,y,vertical_wheel:vw,horizontal_wheel:hw}
+    }));
+  }
+}
+
+connect();
+
+// ── Acceleration curve ──
+function accel(delta){
+  const abs=Math.abs(delta);
+  // Below 3px: 1:1, above: gradual ramp up to ~3x
+  const factor=abs<3?1:1+Math.min((abs-3)*0.15,2);
+  return Math.round(delta*factor*sensitivity);
+}
+
+function clamp8(v){return Math.max(-127,Math.min(127,v))}
+
+// ── Touch tracking ──
+let touches={};  // id → {x,y,startX,startY,startTime}
+let lastMoveTime=0;
+const THROTTLE_MS=16;  // ~60fps
+
+trackpad.addEventListener("touchstart",(e)=>{
+  e.preventDefault();
+  for(const t of e.changedTouches){
+    touches[t.identifier]={x:t.clientX,y:t.clientY,startX:t.clientX,startY:t.clientY,startTime:Date.now()};
+  }
+},{passive:false});
+
+trackpad.addEventListener("touchmove",(e)=>{
+  e.preventDefault();
+  const now=Date.now();
+  if(now-lastMoveTime<THROTTLE_MS)return;
+  lastMoveTime=now;
+
+  const count=Object.keys(touches).length;
+
+  if(count===1){
+    // Single finger → mouse movement
+    const t=e.changedTouches[0];
+    const prev=touches[t.identifier];
+    if(!prev)return;
+    const dx=t.clientX-prev.x;
+    const dy=t.clientY-prev.y;
+    prev.x=t.clientX;
+    prev.y=t.clientY;
+    const ax=clamp8(accel(dx));
+    const ay=clamp8(accel(dy));
+    if(ax!==0||ay!==0){
+      // If a physical button is held, include its bits
+      sendPointing(heldButtons,ax,ay,0,0);
+    }
+  } else if(count===2){
+    // Two fingers → scroll
+    // Use average delta of all moving touches
+    let totalDx=0,totalDy=0,n=0;
+    for(const t of e.changedTouches){
+      const prev=touches[t.identifier];
+      if(!prev)continue;
+      totalDx+=t.clientX-prev.x;
+      totalDy+=t.clientY-prev.y;
+      prev.x=t.clientX;
+      prev.y=t.clientY;
+      n++;
+    }
+    if(n>0){
+      const dx=totalDx/n;
+      const dy=totalDy/n;
+      // Scroll: invert Y for natural scrolling, scale down
+      const vw=clamp8(Math.round(-dy*0.3*sensitivity));
+      const hw=clamp8(Math.round(dx*0.3*sensitivity));
+      if(vw!==0||hw!==0){
+        sendPointing(0,0,0,vw,hw);
+      }
+    }
+  }
+},{passive:false});
+
+trackpad.addEventListener("touchend",(e)=>{
+  e.preventDefault();
+  const ended=[];
+  for(const t of e.changedTouches){
+    const prev=touches[t.identifier];
+    if(prev){
+      prev.endX=t.clientX;
+      prev.endY=t.clientY;
+      ended.push(prev);
+    }
+    delete touches[t.identifier];
+  }
+
+  // Detect taps (short duration, minimal movement)
+  const remaining=Object.keys(touches).length;
+  if(remaining>0)return;  // Wait until all fingers lift
+
+  const allEnded=ended;
+  if(allEnded.length===0)return;
+
+  const now=Date.now();
+  const isTap=allEnded.every(t=>{
+    const dt=now-t.startTime;
+    const dist=Math.sqrt((t.endX-t.startX)**2+(t.endY-t.startY)**2);
+    return dt<300&&dist<15;
+  });
+
+  if(!isTap)return;
+
+  if(allEnded.length===1){
+    // Single tap → left click
+    ripple(allEnded[0].endX,allEnded[0].endY);
+    sendPointing(1,0,0,0,0);  // button down
+    setTimeout(()=>sendPointing(0,0,0,0,0),30);  // button up
+    if(navigator.vibrate)navigator.vibrate(20);
+  } else if(allEnded.length===2){
+    // Two-finger tap → right click
+    ripple(allEnded[0].endX,allEnded[0].endY);
+    sendPointing(2,0,0,0,0);
+    setTimeout(()=>sendPointing(0,0,0,0,0),30);
+    if(navigator.vibrate)navigator.vibrate([20,30,20]);
+  } else if(allEnded.length===3){
+    // Three-finger tap → middle click
+    ripple(allEnded[0].endX,allEnded[0].endY);
+    sendPointing(4,0,0,0,0);
+    setTimeout(()=>sendPointing(0,0,0,0,0),30);
+    if(navigator.vibrate)navigator.vibrate([20,30,20,30,20]);
+  }
+},{passive:false});
+
+trackpad.addEventListener("touchcancel",(e)=>{
+  for(const t of e.changedTouches)delete touches[t.identifier];
+});
+
+// ── Visual feedback ──
+function ripple(x,y){
+  const r=document.createElement("div");
+  r.className="ripple";
+  const rect=trackpad.getBoundingClientRect();
+  r.style.left=(x-rect.left-20)+"px";
+  r.style.top=(y-rect.top-20)+"px";
+  r.style.width="40px";
+  r.style.height="40px";
+  trackpad.appendChild(r);
+  r.addEventListener("animationend",()=>r.remove());
+}
+
+// ── Physical button bar ──
+let heldButtons=0;
+
+function setupButton(id,bit){
+  const btn=document.getElementById(id);
+  // Touch hold: button down while held
+  btn.addEventListener("touchstart",(e)=>{
+    e.preventDefault();
+    heldButtons|=bit;
+    btn.classList.add("held");
+    sendPointing(heldButtons,0,0,0,0);
+    if(navigator.vibrate)navigator.vibrate(15);
+  },{passive:false});
+  btn.addEventListener("touchend",(e)=>{
+    e.preventDefault();
+    heldButtons&=~bit;
+    btn.classList.remove("held");
+    sendPointing(heldButtons,0,0,0,0);
+  },{passive:false});
+  btn.addEventListener("touchcancel",(e)=>{
+    heldButtons&=~bit;
+    btn.classList.remove("held");
+    sendPointing(heldButtons,0,0,0,0);
+  });
+}
+
+setupButton("btn-left",1);
+setupButton("btn-right",2);
+setupButton("btn-middle",4);
+</script>
+</body></html>

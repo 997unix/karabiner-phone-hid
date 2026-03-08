@@ -164,7 +164,6 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
   <button data-idx="2">Replay</button>
   <button data-idx="3">Numpad</button>
   <button data-idx="4">YT Remote</button>
-  <button data-idx="5">1-Hand</button>
 </div>
 
 <div class="swipe" id="swipe">
@@ -189,16 +188,18 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
   <div class="kb-page" id="tab3"></div>
   <!-- YT Remote -->
   <div class="p5-page" id="tab4"></div>
-  <!-- 1-Hand -->
-  <div class="p5-page" id="tab5"></div>
 </div>
 
-<div id="status" class="disconnected"><span class="dot"></span><span id="stxt">Disconnected</span></div>
+<div id="status" class="disconnected"><span class="dot"></span><span id="stxt">Disconnected</span><a href="/mouse.html" style="color:#666;text-decoration:none;font-size:12px;margin-left:8px">Mouse</a></div>
 
 <script>
 const tabs = [
-  { name:"Teammate", buttons:[
-    {action:"superwhisper_toggle",label:"SuperWhisper",color:"#e74c3c",long:"superwhisper_paste",span:3},
+  { name:"Teammate",
+    swSplit:[
+      {action:"superwhisper_toggle",label:"SuperWhisper",color:"#e74c3c",long:"superwhisper_paste"},
+      {action:"_goto_replay",label:"Replay \u270F",color:"#2980b9"},
+    ],
+    buttons:[
     {action:"return",label:"Return",color:"#3498db"},
     {action:"teammate_accept",label:"Accept",color:"#27ae60"},
     {action:"tmux_copy_mode",label:"Copy Mode",color:"#2ecc71"},
@@ -308,12 +309,15 @@ const tabs = [
       {action:"mod_shift",label:"Shift",color:"#7f8c8d",css:"wider"},
       {action:"mod_shift",label:"Shift",color:"#7f8c8d",css:"wider"},
     ],
-    // Arrow row
-    "arrows",
+    // Arrow row with Ctrl margins and Home/End
+    "arrows_ext",
   ]},
   null, // tab2 = Replay (rendered as HTML, not from tabs array)
   { name:"Numpad", layout:"numpad",
-    sw:{action:"superwhisper_toggle",label:"SuperWhisper",long:"superwhisper_paste"},
+    swSplit:[
+      {action:"superwhisper_toggle",label:"SuperWhisper",color:"#e74c3c",long:"superwhisper_paste"},
+      {action:"_goto_replay",label:"Replay \u270F",color:"#2980b9"},
+    ],
     controlPad:[
       {action:"key_insert",label:"Ins",color:"#555"},
       {action:"key_home",label:"Home",color:"#555"},
@@ -530,26 +534,58 @@ tabs.forEach((tab,i)=>{
         const gap=document.createElement("div");
         gap.style.height=row==="gap2"?"12px":"6px";
         kbDiv.appendChild(gap);
-      } else if(row==="arrows"){
-        // Inverted-T arrow cluster
-        const cl=document.createElement("div");
-        cl.className="arrow-cluster";
-        [{action:null},{action:"arrow_up",label:"\u25B2",color:"#1abc9c",hid:"up_arrow",repeat:true},{action:null},
-         {action:"arrow_left",label:"\u25C0",color:"#1abc9c",hid:"left_arrow",repeat:true},{action:"arrow_down",label:"\u25BC",color:"#1abc9c",hid:"down_arrow",repeat:true},{action:"arrow_right",label:"\u25B6",color:"#1abc9c",hid:"right_arrow",repeat:true},
-        ].forEach(b=>{
-          const el=document.createElement("button");
-          el.className="key";
-          el.textContent=b.label||"";
-          el.style.background=b.color||"transparent";
-          if(!b.action){el.style.visibility="hidden";el.disabled=true}
-          else wireBtn(el,b);
-          cl.appendChild(el);
-        });
-        const wrap=document.createElement("div");
-        wrap.className="kb-row";
-        wrap.style.justifyContent="center";
-        wrap.appendChild(cl);
-        kbDiv.appendChild(wrap);
+      } else if(row==="arrows"||row==="arrows_ext"){
+        if(row==="arrows_ext"){
+          // Extended arrow cluster: Ctrl | Home | arrows | End | Ctrl
+          const cl=document.createElement("div");
+          cl.style.cssText="display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr 1fr 1fr 1.2fr;gap:2px;width:100%";
+          // Top row: Ctrl Home [empty] Up [empty] End Ctrl
+          [
+            {action:"mod_ctrl",label:"Ctrl",color:"#2c3e50"},
+            {action:"key_home",label:"Home",color:"#555",hid:"home"},
+            {action:null},{action:"arrow_up",label:"\u25B2",color:"#1abc9c",hid:"up_arrow",repeat:true},{action:null},
+            {action:"key_end",label:"End",color:"#555",hid:"end"},
+            {action:"mod_ctrl",label:"Ctrl",color:"#2c3e50"},
+          // Bottom row: Ctrl Home Left Down Right End Ctrl
+            {action:"mod_ctrl",label:"Ctrl",color:"#2c3e50"},
+            {action:"key_home",label:"Home",color:"#555",hid:"home"},
+            {action:"arrow_left",label:"\u25C0",color:"#1abc9c",hid:"left_arrow",repeat:true},
+            {action:"arrow_down",label:"\u25BC",color:"#1abc9c",hid:"down_arrow",repeat:true},
+            {action:"arrow_right",label:"\u25B6",color:"#1abc9c",hid:"right_arrow",repeat:true},
+            {action:"key_end",label:"End",color:"#555",hid:"end"},
+            {action:"mod_ctrl",label:"Ctrl",color:"#2c3e50"},
+          ].forEach(b=>{
+            const el=document.createElement("button");
+            el.className="key";
+            el.style.height="30px";el.style.width="auto";el.style.flex="none";
+            el.textContent=b.label||"";
+            el.style.background=b.color||"transparent";
+            if(!b.action){el.style.visibility="hidden";el.disabled=true}
+            else wireBtn(el,b);
+            cl.appendChild(el);
+          });
+          kbDiv.appendChild(cl);
+        } else {
+          // Standard inverted-T arrow cluster
+          const cl=document.createElement("div");
+          cl.className="arrow-cluster";
+          [{action:null},{action:"arrow_up",label:"\u25B2",color:"#1abc9c",hid:"up_arrow",repeat:true},{action:null},
+           {action:"arrow_left",label:"\u25C0",color:"#1abc9c",hid:"left_arrow",repeat:true},{action:"arrow_down",label:"\u25BC",color:"#1abc9c",hid:"down_arrow",repeat:true},{action:"arrow_right",label:"\u25B6",color:"#1abc9c",hid:"right_arrow",repeat:true},
+          ].forEach(b=>{
+            const el=document.createElement("button");
+            el.className="key";
+            el.textContent=b.label||"";
+            el.style.background=b.color||"transparent";
+            if(!b.action){el.style.visibility="hidden";el.disabled=true}
+            else wireBtn(el,b);
+            cl.appendChild(el);
+          });
+          const wrap=document.createElement("div");
+          wrap.className="kb-row";
+          wrap.style.justifyContent="center";
+          wrap.appendChild(cl);
+          kbDiv.appendChild(wrap);
+        }
       } else {
         const rowEl=document.createElement("div");
         rowEl.className="kb-row";
@@ -571,8 +607,29 @@ tabs.forEach((tab,i)=>{
     });
     container.appendChild(kbDiv);
   } else if(tab.layout==="numpad"){
-    // SuperWhisper banner
-    if(tab.sw){
+    // SuperWhisper banner (single or split)
+    if(tab.swSplit){
+      const wrap=document.createElement("div");
+      wrap.style.cssText="display:flex;gap:4px;margin-bottom:6px;flex-shrink:0";
+      tab.swSplit.forEach(b=>{
+        const el=document.createElement("button");
+        el.className="kb-sw";
+        el.style.marginBottom="0";
+        el.textContent=b.label;
+        if(b.color)el.style.background=b.color;
+        if(b.action==="_goto_replay"){
+          el.addEventListener("click",()=>{
+            replayReturnTab=i;
+            switchToTab(2);
+            if(navigator.vibrate)navigator.vibrate(30);
+          });
+        } else {
+          wireBtn(el,b);
+        }
+        wrap.appendChild(el);
+      });
+      container.appendChild(wrap);
+    } else if(tab.sw){
       const sw=document.createElement("button");
       sw.className="kb-sw";
       sw.textContent=tab.sw.label;
@@ -853,16 +910,41 @@ tabs.forEach((tab,i)=>{
       }
     }
   } else {
-    // Standard 3-column grid
-    tab.buttons.forEach(b=>{
-      const el=document.createElement("button");
-      el.className="btn";
-      el.textContent=b.label;
-      el.style.background=b.color;
-      if(b.span)el.style.gridColumn="span "+b.span;
-      wireBtn(el,b);
-      container.appendChild(el);
-    });
+    // SwSplit banner (SuperWhisper + Replay) for standard grid tabs
+    if(tab.swSplit){
+      const wrap=document.createElement("div");
+      wrap.style.cssText="display:flex;gap:8px;grid-column:span 3";
+      tab.swSplit.forEach(b=>{
+        const el=document.createElement("button");
+        el.className="btn";
+        el.style.cssText="flex:1;margin:0";
+        el.textContent=b.label;
+        if(b.color)el.style.background=b.color;
+        if(b.action==="_goto_replay"){
+          el.addEventListener("click",()=>{
+            replayReturnTab=i;
+            switchToTab(2);
+            if(navigator.vibrate)navigator.vibrate(30);
+          });
+        } else {
+          wireBtn(el,b);
+        }
+        wrap.appendChild(el);
+      });
+      container.appendChild(wrap);
+    }
+    // Standard 3-column grid buttons
+    if(tab.buttons){
+      tab.buttons.forEach(b=>{
+        const el=document.createElement("button");
+        el.className="btn";
+        el.textContent=b.label;
+        el.style.background=b.color;
+        if(b.span)el.style.gridColumn="span "+b.span;
+        wireBtn(el,b);
+        container.appendChild(el);
+      });
+    }
   }
 });
 
@@ -1035,333 +1117,6 @@ new p5(function(p){
     pressed=null;
   };
 },"tab4");
-// ═══════════════════════════════════════════════════════════════
-// 1-Hand — MessagEase-style 3x3 tap+swipe grid (sci-fi CRT)
-// ANI/HOR/TES layout: tap center letter, swipe toward surrounding
-// letters. Large ~80px keys optimized for one-thumb input.
-// ═══════════════════════════════════════════════════════════════
-new p5(function(p){
-  let cells=[];
-  let pressed=null;
-  let pressFlash=0;
-  let bootFrame=0;
-  const bootDuration=50;
-  let scanOffset=0;
-  let startX=0,startY=0;
-  let swipeDir=null;
-  let repeatTimer=null,repeatInterval=null;
-
-  const GREEN=[0,255,65];
-  const DIM_GREEN=[0,180,45];
-  const DARK_GREEN=[0,60,15];
-  const AMBER=[255,176,0];
-  const RED=[255,50,30];
-  const CYAN=[0,200,220];
-  const BG=[2,8,2];
-  const GRID_COLOR=[0,40,10];
-
-  // MessagEase 3x3 grid: center = tap, surrounding = swipe direction
-  // Each cell: {center, up, down, left, right, upleft, upright, downleft, downright}
-  // Based on ANI/HOR/TES layout (optimized for English frequency)
-  const grid=[
-    // Row 0
-    [{center:{l:"A",hid:"a"},
-      right:{l:"K",hid:"k"},down:{l:"V",hid:"v"},downright:{l:"'",hid:"quote"}},
-     {center:{l:"N",hid:"n"},
-      left:{l:"L",hid:"l"},right:{l:"U",hid:"u"},down:{l:"B",hid:"b"},
-      downleft:{l:"(",hid:"9",shift:true},downright:{l:")",hid:"0",shift:true}},
-     {center:{l:"I",hid:"i"},
-      left:{l:"X",hid:"x"},down:{l:"J",hid:"j"},downleft:{l:"\"",hid:"quote",shift:true}}],
-    // Row 1
-    [{center:{l:"H",hid:"h"},
-      up:{l:"Y",hid:"y"},right:{l:"G",hid:"g"},down:{l:"W",hid:"w"},
-      upright:{l:"{",hid:"open_bracket",shift:true},downright:{l:"[",hid:"open_bracket"}},
-     {center:{l:"O",hid:"o"},
-      up:{l:"D",hid:"d"},down:{l:"C",hid:"c"},left:{l:"F",hid:"f"},right:{l:"P",hid:"p"},
-      upleft:{l:"Q",hid:"q"},upright:{l:"Z",hid:"z"},downleft:{l:"/",hid:"slash"},downright:{l:"\\",hid:"backslash"}},
-     {center:{l:"R",hid:"r"},
-      up:{l:"M",hid:"m"},left:{l:";",hid:"semicolon"},down:{l:".",hid:"period"},
-      upleft:{l:"}",hid:"close_bracket",shift:true},downleft:{l:"]",hid:"close_bracket"}}],
-    // Row 2
-    [{center:{l:"T",hid:"t"},
-      up:{l:"-",hid:"hyphen"},right:{l:",",hid:"comma"},upright:{l:"!",hid:"1",shift:true}},
-     {center:{l:"E",hid:"e"},
-      left:{l:"=",hid:"equal_sign"},right:{l:"`",hid:"grave_accent_and_tilde"},
-      up:{l:"?",hid:"slash",shift:true},
-      upleft:{l:"@",hid:"2",shift:true},upright:{l:"#",hid:"3",shift:true}},
-     {center:{l:"S",hid:"s"},
-      up:{l:":",hid:"semicolon",shift:true},left:{l:"+",hid:"equal_sign",shift:true},
-      upleft:{l:"~",hid:"grave_accent_and_tilde",shift:true}}],
-  ];
-
-  // Special bottom row buttons
-  const bottomKeys=[];
-
-  p.setup=function(){
-    const c=p.createCanvas(100,100);
-    c.parent("tab5");
-    c.elt.style.touchAction="pan-x";
-    p.textAlign(p.CENTER,p.CENTER);
-    p.textFont("monospace");
-    resize();bootFrame=0;
-  };
-
-  function resize(){
-    const el=document.getElementById("tab5");
-    p.resizeCanvas(el.clientWidth,el.clientHeight);
-    buildCells();
-  }
-
-  function buildCells(){
-    const pad=10,gap=6;
-    const bottomH=50;// space for bottom row (space, bsp, enter, mods)
-    const gridH=p.height-pad*2-bottomH-gap;
-    const gridW=p.width-pad*2;
-    const cellW=gridW/3;
-    const cellH=gridH/3;
-    cells=[];
-    grid.forEach((row,ri)=>{
-      row.forEach((cell,ci)=>{
-        cells.push({
-          ...cell,
-          x:pad+ci*cellW,y:pad+ri*cellH,
-          bw:cellW-gap,bh:cellH-gap,
-          row:ri,col:ci
-        });
-      });
-    });
-    // Build bottom row buttons
-    bottomKeys.length=0;
-    const by=pad+gridH+gap;
-    const bw=(gridW-gap*4)/5;
-    const bItems=[
-      {l:"SHIFT",mod:"shift"},{l:"BSP",hid:"delete_or_backspace"},
-      {l:"SPACE",hid:"spacebar",w:1.5},{l:"RET",hid:"return_or_enter",ret:true},
-      {l:"SW",action:"superwhisper_toggle",sw:true,long:"superwhisper_paste"}
-    ];
-    const totalU=bItems.reduce((s,b)=>s+(b.w||1),0);
-    const unitW=(gridW-(bItems.length-1)*gap)/totalU;
-    let bx=pad;
-    bItems.forEach(b=>{
-      const w=(b.w||1)*unitW+((b.w||1)>1?((b.w||1)-1)*gap:0);
-      bottomKeys.push({...b,x:bx,y:by,bw:w,bh:bottomH-gap});
-      bx+=w+gap;
-    });
-  }
-
-  p.windowResized=function(){resize()};
-
-  // Swipe detection
-  const SWIPE_THRESHOLD=20;
-  function detectSwipe(sx,sy,ex,ey){
-    const dx=ex-sx,dy=ey-sy;
-    const dist=Math.sqrt(dx*dx+dy*dy);
-    if(dist<SWIPE_THRESHOLD)return null;
-    const angle=Math.atan2(dy,dx)*180/Math.PI;
-    // 8 directions
-    if(angle>=-22.5&&angle<22.5)return "right";
-    if(angle>=22.5&&angle<67.5)return "downright";
-    if(angle>=67.5&&angle<112.5)return "down";
-    if(angle>=112.5&&angle<157.5)return "downleft";
-    if(angle>=157.5||angle<-157.5)return "left";
-    if(angle>=-157.5&&angle<-112.5)return "upleft";
-    if(angle>=-112.5&&angle<-67.5)return "up";
-    if(angle>=-67.5&&angle<-22.5)return "upright";
-    return null;
-  }
-
-  function hitTestCell(x,y){
-    return cells.find(c=>x>=c.x&&x<=c.x+c.bw&&y>=c.y&&y<=c.y+c.bh);
-  }
-  function hitTestBottom(x,y){
-    return bottomKeys.find(b=>x>=b.x&&x<=b.x+b.bw&&y>=b.y&&y<=b.y+b.bh);
-  }
-
-  let shiftActive=false;
-  let swLongTimer=null;
-
-  function fireHid(entry){
-    if(!entry)return;
-    const mods=[];
-    if(entry.shift)mods.push("shift");
-    if(shiftActive){mods.push("shift");shiftActive=false}
-    sendKeypress(entry.hid,mods);
-    if(navigator.vibrate)navigator.vibrate(30);
-  }
-
-  function startRepeat(entry){stopRepeat();repeatTimer=setTimeout(()=>{repeatInterval=setInterval(()=>fireHid(entry),80)},500)}
-  function stopRepeat(){clearTimeout(repeatTimer);clearInterval(repeatInterval);repeatTimer=null;repeatInterval=null}
-
-  function handlePress(x,y){
-    if(bootFrame<bootDuration){bootFrame=bootDuration;return}
-    startX=x;startY=y;swipeDir=null;
-    const cell=hitTestCell(x,y);
-    if(cell){pressed=cell;pressFlash=1;return}
-    const bk=hitTestBottom(x,y);
-    if(bk){
-      pressed=bk;pressFlash=1;
-      if(bk.mod==="shift"){shiftActive=!shiftActive;if(navigator.vibrate)navigator.vibrate(30)}
-      else if(bk.sw){
-        clearTimeout(swLongTimer);
-        swLongTimer=setTimeout(()=>{send(bk.long);if(navigator.vibrate)navigator.vibrate(50);swLongTimer="fired"},500);
-        if(navigator.vibrate)navigator.vibrate(30);
-      } else {
-        fireHid(bk);
-        if(!bk.mod)startRepeat(bk);
-      }
-    }
-  }
-
-  function handleRelease(x,y){
-    stopRepeat();
-    if(pressed&&pressed.center){
-      // Grid cell — detect swipe direction
-      const dir=detectSwipe(startX,startY,x||startX,y||startY);
-      const entry=dir?pressed[dir]:pressed.center;
-      if(entry)fireHid(entry);
-    } else if(pressed&&pressed.sw&&swLongTimer!=="fired"){
-      clearTimeout(swLongTimer);
-      send(pressed.action);
-    }
-    swLongTimer=null;pressed=null;swipeDir=null;
-  }
-
-  p.draw=function(){
-    p.background(...BG);
-    if(bootFrame<bootDuration){drawBoot();bootFrame++;return}
-
-    scanOffset=(scanOffset+0.5)%4;
-    p.stroke(0,20,5,40);p.strokeWeight(1);
-    for(let y=scanOffset;y<p.height;y+=4)p.line(0,y,p.width,y);
-    p.stroke(...GRID_COLOR,25);p.strokeWeight(0.5);
-    for(let x=0;x<p.width;x+=20)p.line(x,0,x,p.height);
-    for(let y=0;y<p.height;y+=20)p.line(0,y,p.width,y);
-
-    if(pressFlash>0)pressFlash-=0.04;
-
-    // Draw grid cells
-    cells.forEach(c=>{
-      const isPressed=pressed===c;
-      const keyBG=isPressed?[0,60,15]:[0,20,5];
-      const border=isPressed?GREEN:DARK_GREEN;
-      const glow=isPressed?40:0;
-
-      if(glow>0){
-        p.noStroke();p.fill(border[0],border[1],border[2],glow);
-        p.rect(c.x-2,c.y-2,c.bw+4,c.bh+4,6);
-      }
-
-      p.fill(...keyBG);p.stroke(...border);p.strokeWeight(1);
-      p.rect(c.x,c.y,c.bw,c.bh,4);
-
-      // Corner dots
-      p.noStroke();p.fill(...border,50);
-      p.circle(c.x+5,c.y+5,2);p.circle(c.x+c.bw-5,c.y+5,2);
-      p.circle(c.x+5,c.y+c.bh-5,2);p.circle(c.x+c.bw-5,c.y+c.bh-5,2);
-
-      // Center letter (large)
-      p.noStroke();p.fill(...GREEN);
-      p.textSize(22);
-      p.text(c.center.l,c.x+c.bw/2,c.y+c.bh/2);
-
-      // Swipe letters (small, in their directional positions)
-      p.textSize(9);p.fill(...DIM_GREEN,200);
-      const cx=c.x+c.bw/2,cy=c.y+c.bh/2;
-      const ox=c.bw*0.35,oy=c.bh*0.35;
-      if(c.up)p.text(c.up.l,cx,cy-oy);
-      if(c.down)p.text(c.down.l,cx,cy+oy);
-      if(c.left)p.text(c.left.l,cx-ox,cy);
-      if(c.right)p.text(c.right.l,cx+ox,cy);
-      if(c.upleft)p.text(c.upleft.l,cx-ox,cy-oy);
-      if(c.upright)p.text(c.upright.l,cx+ox,cy-oy);
-      if(c.downleft)p.text(c.downleft.l,cx-ox,cy+oy);
-      if(c.downright)p.text(c.downright.l,cx+ox,cy+oy);
-
-      // Inner highlight
-      p.stroke(border[0],border[1],border[2],30);
-      p.line(c.x+3,c.y+1,c.x+c.bw-3,c.y+1);
-    });
-
-    // Draw bottom row
-    bottomKeys.forEach(b=>{
-      const isPressed=pressed===b;
-      const isMod=b.mod==="shift";
-      let keyBG=[0,20,5],border=DARK_GREEN,text=DIM_GREEN,glow=0;
-
-      if(b.special||b.hid==="escape"){keyBG=[40,10,5];border=RED;text=RED}
-      else if(b.sw){keyBG=[40,5,5];border=RED;text=RED;glow=15}
-      else if(b.ret){keyBG=[5,30,10];border=[0,220,80];text=[0,220,80];glow=10}
-      else if(isMod&&shiftActive){keyBG=[0,40,10];border=GREEN;text=GREEN;glow=30}
-      else if(isMod){keyBG=[0,15,5];border=DIM_GREEN;text=DIM_GREEN}
-      else if(isPressed){keyBG=[0,80,20];border=GREEN;text=[200,255,200];glow=60}
-
-      if(glow>0){
-        p.noStroke();p.fill(border[0],border[1],border[2],glow);
-        p.rect(b.x-2,b.y-2,b.bw+4,b.bh+4,4);
-      }
-      p.fill(...keyBG);p.stroke(...border);p.strokeWeight(1);
-      p.rect(b.x,b.y,b.bw,b.bh,3);
-
-      p.noStroke();p.fill(...text);
-      p.textSize(b.l.length>3?9:11);
-      if(p.random()>0.995)p.fill(...text,150);
-      p.text(b.l,b.x+b.bw/2,b.y+b.bh/2);
-
-      if(isMod&&shiftActive){p.fill(...border);p.rect(b.x+3,b.y+b.bh-4,b.bw-6,2,1)}
-    });
-
-    // Status bar
-    p.noStroke();p.fill(0,15,4);p.rect(0,0,p.width,14);
-    p.fill(...DIM_GREEN,180);p.textSize(8);
-    p.textAlign(p.LEFT,p.TOP);
-    p.text("1-HAND GRID",4,2);
-    p.textAlign(p.RIGHT,p.TOP);
-    p.text(shiftActive?"SHIFT":"TAP+SWIPE",p.width-4,2);
-    p.textAlign(p.CENTER,p.CENTER);
-    p.stroke(...DARK_GREEN,80);p.line(0,14,p.width,14);
-
-    drawVignette();
-  };
-
-  function drawBoot(){
-    p.fill(...GREEN);p.textSize(11);p.textAlign(p.LEFT,p.TOP);
-    const lines=["KARABINER-HID 1-HAND v1.0","INIT SWIPE ENGINE ....... OK","LOAD MESSAGEASE GRID .... OK","GESTURE RECOGNITION ..... OK","","ONE-HANDED INPUT READY _"];
-    const shown=Math.floor(p.map(bootFrame,0,bootDuration,0,lines.length+1));
-    for(let i=0;i<Math.min(shown,lines.length);i++){
-      if(i===shown-1&&p.random()>0.6)continue;
-      p.fill(...GREEN);p.text(lines[i],12,12+i*16);
-    }
-    p.stroke(0,20,5,30);p.strokeWeight(1);
-    for(let y=0;y<p.height;y+=3)p.line(0,y,p.width,y);
-    p.textAlign(p.CENTER,p.CENTER);
-  }
-
-  function drawVignette(){
-    p.noStroke();
-    for(let i=0;i<20;i++){const a=p.map(i,0,20,30,0);p.fill(0,0,0,a);
-      p.rect(0,0,p.width,i);p.rect(0,p.height-i,p.width,i);
-      p.rect(0,0,i,p.height);p.rect(p.width-i,0,i,p.height)}
-  }
-
-  let lastTouchX=0,lastTouchY=0;
-
-  p.touchStarted=function(e){
-    if(!e.target||e.target.tagName!=="CANVAS")return true;
-    const t=p.touches.length?p.touches[0]:{x:p.mouseX,y:p.mouseY};
-    lastTouchX=t.x;lastTouchY=t.y;
-    const cell=hitTestCell(t.x,t.y);
-    const bk=hitTestBottom(t.x,t.y);
-    if(cell||bk||bootFrame<bootDuration){handlePress(t.x,t.y);return false}
-    return true;
-  };
-  p.touchMoved=function(){
-    if(p.touches.length){lastTouchX=p.touches[0].x;lastTouchY=p.touches[0].y}
-    return true;
-  };
-  p.touchEnded=function(){handleRelease(lastTouchX,lastTouchY);return true};
-  p.mousePressed=function(){handlePress(p.mouseX,p.mouseY)};
-  p.mouseReleased=function(){handleRelease(p.mouseX,p.mouseY)};
-},"tab5");
 
 // Replay — Text-to-HID replay (plain HTML)
 (function(){
