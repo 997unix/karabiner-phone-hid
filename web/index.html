@@ -1107,6 +1107,20 @@ function initMouseTab(container,tabIdx){
   let tapEnded=[];
   let lastTwoTapTime=0;
 
+  // Double-tap and selection extension
+  let lastSingleTapTime=0;
+  let selectExtend=false; // after double-tap, one finger moves, second finger shift-clicks
+  let selectExtendTimer=null;
+  function enterSelectExtend(){
+    selectExtend=true;
+    clearTimeout(selectExtendTimer);
+    selectExtendTimer=setTimeout(()=>{selectExtend=false;selectExtendTimer=null},3000);
+  }
+  function exitSelectExtend(){
+    selectExtend=false;
+    clearTimeout(selectExtendTimer);selectExtendTimer=null;
+  }
+
   // Scroll momentum
   let scrollVx=0,scrollVy=0;
   let momentumRAF=null;
@@ -1190,6 +1204,22 @@ function initMouseTab(container,tabIdx){
       return;
     }
 
+    // Selection extend: one finger already down, second finger = Shift+Click
+    // Only trigger if we went from 1→2 fingers (not both down at once)
+    if(selectExtend&&touchCount===2&&e.changedTouches.length===1){
+      showMouseGesture("Extend");
+      // Reset timeout on each extend tap
+      clearTimeout(selectExtendTimer);
+      selectExtendTimer=setTimeout(()=>{selectExtend=false;selectExtendTimer=null},3000);
+      sendKeyDown("",["shift"]);
+      setTimeout(()=>{
+        sendPointing(1,0,0,0,0);
+        setTimeout(()=>{sendPointing(0,0,0,0,0);sendKeyUp()},30);
+      },10);
+      if(navigator.vibrate)navigator.vibrate([10,30,10]);
+      return;
+    }
+
     // Detect double-tap-and-hold: 2 fingers down within 400ms of last 2-finger tap
     if(touchCount===2&&now-lastTwoTapTime<400){
       appSwitcher=true;
@@ -1235,6 +1265,15 @@ function initMouseTab(container,tabIdx){
     // In app switcher mode, ignore movement (use taps to cycle)
     if(appSwitcher){
       // Still update positions so deltas don't accumulate
+      for(const t of e.changedTouches){
+        const prev=mt[t.identifier];
+        if(prev){prev.x=t.clientX;prev.y=t.clientY}
+      }
+      return;
+    }
+
+    // Selection extend: 2 fingers down = don't scroll, just update positions
+    if(selectExtend&&count===2){
       for(const t of e.changedTouches){
         const prev=mt[t.identifier];
         if(prev){prev.x=t.clientX;prev.y=t.clientY}
@@ -1328,6 +1367,13 @@ function initMouseTab(container,tabIdx){
       return;
     }
 
+    // Selection extend: second finger lifted → stay in extend mode
+    // All fingers lifted → exit extend mode
+    if(selectExtend&&remaining>0){
+      tapEnded=[];
+      return;
+    }
+
     // Start scroll momentum when 2-finger scroll ends
     if(wasScrolling&&remaining===0&&(Math.abs(scrollVx)>0.5||Math.abs(scrollVy)>0.5)){
       startMomentum();
@@ -1357,14 +1403,52 @@ function initMouseTab(container,tabIdx){
       return dt<300&&dist<15;
     });
 
+    // Two-finger horizontal swipe → iTerm2 pane switch (Cmd+Shift+[/])
+    if(!isTap&&allEnded.length===2){
+      const avgDx=allEnded.reduce((s,t)=>s+(t.endX-t.startX),0)/2;
+      const avgDy=allEnded.reduce((s,t)=>s+(t.endY-t.startY),0)/2;
+      const avgDt=allEnded.reduce((s,t)=>s+(now-t.startTime),0)/2;
+      if(Math.abs(avgDx)>50&&Math.abs(avgDy)<40&&avgDt<400){
+        if(avgDx>0){
+          showMouseGesture("Pane →");
+          if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:"action",id:"sw-"+Date.now(),action:"keypress",payload:{key:"close_bracket",modifiers:["command","shift"]}}));
+        } else {
+          showMouseGesture("← Pane");
+          if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:"action",id:"sw-"+Date.now(),action:"keypress",payload:{key:"open_bracket",modifiers:["command","shift"]}}));
+        }
+        if(navigator.vibrate)navigator.vibrate([15,30,15]);
+        return;
+      }
+    }
+
     if(!isTap)return;
 
     if(allEnded.length===1){
-      // Single tap → left click (short tick)
-      mouseRipple(allEnded[0].endX,allEnded[0].endY);
-      sendPointing(1,0,0,0,0);
-      setTimeout(()=>sendPointing(0,0,0,0,0),30);
-      if(navigator.vibrate)navigator.vibrate(10);
+      if(now-lastSingleTapTime<300){
+        // Double-tap → double-click (highlight word), enter selectExtend
+        mouseRipple(allEnded[0].endX,allEnded[0].endY);
+        sendPointing(1,0,0,0,0);
+        setTimeout(()=>{
+          sendPointing(0,0,0,0,0);
+          setTimeout(()=>{
+            sendPointing(1,0,0,0,0);
+            setTimeout(()=>sendPointing(0,0,0,0,0),30);
+          },30);
+        },30);
+        showMouseGesture("Select");
+        if(navigator.vibrate)navigator.vibrate([10,20,10]);
+        enterSelectExtend();
+        lastSingleTapTime=0;
+      } else {
+        // Single tap → left click (short tick)
+        mouseRipple(allEnded[0].endX,allEnded[0].endY);
+        sendPointing(1,0,0,0,0);
+        setTimeout(()=>sendPointing(0,0,0,0,0),30);
+        if(navigator.vibrate)navigator.vibrate(10);
+        lastSingleTapTime=now;
+        // Exit selectExtend on regular tap (committed to a new position)
+        exitSelectExtend();
+      }
     } else if(allEnded.length===2){
       // Single two-finger tap → right click (double pulse)
       mouseRipple(allEnded[0].endX,allEnded[0].endY);
@@ -1385,7 +1469,7 @@ function initMouseTab(container,tabIdx){
     for(const t of e.changedTouches)delete mt[t.identifier];
     tapEnded=[];
     clearTimeout(longPressTimer);longPressTimer=null;
-    slowScroll=false;
+    slowScroll=false;exitSelectExtend();
     stopMomentum();stopEdge();
     if(appSwitcher){sendKeyUp();appSwitcher=false}
   });
