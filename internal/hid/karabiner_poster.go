@@ -31,7 +31,8 @@ type KarabinerPoster struct {
 	mu            sync.Mutex
 	ready         chan struct{}
 	pointingReady chan struct{}
-	readyDots     int // counts "keyboard ready" heartbeat dots
+	readyDots         int // counts "keyboard ready" heartbeat dots
+	pointingReadyDots int // counts "pointing ready" heartbeat dots
 }
 
 // posters tracks active KarabinerPoster instances for the C callback.
@@ -72,7 +73,17 @@ func goKarabinerCallback(status C.karabiner_status_t, context unsafe.Pointer) {
 		default:
 		}
 	case C.KARABINER_STATUS_POINTING_READY:
-		fmt.Println("[Karabiner] Pointing device ready")
+		if poster.pointingReadyDots == 0 {
+			fmt.Print("[Karabiner] Pointing ready")
+		}
+		poster.pointingReadyDots++
+		if poster.pointingReadyDots >= 80 {
+			fmt.Println()
+			fmt.Print("[Karabiner] Pointing ready")
+			poster.pointingReadyDots = 1
+		} else {
+			fmt.Print(".")
+		}
 		select {
 		case poster.pointingReady <- struct{}{}:
 		default:
