@@ -43,6 +43,25 @@ func (d *Dispatcher) Dispatch(steps []protocol.KeyStep) error {
 	return nil
 }
 
+// DispatchKeyDown sends a keyboard HID report without releasing.
+func (d *Dispatcher) DispatchKeyDown(kp *protocol.KeypressPayload) error {
+	var keys []uint16
+	if kp.Key != "" {
+		keyCode, ok := LookupKeyCode(kp.Key)
+		if !ok {
+			return fmt.Errorf("unknown key: %s", kp.Key)
+		}
+		keys = []uint16{keyCode}
+	}
+	modByte := BuildModifierByte(kp.Modifiers)
+	return d.poster.PostKeyboard(modByte, keys)
+}
+
+// DispatchKeyUp releases all keys.
+func (d *Dispatcher) DispatchKeyUp() error {
+	return d.poster.ReleaseAll()
+}
+
 // DispatchPointing sends a pointing HID report.
 func (d *Dispatcher) DispatchPointing(p *protocol.PointingPayload) error {
 	return d.poster.PostPointing(p.Buttons, p.X, p.Y, p.VerticalWheel, p.HorizontalWheel)

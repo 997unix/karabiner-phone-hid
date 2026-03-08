@@ -123,6 +123,45 @@ func TestRouteNamedAction(t *testing.T) {
 	}
 }
 
+func TestRouteKeydownAction(t *testing.T) {
+	router, mock := newTestRouter()
+
+	raw := `{"type":"action","id":"kd-1","action":"keydown","payload":{"key":"tab","modifiers":["command"]}}`
+	resp := router.Route([]byte(raw))
+
+	ack := decodeAck(t, resp)
+	if ack["status"] != "ok" {
+		t.Errorf("status = %v, want ok", ack["status"])
+	}
+
+	// keydown = 1 call (no release)
+	if len(mock.Calls) != 1 {
+		t.Fatalf("calls = %d, want 1", len(mock.Calls))
+	}
+	if mock.Calls[0].Release {
+		t.Error("keydown should not release")
+	}
+}
+
+func TestRouteKeyupAction(t *testing.T) {
+	router, mock := newTestRouter()
+
+	raw := `{"type":"action","id":"ku-1","action":"keyup","payload":{}}`
+	resp := router.Route([]byte(raw))
+
+	ack := decodeAck(t, resp)
+	if ack["status"] != "ok" {
+		t.Errorf("status = %v, want ok", ack["status"])
+	}
+
+	if len(mock.Calls) != 1 {
+		t.Fatalf("calls = %d, want 1", len(mock.Calls))
+	}
+	if !mock.Calls[0].Release {
+		t.Error("keyup should be a release")
+	}
+}
+
 func TestRoutePointingAction(t *testing.T) {
 	router, mock := newTestRouter()
 

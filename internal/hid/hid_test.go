@@ -271,6 +271,68 @@ func TestDispatchEmptySteps(t *testing.T) {
 	}
 }
 
+func TestDispatchKeyDown(t *testing.T) {
+	mock := &MockPoster{}
+	d := NewDispatcher(mock)
+
+	kp := &protocol.KeypressPayload{Key: "tab", Modifiers: []string{"command"}}
+	err := d.DispatchKeyDown(kp)
+	if err != nil {
+		t.Fatalf("DispatchKeyDown: %v", err)
+	}
+
+	if len(mock.Calls) != 1 {
+		t.Fatalf("calls = %d, want 1", len(mock.Calls))
+	}
+	if mock.Calls[0].Release {
+		t.Error("keydown should not release")
+	}
+	if mock.Calls[0].Modifiers != 0x08 { // command
+		t.Errorf("modifiers = 0x%02X, want 0x08", mock.Calls[0].Modifiers)
+	}
+	if mock.Calls[0].Keys[0] != 0x2B { // tab
+		t.Errorf("key = 0x%02X, want 0x2B", mock.Calls[0].Keys[0])
+	}
+}
+
+func TestDispatchKeyDownModifiersOnly(t *testing.T) {
+	mock := &MockPoster{}
+	d := NewDispatcher(mock)
+
+	kp := &protocol.KeypressPayload{Key: "", Modifiers: []string{"command"}}
+	err := d.DispatchKeyDown(kp)
+	if err != nil {
+		t.Fatalf("DispatchKeyDown: %v", err)
+	}
+
+	if len(mock.Calls) != 1 {
+		t.Fatalf("calls = %d, want 1", len(mock.Calls))
+	}
+	if mock.Calls[0].Modifiers != 0x08 {
+		t.Errorf("modifiers = 0x%02X, want 0x08", mock.Calls[0].Modifiers)
+	}
+	if len(mock.Calls[0].Keys) != 0 {
+		t.Errorf("keys = %v, want empty", mock.Calls[0].Keys)
+	}
+}
+
+func TestDispatchKeyUp(t *testing.T) {
+	mock := &MockPoster{}
+	d := NewDispatcher(mock)
+
+	err := d.DispatchKeyUp()
+	if err != nil {
+		t.Fatalf("DispatchKeyUp: %v", err)
+	}
+
+	if len(mock.Calls) != 1 {
+		t.Fatalf("calls = %d, want 1", len(mock.Calls))
+	}
+	if !mock.Calls[0].Release {
+		t.Error("keyup should be a release")
+	}
+}
+
 func TestDispatchPointing(t *testing.T) {
 	mock := &MockPoster{}
 	d := NewDispatcher(mock)

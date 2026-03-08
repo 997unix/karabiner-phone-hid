@@ -64,6 +64,22 @@ func (r *Router) handleAction(msg *protocol.IncomingMessage) []byte {
 		}
 		steps = seq.Steps
 
+	case "keydown":
+		kp, err := msg.ParseKeypress()
+		if err != nil {
+			return r.encodeAck(msg.ID, fmt.Sprintf("invalid keydown payload: %v", err))
+		}
+		if err := r.dispatcher.DispatchKeyDown(kp); err != nil {
+			return r.encodeAck(msg.ID, fmt.Sprintf("dispatch error: %v", err))
+		}
+		return r.encodeOK(msg.ID)
+
+	case "keyup":
+		if err := r.dispatcher.DispatchKeyUp(); err != nil {
+			return r.encodeAck(msg.ID, fmt.Sprintf("dispatch error: %v", err))
+		}
+		return r.encodeOK(msg.ID)
+
 	case "pointing":
 		pt, err := msg.ParsePointing()
 		if err != nil {

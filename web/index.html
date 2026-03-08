@@ -1068,6 +1068,18 @@ function initMouseTab(container,tabIdx){
     if(navigator.vibrate)navigator.vibrate(30);
   });
 
+  // Key down/up senders (hold modifier without releasing)
+  function sendKeyDown(key,modifiers){
+    if(ws&&ws.readyState===1){
+      ws.send(JSON.stringify({type:"action",id:"kd-"+Date.now(),action:"keydown",payload:{key,modifiers}}));
+    }
+  }
+  function sendKeyUp(){
+    if(ws&&ws.readyState===1){
+      ws.send(JSON.stringify({type:"action",id:"ku-"+Date.now(),action:"keyup",payload:{}}));
+    }
+  }
+
   // Pointing message sender
   function sendPointing(buttons,x,y,vw,hw){
     if(ws&&ws.readyState===1){
@@ -1091,15 +1103,35 @@ function initMouseTab(container,tabIdx){
   let lastMoveT=0;
   let heldBtns=0;
 
-  // Two-finger double-tap detection: accumulate ended touches across rapid touchend events
-  let twoTapEnded=[];
-  let twoTapTimer=null;
+  // Two-finger tap tracking
+  let tapEnded=[];
   let lastTwoTapTime=0;
+
+  // App switcher mode: Cmd held, horizontal drag sends Tab/Shift+Tab
+  let appSwitcher=false;
+  let appSwitcherAccum=0;  // accumulated horizontal pixels
+  const APP_SWITCH_THRESH=50; // pixels per Tab press
 
   pad.addEventListener("touchstart",(e)=>{
     e.preventDefault();e.stopPropagation();
+    const now=Date.now();
+    const touchCount=e.touches.length;
+
     for(const t of e.changedTouches){
-      mt[t.identifier]={x:t.clientX,y:t.clientY,startX:t.clientX,startY:t.clientY,startTime:Date.now()};
+      mt[t.identifier]={x:t.clientX,y:t.clientY,startX:t.clientX,startY:t.clientY,startTime:now};
+    }
+
+    // Detect double-tap-and-hold: 2 fingers down within 400ms of last 2-finger tap
+    if(touchCount===2&&!appSwitcher&&now-lastTwoTapTime<400){
+      appSwitcher=true;
+      appSwitcherAccum=0;
+      showMouseGesture("App Switcher");
+      // Send Cmd+Tab to open switcher
+      sendKeyDown("tab",["command"]);
+      // Release Tab but keep Cmd held
+      setTimeout(()=>sendKeyDown("",["command"]),50);
+      if(navigator.vibrate)navigator.vibrate([20,40,20]);
+      lastTwoTapTime=0;
     }
   },{passive:false});
 
@@ -1110,6 +1142,33 @@ function initMouseTab(container,tabIdx){
     lastMoveT=now;
 
     const count=Object.keys(mt).length;
+
+    if(appSwitcher&&count>=2){
+      // App switcher mode: horizontal drag cycles apps
+      let tdx=0,n=0;
+      for(const t of e.changedTouches){
+        const prev=mt[t.identifier];
+        if(!prev)continue;
+        tdx+=t.clientX-prev.x;
+        prev.x=t.clientX;prev.y=t.clientY;n++;
+      }
+      if(n>0){
+        appSwitcherAccum+=tdx/n;
+        while(appSwitcherAccum>APP_SWITCH_THRESH){
+          sendKeyDown("tab",["command"]);
+          setTimeout(()=>sendKeyDown("",["command"]),30);
+          appSwitcherAccum-=APP_SWITCH_THRESH;
+          if(navigator.vibrate)navigator.vibrate(15);
+        }
+        while(appSwitcherAccum<-APP_SWITCH_THRESH){
+          sendKeyDown("tab",["command","shift"]);
+          setTimeout(()=>sendKeyDown("",["command"]),30);
+          appSwitcherAccum+=APP_SWITCH_THRESH;
+          if(navigator.vibrate)navigator.vibrate(15);
+        }
+      }
+      return;
+    }
 
     if(count===1){
       const t=e.changedTouches[0];
@@ -1156,17 +1215,25 @@ function initMouseTab(container,tabIdx){
       const prev=mt[t.identifier];
       if(prev){
         prev.endX=t.clientX;prev.endY=t.clientY;
-        twoTapEnded.push(prev);
+        tapEnded.push(prev);
       }
       delete mt[t.identifier];
     }
 
-    // Wait until all fingers are lifted, then process
+    // Wait until all fingers are lifted
     if(Object.keys(mt).length>0)return;
 
+    // App switcher: release Cmd on finger lift
+    if(appSwitcher){
+      sendKeyUp();
+      appSwitcher=false;
+      tapEnded=[];
+      return;
+    }
+
     // Collect all ended touches for this gesture
-    const allEnded=[...twoTapEnded];
-    twoTapEnded=[];
+    const allEnded=[...tapEnded];
+    tapEnded=[];
 
     const now=Date.now();
     const isTap=allEnded.length>0&&allEnded.every(t=>{
@@ -1184,21 +1251,12 @@ function initMouseTab(container,tabIdx){
       setTimeout(()=>sendPointing(0,0,0,0,0),30);
       if(navigator.vibrate)navigator.vibrate(20);
     } else if(allEnded.length===2){
-      // Two-finger tap — check for double-tap
-      if(now-lastTwoTapTime<400){
-        // Double two-finger tap → Cmd+Tab (toggles last app)
-        showMouseGesture("Cmd+Tab");
-        sendKeypress("tab",["command"]);
-        if(navigator.vibrate)navigator.vibrate([20,40,20]);
-        lastTwoTapTime=0;
-      } else {
-        // Single two-finger tap → right click
-        mouseRipple(allEnded[0].endX,allEnded[0].endY);
-        sendPointing(2,0,0,0,0);
-        setTimeout(()=>sendPointing(0,0,0,0,0),30);
-        if(navigator.vibrate)navigator.vibrate([20,30,20]);
-        lastTwoTapTime=now;
-      }
+      // Single two-finger tap → right click, record time for double-tap detection
+      mouseRipple(allEnded[0].endX,allEnded[0].endY);
+      sendPointing(2,0,0,0,0);
+      setTimeout(()=>sendPointing(0,0,0,0,0),30);
+      if(navigator.vibrate)navigator.vibrate([20,30,20]);
+      lastTwoTapTime=now;
     } else if(allEnded.length===3){
       // Three-finger tap → middle click
       mouseRipple(allEnded[0].endX,allEnded[0].endY);
@@ -1210,7 +1268,8 @@ function initMouseTab(container,tabIdx){
 
   pad.addEventListener("touchcancel",(e)=>{
     for(const t of e.changedTouches)delete mt[t.identifier];
-    twoTapEnded=[];
+    tapEnded=[];
+    if(appSwitcher){sendKeyUp();appSwitcher=false}
   });
 
   function mouseRipple(x,y){
