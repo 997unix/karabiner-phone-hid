@@ -184,9 +184,9 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
   <button data-idx="0" class="active">tmate/tmux</button>
   <button data-idx="1">KBDv2</button>
   <button data-idx="2">Replay</button>
-  <button data-idx="3">Numpad</button>
-  <button data-idx="4">YT Remote</button>
-  <button data-idx="5">Mouse</button>
+  <button data-idx="3">Mouse</button>
+  <button data-idx="4">Numpad</button>
+  <button data-idx="5">YT Remote</button>
 </div>
 
 <div class="swipe" id="swipe">
@@ -207,12 +207,12 @@ button.btn:active{opacity:0.7;transform:scale(0.95)}
       <button id="replay-send" class="replay-btn send">SEND</button>
     </div>
   </div>
-  <!-- Numpad -->
-  <div class="kb-page" id="tab3"></div>
-  <!-- YT Remote -->
-  <div class="p5-page" id="tab4"></div>
   <!-- Mouse -->
-  <div class="page" id="tab5" style="padding:0;justify-content:stretch;touch-action:none"></div>
+  <div class="page" id="tab3" style="padding:0;justify-content:stretch;touch-action:none"></div>
+  <!-- Numpad -->
+  <div class="kb-page" id="tab4"></div>
+  <!-- YT Remote -->
+  <div class="p5-page" id="tab5"></div>
 </div>
 
 <div id="status" class="disconnected"><span class="dot"></span><span id="stxt">Disconnected</span></div>
@@ -338,6 +338,7 @@ const tabs = [
     "arrows_ext",
   ]},
   null, // tab2 = Replay (rendered as HTML, not from tabs array)
+  { name:"Mouse", layout:"mouse" },
   { name:"Numpad", layout:"numpad",
     swSplit:[
       {action:"superwhisper_toggle",label:"SuperWhisper",color:"#e74c3c",long:"superwhisper_paste"},
@@ -377,8 +378,7 @@ const tabs = [
       {action:"numpad_decimal",label:".",color:"#444"},
     ],
   },
-  null, // tab4 = YT Remote (rendered by p5.js, not from tabs array)
-  { name:"Mouse", layout:"mouse" },
+  null, // tab5 = YT Remote (rendered by p5.js, not from tabs array)
 ];
 
 let ws;
@@ -1186,7 +1186,7 @@ function initMouseTab(container,tabIdx){
     } else if(allEnded.length===2){
       // Two-finger tap — check for double-tap
       if(now-lastTwoTapTime<400){
-        // Double two-finger tap → Cmd+Tab
+        // Double two-finger tap → Cmd+Tab (toggles last app)
         showMouseGesture("Cmd+Tab");
         sendKeypress("tab",["command"]);
         if(navigator.vibrate)navigator.vibrate([20,40,20]);
@@ -1268,7 +1268,7 @@ new p5(function(p){
 
   p.setup=function(){
     const c=p.createCanvas(100,100);
-    c.parent("tab4");
+    c.parent("tab5");
     c.elt.style.touchAction="pan-x";
     p.textAlign(p.CENTER,p.CENTER);
     p.textFont("system-ui,sans-serif");
@@ -1276,7 +1276,7 @@ new p5(function(p){
   };
 
   function rebuild(){
-    const el=document.getElementById("tab4");
+    const el=document.getElementById("tab5");
     p.resizeCanvas(el.clientWidth,el.clientHeight);
     const W=p.width,H=p.height;
     const pad=14,gap=8;
@@ -1379,7 +1379,7 @@ new p5(function(p){
     if(pressed){send(pressed.a);if(navigator.vibrate)navigator.vibrate(30)}
     pressed=null;
   };
-},"tab4");
+},"tab5");
 
 // Replay — Text-to-HID replay (plain HTML)
 (function(){
