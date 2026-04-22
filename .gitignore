@@ -3,3 +3,6 @@ bin/
 *.a
 *.dylib
 .DS_Store
+
+# Stray `go build ./cmd/server` output — real builds go to bin/ via `make`.
+/server
