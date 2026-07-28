@@ -7,7 +7,7 @@ No app to install. Open a browser on your phone, tap buttons, keystrokes appear 
 ## Prerequisites
 
 - **macOS 13+**
-- **[Karabiner-Elements](https://karabiner-elements.pqrs.org/)** installed and running (provides the DriverKit virtual HID daemon)
+- **[Karabiner-Elements](https://karabiner-elements.pqrs.org/)** installed and running (provides the DriverKit virtual HID daemon), shipping **Karabiner-DriverKit-VirtualHIDDevice 8.x** — see [Karabiner version compatibility](#karabiner-version-compatibility)
 - **Go 1.23+** (`brew install go`)
 - **Xcode Command Line Tools** (`xcode-select --install`)
 - **A phone/tablet on the same network** with any modern browser
@@ -26,7 +26,7 @@ Optional, for process supervision:
 ## Install
 
 ```bash
-git clone --recurse-submodules https://github.com/997unix/karabiner-phone-hid.git
+git clone https://github.com/997unix/karabiner-phone-hid.git
 cd karabiner-phone-hid
 make
 ```
@@ -220,13 +220,53 @@ Run tests (no root or Karabiner needed):
 make test
 ```
 
-68 tests across 6 packages — protocol serialization, key code lookups, HID dispatch, message routing, WebSocket integration, build identity.
+80 tests across 6 packages — protocol serialization, key code lookups, HID dispatch, message routing, WebSocket integration, build identity.
 
 Build with stub mode (no Karabiner headers needed):
 
 ```bash
 make STUB=1
 ```
+
+The build tracks the `STUB` value, so switching between stub and real
+rebuilds the shim rather than silently reusing the previous object.
+
+## Karabiner Version Compatibility
+
+`vendor-headers/` holds a pinned copy of the Karabiner-DriverKit-VirtualHIDDevice
+client headers. They are currently on **v8.0.0** (`client_protocol_version` 7,
+`driver_version` 10800 — matching driver extension 1.8.0). This covers the whole
+8.x line; v8.1 and v8.2 use the same protocol version.
+
+Updating Karabiner-Elements can bump the daemon's protocol and break the
+connection. The symptom is the server looping on:
+
+```
+[Karabiner] Connection failed, re-initializing pointing device
+```
+
+The daemon reports what it expects on startup:
+
+```bash
+grep -E 'version|client_protocol_version' /var/log/karabiner/virtual_hid_device_service.log
+```
+
+If `client_protocol_version` there differs from
+`vendor-headers/karabiner/pqrs/karabiner/driverkit/client_protocol_version.hpp`,
+re-vendor headers matching the installed daemon:
+
+```bash
+git clone --depth 1 --branch v<VERSION> --recurse-submodules \
+  https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice.git /tmp/kdk
+rm -rf vendor-headers/karabiner vendor-headers/deps
+mkdir -p vendor-headers/karabiner vendor-headers/deps
+cp -R /tmp/kdk/include/. vendor-headers/karabiner/
+cp -R /tmp/kdk/vendor/vendor/include/. vendor-headers/deps/
+make && make s6-restart
+```
+
+Check upstream `NEWS.md` for breaking API changes before rebuilding; the
+8.0.0 upgrade changed the transport but left the client API untouched.
 
 ## Project Structure
 
@@ -240,7 +280,7 @@ internal/
   discovery/             Bonjour advertisement
   buildinfo/             Binary identity, self-watch + auto-reload
 cshim/                   C wrapper around Karabiner C++ client
-vendor-cpp/              Karabiner headers (git submodule)
+vendor-headers/          Karabiner + dependency headers (vendored copy)
 web/                     Browser UI served at /
 shared/protocol.md       Wire protocol spec
 scripts/s6/              s6 supervision run scripts
