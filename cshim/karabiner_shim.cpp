@@ -60,14 +60,18 @@ karabiner_client_t* karabiner_client_create(karabiner_status_callback_t callback
     });
 
     c->client->virtual_hid_keyboard_ready.connect([c](bool ready) {
-        if (ready && c->callback) {
-            c->callback(KARABINER_STATUS_KEYBOARD_READY, c->context);
+        if (c->callback) {
+            c->callback(ready ? KARABINER_STATUS_KEYBOARD_READY
+                              : KARABINER_STATUS_KEYBOARD_NOT_READY,
+                        c->context);
         }
     });
 
     c->client->virtual_hid_pointing_ready.connect([c](bool ready) {
-        if (ready && c->callback) {
-            c->callback(KARABINER_STATUS_POINTING_READY, c->context);
+        if (c->callback) {
+            c->callback(ready ? KARABINER_STATUS_POINTING_READY
+                              : KARABINER_STATUS_POINTING_NOT_READY,
+                        c->context);
         }
     });
 

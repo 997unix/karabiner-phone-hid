@@ -6,6 +6,40 @@ The aim is to make the "why" recoverable later — both for humans and for LLMs 
 
 ---
 
+## ED-008 — Device recovery keys off readiness state, not a heartbeat
+
+**Decision:** Connection and device readiness are tracked as explicit state
+(`linkState` in `internal/hid/link_state.go`). Recovery triggers on "connected
+but pointing not ready"; every log line is emitted on a state *transition*.
+The shim forwards both edges of the driver's readiness signals — see the
+`*_NOT_READY` status codes in `cshim/karabiner_shim.h`.
+
+**Rejected:**
+- Keeping the ED-006 heartbeat and re-initializing when callbacks go quiet.
+- Forcing re-initialization on a timer regardless of state.
+
+**Why:** Karabiner-DriverKit-VirtualHIDDevice 8.x reports readiness only when
+it changes. Pre-8.0 re-broadcast it periodically, which is what made ED-006's
+heartbeat interpretation work. Under 8.x that heartbeat never arrives, so the
+old watchdog fired every 30s forever while the device was perfectly healthy,
+and its non-forced re-init was a silent no-op (the 8.x client drops an
+initialize request for a device that is already up). Silence now correctly
+means "nothing changed".
+
+Two supporting fixes fell out of this. The shim previously discarded
+`ready == false`, so the server could see a device appear but never learn it
+had gone — the exact condition the watchdog existed to catch. And the connect
+handler only created the keyboard, so a device lost to a reconnect was never
+re-created; it now creates both on every connect, which is the primary
+recovery path. The watchdog is the backstop for a device dying while the
+connection survives.
+
+Logging on transitions also fixes the log volume: the 8.x client retries the
+socket once a second while the daemon is down, and the old code logged every
+attempt. That is how the log reached 8MB.
+
+---
+
 ## ED-007 — Self-exec on binary rebuild
 
 **Decision:** The server watches its own file checksum every 30s (`internal/buildinfo/watch.go`). When the on-disk binary changes, it calls `syscall.Exec` on itself to hot-swap into the new build.
@@ -19,6 +53,11 @@ The aim is to make the "why" recoverable later — both for humans and for LLMs 
 ---
 
 ## ED-006 — Pointing-device watchdog
+
+> **Superseded by ED-008.** The heartbeat reading below was correct against the
+> pre-8.0 driver, which re-broadcast readiness periodically. Karabiner 8.x
+> reports it only on change, so the watchdog now keys off readiness state.
+> The underlying problem — and the watchdog itself — remain real.
 
 **Decision:** After `InitPointing()`, a watchdog goroutine (`StartPointingWatchdog` in `internal/hid/karabiner_poster.go`) re-initializes the pointing device if we stop getting `POINTING_READY` callbacks.
 

@@ -11,11 +11,18 @@ extern "C" {
 typedef struct karabiner_client karabiner_client_t;
 
 // Status codes returned by callbacks.
+//
+// The *_READY / *_NOT_READY pairs mirror the driver's readiness signals, which
+// are edge-triggered: the daemon reports a device's readiness when it changes,
+// not on a timer. Both edges must be forwarded, otherwise a caller can see a
+// device come up but never learn that it went away.
 typedef enum {
     KARABINER_STATUS_OK = 0,
     KARABINER_STATUS_CONNECTED = 1,
     KARABINER_STATUS_KEYBOARD_READY = 2,
     KARABINER_STATUS_POINTING_READY = 3,
+    KARABINER_STATUS_KEYBOARD_NOT_READY = 4,
+    KARABINER_STATUS_POINTING_NOT_READY = 5,
     KARABINER_STATUS_ERROR = -1,
     KARABINER_STATUS_CONNECT_FAILED = -2,
     KARABINER_STATUS_CLOSED = -3,

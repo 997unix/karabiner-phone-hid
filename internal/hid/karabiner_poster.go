@@ -33,10 +33,8 @@ type KarabinerPoster struct {
 	mu            sync.Mutex
 	ready         chan struct{}
 	pointingReady chan struct{}
-	readyDots         int // counts "keyboard ready" heartbeat dots
-	pointingReadyDots int // counts "pointing ready" heartbeat dots
-	lastPointingReady time.Time // last POINTING_READY callback
-	watchdogStop      chan struct{}
+	state         linkState
+	watchdogStop  chan struct{}
 }
 
 // posters tracks active KarabinerPoster instances for the C callback.
@@ -56,53 +54,65 @@ func goKarabinerCallback(status C.karabiner_status_t, context unsafe.Pointer) {
 		return
 	}
 
+	// Every branch logs only on a state change. The client retries the socket
+	// once a second while the daemon is unreachable, so logging each callback
+	// unconditionally buries everything else in the log.
 	switch status {
 	case C.KARABINER_STATUS_CONNECTED:
-		fmt.Println("[Karabiner] Connected to daemon")
-		C.karabiner_client_init_keyboard(poster.client)
-	case C.KARABINER_STATUS_KEYBOARD_READY:
-		if poster.readyDots == 0 {
-			fmt.Print("[Karabiner] Keyboard ready")
+		if poster.state.setConnected(true) {
+			log.Println("[Karabiner] Connected to daemon")
 		}
-		poster.readyDots++
-		if poster.readyDots >= 80 {
-			fmt.Println()
-			fmt.Print("[Karabiner] Keyboard ready")
-			poster.readyDots = 1
-		} else {
-			fmt.Print(".")
+		// Re-create both devices on every connect, not just the first. The
+		// client reconnects on its own after an outage, and the devices do not
+		// survive it. Requests for a device that is already up are dropped by
+		// the client, so this is free when nothing was lost.
+		C.karabiner_client_init_keyboard(poster.client)
+		C.karabiner_client_init_pointing(poster.client)
+
+	case C.KARABINER_STATUS_KEYBOARD_READY:
+		if poster.state.setKeyboardReady(true) {
+			log.Println("[Karabiner] Keyboard ready")
 		}
 		select {
 		case poster.ready <- struct{}{}:
 		default:
 		}
+
+	case C.KARABINER_STATUS_KEYBOARD_NOT_READY:
+		if poster.state.setKeyboardReady(false) {
+			log.Println("[Karabiner] Keyboard went away")
+		}
+
 	case C.KARABINER_STATUS_POINTING_READY:
-		if poster.pointingReadyDots == 0 {
-			fmt.Print("[Karabiner] Pointing ready")
+		if poster.state.setPointingReady(true) {
+			log.Println("[Karabiner] Pointing ready")
 		}
-		poster.pointingReadyDots++
-		if poster.pointingReadyDots >= 80 {
-			fmt.Println()
-			fmt.Print("[Karabiner] Pointing ready")
-			poster.pointingReadyDots = 1
-		} else {
-			fmt.Print(".")
-		}
-		poster.mu.Lock()
-		poster.lastPointingReady = time.Now()
-		poster.mu.Unlock()
 		select {
 		case poster.pointingReady <- struct{}{}:
 		default:
 		}
+
+	case C.KARABINER_STATUS_POINTING_NOT_READY:
+		if poster.state.setPointingReady(false) {
+			log.Println("[Karabiner] Pointing device went away, will re-initialize")
+		}
+
 	case C.KARABINER_STATUS_ERROR:
-		log.Println("[Karabiner] Error occurred, re-initializing pointing device")
-		C.karabiner_client_init_pointing(poster.client)
+		if poster.state.setConnected(false) {
+			log.Println("[Karabiner] Connection error, waiting for reconnect")
+		}
+
 	case C.KARABINER_STATUS_CONNECT_FAILED:
-		log.Println("[Karabiner] Connection failed, re-initializing pointing device")
-		C.karabiner_client_init_pointing(poster.client)
+		// Fires once per retry, once a second, for as long as the daemon is
+		// down. Only the first is worth a line.
+		if poster.state.setConnected(false) {
+			log.Println("[Karabiner] Cannot reach daemon, retrying")
+		}
+
 	case C.KARABINER_STATUS_CLOSED:
-		log.Println("[Karabiner] Connection closed, re-initializing pointing device")
+		if poster.state.setConnected(false) {
+			log.Println("[Karabiner] Connection closed, waiting for reconnect")
+		}
 	}
 }
 
@@ -214,8 +224,17 @@ func (p *KarabinerPoster) ReleasePointing() error {
 	return nil
 }
 
-// StartPointingWatchdog monitors the pointing device and re-initializes it
-// if the POINTING_READY heartbeat stops for more than 60 seconds.
+// StartPointingWatchdog re-initializes the pointing device whenever it is not
+// ready while the daemon is connected.
+//
+// This is a backstop, not the primary recovery path: the callbacks above
+// already re-create both devices on reconnect. It covers the case where the
+// connection survives but the pointing device does not, which is what made the
+// mouse die overnight.
+//
+// It deliberately does not watch for a heartbeat. Karabiner 8.x reports
+// readiness only when it changes, so a quiet channel means the state is
+// unchanged, not that anything is wrong.
 func (p *KarabinerPoster) StartPointingWatchdog() {
 	p.watchdogStop = make(chan struct{})
 	go func() {
@@ -224,16 +243,18 @@ func (p *KarabinerPoster) StartPointingWatchdog() {
 		for {
 			select {
 			case <-ticker.C:
-				p.mu.Lock()
-				last := p.lastPointingReady
-				client := p.client
-				p.mu.Unlock()
-				if client != nil && !last.IsZero() && time.Since(last) > 60*time.Second {
-					log.Printf("[Karabiner] Pointing device heartbeat stale (%s ago), re-initializing", time.Since(last).Round(time.Second))
-					p.mu.Lock()
-					C.karabiner_client_init_pointing(p.client)
-					p.mu.Unlock()
+				if !p.state.pointingNeedsInit() {
+					continue
 				}
+				// Logged once per outage; the retry itself stays silent.
+				if p.state.shouldReportReinit() {
+					log.Println("[Karabiner] Pointing device not ready, re-initializing")
+				}
+				p.mu.Lock()
+				if p.client != nil {
+					C.karabiner_client_init_pointing(p.client)
+				}
+				p.mu.Unlock()
 			case <-p.watchdogStop:
 				return
 			}
