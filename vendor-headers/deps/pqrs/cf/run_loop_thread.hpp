@@ -1,6 +1,6 @@
 #pragma once
 
-// pqrs::cf::run_loop_thread v2.8
+// pqrs::cf::run_loop_thread v3.1.0
 
 // (C) Copyright Takayama Fumihiko 2018.
 // Distributed under the Boost Software License, Version 1.0.
@@ -8,13 +8,16 @@
 
 // `pqrs::cf::run_loop_thread` can be used safely in a multi-threaded environment.
 
+#include <atomic>
+#include <chrono>
 #include <cstdlib>
+#include <mutex>
 #include <pqrs/cf/cf_ptr.hpp>
+#include <pqrs/gsl.hpp>
 #include <pqrs/thread_wait.hpp>
 #include <thread>
 
-namespace pqrs {
-namespace cf {
+namespace pqrs::cf {
 class run_loop_thread final {
 public:
   enum class failure_policy {
@@ -28,30 +31,32 @@ public:
   };
 
   run_loop_thread(const run_loop_thread&) = delete;
+  run_loop_thread& operator=(const run_loop_thread&) = delete;
 
   run_loop_thread(failure_policy policy = failure_policy::abort)
       : failure_policy_(policy) {
-    std::atomic<bool> ready = false;
+    using namespace std::chrono_literals;
+
+    std::atomic<bool> ready{false};
 
     thread_ = std::thread([this, &ready] {
-      run_loop_ = CFRunLoopGetCurrent();
-
       // Append a source to prevent immediately quitting of `CFRunLoopRun`.
 
       auto context = CFRunLoopSourceContext();
       context.info = reinterpret_cast<void*>(&ready);
       context.perform = [](void* _Nullable info) {
         auto ready = reinterpret_cast<std::atomic<bool>*>(info);
-        *ready = true;
+        ready->store(true);
       };
 
       {
         std::lock_guard<std::mutex> lock(initial_source_mutex_);
 
-        initial_source_ = CFRunLoopSourceCreate(kCFAllocatorDefault,
-                                                0,
-                                                &context);
-        CFRelease(*initial_source_);
+        run_loop_ = CFRunLoopGetCurrent();
+
+        initial_source_ = adopt_cf_ptr(CFRunLoopSourceCreate(kCFAllocatorDefault,
+                                                             0,
+                                                             &context));
 
         CFRunLoopAddSource(*run_loop_,
                            *initial_source_,
@@ -74,11 +79,13 @@ public:
     auto since = std::chrono::system_clock::now();
     while (!ready) {
       auto now = std::chrono::system_clock::now();
-      if (now - since > std::chrono::milliseconds(3000)) {
+      if (now - since > 3s) {
         // Although this does not usually happen, it is reached when CFRunLoop processing does not start due to a problem with CFRunLoop.
         // Abort because it is irrecoverable.
         if (failure_policy_ == failure_policy::exit) {
-          std::exit(EXIT_FAILURE);
+          // `std::quick_exit` causes a "Symbol not found: _quick_exit" error on macOS 13,
+          // so we use `std::_Exit` instead.
+          std::_Exit(EXIT_FAILURE);
         } else {
           abort();
         }
@@ -94,11 +101,11 @@ public:
       }
 
       // The period of time should be as short as possible, as the thread sleeps at least once here.
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+      std::this_thread::sleep_for(10ms);
     }
   }
 
-  ~run_loop_thread(void) {
+  ~run_loop_thread() noexcept {
     if (thread_.joinable()) {
       // We have to call `terminate` before destroy run_loop_thread.
       abort();
@@ -108,26 +115,28 @@ public:
     run_loop_ = nullptr;
   }
 
-  void terminate(void) {
-    enqueue(^{
-      CFRunLoopStop(*run_loop_);
-    });
+  void terminate() {
+    std::lock_guard<std::mutex> lock(thread_mutex_);
 
     if (thread_.joinable()) {
+      enqueue(^{
+        CFRunLoopStop(*run_loop_);
+      });
+
       thread_.join();
     }
   }
 
-  CFRunLoopRef _Nonnull get_run_loop(void) const {
+  [[nodiscard]] CFRunLoopRef _Nonnull get_run_loop() const noexcept {
     return *run_loop_;
   }
 
-  void wake(void) const {
+  void wake() const noexcept {
     CFRunLoopWakeUp(*run_loop_);
   }
 
   void add_source(CFRunLoopSourceRef _Nullable source,
-                  CFRunLoopMode _Nonnull mode = kCFRunLoopCommonModes) {
+                  CFRunLoopMode _Nonnull mode = kCFRunLoopCommonModes) noexcept {
     if (source) {
       CFRunLoopAddSource(*run_loop_,
                          source,
@@ -138,7 +147,7 @@ public:
   }
 
   void remove_source(CFRunLoopSourceRef _Nullable source,
-                     CFRunLoopMode _Nonnull mode = kCFRunLoopCommonModes) {
+                     CFRunLoopMode _Nonnull mode = kCFRunLoopCommonModes) noexcept {
     if (source) {
       CFRunLoopRemoveSource(*run_loop_,
                             source,
@@ -148,7 +157,7 @@ public:
     }
   }
 
-  void enqueue(void (^_Nonnull block)(void)) const {
+  void enqueue(void (^_Nonnull block)()) const noexcept {
     CFRunLoopPerformBlock(*run_loop_,
                           kCFRunLoopCommonModes,
                           block);
@@ -158,11 +167,11 @@ public:
 
 private:
   std::thread thread_;
+  std::mutex thread_mutex_;
   cf_ptr<CFRunLoopRef> run_loop_;
 
   cf_ptr<CFRunLoopSourceRef> initial_source_;
   std::mutex initial_source_mutex_;
   failure_policy failure_policy_;
 };
-} // namespace cf
-} // namespace pqrs
+} // namespace pqrs::cf

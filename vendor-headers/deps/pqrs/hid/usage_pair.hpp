@@ -7,14 +7,10 @@
 #include "usage.hpp"
 #include "usage_page.hpp"
 
-namespace pqrs {
-namespace hid {
+namespace pqrs::hid {
 class usage_pair final {
 public:
-  constexpr usage_pair(void)
-      : usage_page_(usage_page::undefined),
-        usage_(usage::undefined) {
-  }
+  constexpr usage_pair() = default;
 
   constexpr usage_pair(usage_page::value_t usage_page,
                        usage::value_t usage)
@@ -22,32 +18,31 @@ public:
         usage_(usage) {
   }
 
-  usage_page::value_t get_usage_page(void) const {
+  [[nodiscard]] usage_page::value_t get_usage_page() const noexcept {
     return usage_page_;
   }
 
-  usage_pair& set_usage_page(const usage_page::value_t& value) {
+  usage_pair& set_usage_page(usage_page::value_t value) noexcept {
     usage_page_ = value;
     return *this;
   }
 
-  usage::value_t get_usage(void) const {
+  [[nodiscard]] usage::value_t get_usage() const noexcept {
     return usage_;
   }
 
-  usage_pair& set_usage(const usage::value_t& value) {
+  usage_pair& set_usage(usage::value_t value) noexcept {
     usage_ = value;
     return *this;
   }
 
-  constexpr auto operator<=>(const usage_pair&) const = default;
+  [[nodiscard]] constexpr auto operator<=>(const usage_pair&) const noexcept = default;
 
 private:
-  usage_page::value_t usage_page_;
-  usage::value_t usage_;
+  usage_page::value_t usage_page_ = usage_page::undefined;
+  usage::value_t usage_ = usage::undefined;
 };
-} // namespace hid
-} // namespace pqrs
+} // namespace pqrs::hid
 
 //
 // hash
@@ -56,7 +51,7 @@ private:
 namespace std {
 template <>
 struct hash<pqrs::hid::usage_pair> {
-  size_t operator()(const pqrs::hid::usage_pair& pair) const {
+  [[nodiscard]] size_t operator()(const pqrs::hid::usage_pair& pair) const {
     size_t h = 0;
     pqrs::hash::combine(h, type_safe::get(pair.get_usage_page()));
     pqrs::hash::combine(h, type_safe::get(pair.get_usage()));
