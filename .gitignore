@@ -4,5 +4,8 @@ bin/
 *.dylib
 .DS_Store
 
+# Records the STUB flag the cshim objects were built with (see cshim/Makefile).
+cshim/.build-flags
+
 # Stray `go build ./cmd/server` output — real builds go to bin/ via `make`.
 /server
