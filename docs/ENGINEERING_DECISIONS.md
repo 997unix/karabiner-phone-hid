@@ -6,6 +6,35 @@ The aim is to make the "why" recoverable later — both for humans and for LLMs 
 
 ---
 
+## ED-009 — Status comes from `/readyz`, not from the log
+
+**Decision:** `/healthz` reports liveness (process up, consults nothing
+external); `/readyz` reports whether input can actually be delivered and
+returns 503 when it cannot. `make status` prints supervision state alongside
+it. Both are backed by the `linkState` from ED-008.
+
+**Rejected:**
+- Grepping the log for the startup banner or a readiness line.
+- Logging a periodic status line so the log always has a recent answer.
+
+**Why:** The log cannot answer "is it working right now". `s6-log` is bounded
+at 10MB × 5, so startup lines age out on a busy day. ED-008 made readiness
+log only on transitions, so a healthy server writes nothing for days —
+silence is indistinguishable from rotated-away or wedged, which is the wrong
+direction to fail. A periodic status line would fix the ambiguity by
+reintroducing exactly the volume ED-008 removed.
+
+Splitting liveness from readiness follows the house rule for services with an
+external dependency: a Karabiner outage must not read as "restart this
+process". The client reconnects on its own, so `/healthz` stays 200 and only
+`/readyz` drops to 503. 503 rather than 500 or a hung socket, so a caller can
+distinguish "not ready yet" from "broken".
+
+The response carries the same short checksum the log prints at startup, so a
+status answer can be tied back to a specific build.
+
+---
+
 ## ED-008 — Device recovery keys off readiness state, not a heartbeat
 
 **Decision:** Connection and device readiness are tracked as explicit state

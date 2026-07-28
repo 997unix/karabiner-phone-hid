@@ -92,3 +92,20 @@ func TestPrevChecksumRoundTrip(t *testing.T) {
 	// Clean up
 	os.Unsetenv(prevChecksumEnv)
 }
+
+func TestShortChecksumMatchesLogForm(t *testing.T) {
+	id := Identity{Checksum: "91baba3a800c522bff1b3b2ddef695805b5821ac"}
+	if got, want := id.ShortChecksum(), "91baba3a800c"; got != want {
+		t.Errorf("ShortChecksum() = %q, want %q", got, want)
+	}
+	if !strings.Contains(id.String(), id.ShortChecksum()) {
+		t.Error("String() should use the same short form so logs and status agree")
+	}
+}
+
+func TestShortChecksumHandlesShortInput(t *testing.T) {
+	id := Identity{Checksum: "abc"}
+	if got := id.ShortChecksum(); got != "abc" {
+		t.Errorf("ShortChecksum() = %q, want %q", got, "abc")
+	}
+}

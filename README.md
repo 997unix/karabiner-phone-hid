@@ -99,6 +99,56 @@ Find your Mac's IP with `ipconfig getifaddr en0`.
 
 Tap a button. The keystroke appears on your Mac. Swipe to switch tabs.
 
+## Status
+
+To check whether it is actually working:
+
+```bash
+make status
+```
+
+```
+s6:   up (pid 70958 pgid 70958) 6 seconds
+hid:  ready=true connected=true keyboard=true pointing=true up=5s build=cd893bedefc7
+```
+
+The two lines answer different questions. `s6` says the process is alive;
+`hid` says it can actually deliver input. A daemon outage shows the first as
+`up` and the second as `ready=false`.
+
+Behind it are two endpoints:
+
+| Endpoint | Meaning | Codes |
+|---|---|---|
+| `/healthz` | Process is up and serving. Consults nothing external. | always `200` |
+| `/readyz` | Input can actually be delivered. | `200` ready, `503` not |
+
+```bash
+curl -s localhost:8765/readyz | jq
+```
+
+```json
+{
+  "ready": true,
+  "connected": true,
+  "keyboard_ready": true,
+  "pointing_ready": true,
+  "uptime": "5s",
+  "checksum": "cd893bedefc7"
+}
+```
+
+`checksum` is the same short form the log prints at startup
+(`start checksum=cd893bedefc7`), so you can tell which build answered.
+
+`/healthz` never fails on a Karabiner outage — the client reconnects on its
+own, and restarting the server would not help. Only `/readyz` goes to `503`.
+
+**Don't use the log for this.** `s6-log` is size-bounded (10MB × 5), so startup
+lines age out, and readiness is logged only on transitions — a healthy server
+writes nothing for days. Silence there is ambiguous: it looks the same as
+rotated-away or wedged. The endpoints report current state rather than history.
+
 ## Tabs
 
 ### tmate/tmux

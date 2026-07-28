@@ -39,12 +39,19 @@ func Self() Identity {
 	return id
 }
 
+// ShortChecksum returns the checksum prefix used in log lines. The status
+// endpoints report the same form, so a running build can be matched against a
+// log line by eye.
+func (id Identity) ShortChecksum() string {
+	if len(id.Checksum) > 12 {
+		return id.Checksum[:12]
+	}
+	return id.Checksum
+}
+
 // String returns a one-line summary suitable for logging.
 func (id Identity) String() string {
-	checksum := id.Checksum
-	if len(checksum) > 12 {
-		checksum = checksum[:12]
-	}
+	checksum := id.ShortChecksum()
 	commit := id.VCSCommit
 	if len(commit) > 7 {
 		commit = commit[:7]

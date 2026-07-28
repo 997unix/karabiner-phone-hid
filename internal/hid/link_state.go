@@ -75,6 +75,18 @@ func (s *linkState) setPointingReady(ready bool) bool {
 	return true
 }
 
+// readiness snapshots the current link state.
+func (s *linkState) readiness() Readiness {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	return Readiness{
+		Connected:     s.connected,
+		KeyboardReady: s.keyboardReady,
+		PointingReady: s.pointingReady,
+	}
+}
+
 // pointingIsReady reports whether the pointing device is usable.
 func (s *linkState) pointingIsReady() bool {
 	s.mu.Lock()

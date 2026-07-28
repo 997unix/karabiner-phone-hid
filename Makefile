@@ -1,9 +1,10 @@
-.PHONY: all build shim test clean install uninstall sudoers unsudoers \
+.PHONY: all build shim test clean install uninstall sudoers unsudoers status \
        s6-install s6-uninstall s6-up s6-down s6-restart s6-status s6-log
 
 BIN      := bin/karabiner-phone-hid
 PREFIX   ?= /usr/local
 STUB     ?= 0
+PORT     ?= 8765
 
 all: build
 
@@ -83,6 +84,20 @@ s6-restart: build s6-install
 s6-status:
 	s6-svstat $(S6_SVCDIR)
 	@s6-svstat $(S6_SVCDIR)/log 2>/dev/null; true
+
+# "Is it working right now?" -- supervision state plus live HID readiness.
+#
+# Deliberately not a log query. s6-log is size-bounded (10MB x 5), so startup
+# lines age out, and readiness is logged only on transitions -- a healthy
+# server writes nothing for days. Silence in the log is ambiguous; /readyz
+# is not.
+status:
+	@printf 's6:   '
+	@s6-svstat $(S6_SVCDIR) 2>/dev/null || echo "service not installed"
+	@printf 'hid:  '
+	@curl -s -m 2 http://127.0.0.1:$(PORT)/readyz 2>/dev/null \
+	  | jq -er '"ready=\(.ready) connected=\(.connected) keyboard=\(.keyboard_ready) pointing=\(.pointing_ready) up=\(.uptime) build=\(.checksum)"' \
+	  || echo "no answer on port $(PORT)"
 
 s6-log:
 	tail -f $(S6_LOGDIR)/current | s6-tai64nlocal

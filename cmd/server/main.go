@@ -81,6 +81,7 @@ func main() {
 	}
 
 	ws := server.NewServer(router, serverName, actions)
+	ws.SetReadinessSource(poster)
 
 	// Serve web UI
 	wd := *webDir

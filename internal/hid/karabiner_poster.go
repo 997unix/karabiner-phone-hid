@@ -190,6 +190,12 @@ func (p *KarabinerPoster) InitPointing() {
 	}
 }
 
+// Readiness reports the live state of the daemon link, satisfying
+// ReadinessReporter so the HTTP status endpoints can surface it.
+func (p *KarabinerPoster) Readiness() Readiness {
+	return p.state.readiness()
+}
+
 // WaitPointingReady blocks until the pointing device is ready.
 func (p *KarabinerPoster) WaitPointingReady() {
 	<-p.pointingReady

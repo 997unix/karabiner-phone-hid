@@ -47,6 +47,10 @@ general items are repeated here.
 
 ### Verifying a change actually works
 
+- [ ] `make status` reports `s6: up` and `hid: ready=true` with all three of
+      connected / keyboard / pointing true, and a `build=` checksum matching
+      the binary you just deployed. This is the quick check; the log lines
+      below are for reconstructing what happened, not for current state.
 - [ ] Server side: `~/.local/log/karabiner-phone-hid/current` should show
       `Connected to daemon` → `Keyboard ready` → `Pointing ready` → `Listening on port`.
 - [ ] Daemon side: `/var/log/karabiner/virtual_hid_device_service.log` should show

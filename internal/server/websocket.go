@@ -6,8 +6,10 @@ import (
 	"net"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/tonyjiang/karabiner-phone-hid/internal/hid"
 	"github.com/tonyjiang/karabiner-phone-hid/internal/protocol"
 )
 
@@ -22,6 +24,8 @@ type Server struct {
 	actions    []protocol.ActionInfo
 	webDir     string
 	listener   net.Listener
+	readiness  hid.ReadinessReporter
+	startedAt  time.Time
 	mu         sync.Mutex
 }
 
@@ -31,6 +35,7 @@ func NewServer(router *Router, serverName string, actions []protocol.ActionInfo)
 		router:     router,
 		serverName: serverName,
 		actions:    actions,
+		startedAt:  time.Now(),
 	}
 }
 
@@ -43,6 +48,8 @@ func (s *Server) SetWebDir(dir string) {
 func (s *Server) Start(addr string) (int, error) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/ws", s.handleWS)
+	mux.HandleFunc("/healthz", s.handleHealthz)
+	mux.HandleFunc("/readyz", s.handleReadyz)
 	mux.HandleFunc("/", s.handleRoot)
 
 	ln, err := net.Listen("tcp", addr)
